@@ -1,8 +1,6 @@
 # Implementation Plan
 
-- [-] 1. Set up project structure and dependencies
-
-
+- [x] 1. Set up project structure and dependencies
 
   - Create directory structure for models, services, tools, and UI components
   - Set up requirements.txt with all necessary dependencies (streamlit, groq, opencv-python, transformers, whisper, ultralytics, fastapi, redis, sqlite3)
@@ -10,13 +8,16 @@
   - Initialize Git repository with .gitignore for Python projects
   - _Requirements: All requirements depend on proper project setup_
 
-- [ ] 2. Implement core data models and database schema
+- [x] 2. Implement core data models and database schema
+
   - Define Pydantic models for Video, VideoMetadata, Frame, Caption, Transcript, DetectionResult, MemoryRecord, AssistantMessageResponse
   - Create SQLite database initialization script with tables for videos, memory, and video_context
   - Implement database connection utilities with proper error handling
   - _Requirements: 3.5, 5.1, 5.2, 11.2_
 
-- [ ] 3. Build Memory Manager component
+- [x] 3. Build Memory Manager component
+
+
   - Implement Memory class with SQLite backend for storing conversation history
   - Create methods for inserting memory records (insert)
   - Create methods for retrieving conversation history (get_conversation_history)
@@ -24,7 +25,11 @@
   - Add indexing on video_id and timestamp for performance
   - _Requirements: 5.1, 5.2, 5.3, 5.5, 5.6_
 
-- [ ] 4. Implement Frame Extractor tool
+- [-] 4. Implement Frame Extractor tool
+
+
+
+
   - Create FrameExtractor class using OpenCV for video frame extraction
   - Implement extract_frames method with configurable interval and max_frames
   - Implement extract_frame_at_timestamp for specific timestamp extraction
@@ -34,6 +39,7 @@
   - _Requirements: 3.1, 3.5, 12.5_
 
 - [ ] 5. Implement Image Captioner tool
+
   - Create ImageCaptioner class using Hugging Face BLIP model
   - Load BLIP model and processor (Salesforce/blip-image-captioning-large)
   - Implement caption_frame method for single frame captioning
@@ -42,6 +48,7 @@
   - _Requirements: 3.2, 3.5_
 
 - [ ] 6. Implement Audio Transcriber tool
+
   - Create AudioTranscriber class using OpenAI Whisper
   - Load Whisper model (base or small for balance of speed/accuracy)
   - Implement transcribe_video method for full video transcription with timestamps
@@ -50,6 +57,7 @@
   - _Requirements: 3.3, 3.5_
 
 - [ ] 7. Implement Object Detector tool
+
   - Create ObjectDetector class using YOLO (YOLOv8)
   - Load YOLOv8 model (yolov8n.pt for speed)
   - Implement detect_objects_in_frames for batch object detection
@@ -58,6 +66,7 @@
   - _Requirements: 3.4, 3.5_
 
 - [ ] 8. Build MCP Server with FastAPI
+
   - Create FastAPI application with CORS middleware
   - Implement tool registry for dynamic tool discovery
   - Create GET /tools endpoint to list available tools with schemas
@@ -68,6 +77,7 @@
   - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6_
 
 - [ ] 9. Implement Context Builder
+
   - Create ContextBuilder class to aggregate video processing results
   - Implement build_video_context to compile all available data for a video
   - Implement search_captions using text similarity for relevant caption retrieval
@@ -77,6 +87,7 @@
   - _Requirements: 4.4, 8.1, 8.2_
 
 - [ ] 10. Implement Tool Router
+
   - Create ToolRouter class for query analysis and tool selection
   - Implement analyze_query to determine which tools are needed based on query content
   - Implement requires_captions, requires_transcripts, requires_objects helper methods
@@ -86,17 +97,19 @@
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
 
 - [ ] 11. Build Groq Agent core
+
   - Create GroqAgent class with Groq API client initialization
   - Implement chat method as main entry point for processing user messages
-  - Implement _should_use_tool to determine if tools are needed
-  - Implement _run_with_tool for tool-based query processing
-  - Implement _respond_general for conversational responses without tools
-  - Implement _add_memory_pair to store interactions in memory
+  - Implement \_should_use_tool to determine if tools are needed
+  - Implement \_run_with_tool for tool-based query processing
+  - Implement \_respond_general for conversational responses without tools
+  - Implement \_add_memory_pair to store interactions in memory
   - Configure Groq with appropriate model (llama-3.1-70b-versatile) and parameters
   - Create system prompt defining BRI's warm, supportive personality
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 5.1, 7.1_
 
 - [ ] 12. Implement response generation with media
+
   - Extend agent to include relevant frames in responses
   - Add timestamp extraction and formatting in responses
   - Implement frame thumbnail generation for response display
@@ -104,12 +117,14 @@
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
 
 - [ ] 13. Implement follow-up suggestion generation
+
   - Add logic to generate 1-3 relevant follow-up questions based on response
   - Implement suggestion templates for different query types
   - Add proactive content discovery suggestions
   - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
 - [ ] 14. Build error handling system
+
   - Create ErrorHandler class with friendly error message generation
   - Implement handle_tool_error for tool-specific failures
   - Implement handle_api_error for Groq API errors
@@ -118,6 +133,7 @@
   - _Requirements: 3.8, 4.7, 6.4, 10.1, 10.2, 10.3, 10.4, 10.5_
 
 - [ ] 15. Create Streamlit UI foundation
+
   - Set up Streamlit app structure with session state management
   - Implement color scheme with feminine touches (blush pink, lavender, teal)
   - Configure custom CSS for rounded edges, soft shadows, and typography
@@ -125,6 +141,7 @@
   - _Requirements: 1.1, 1.2, 1.5_
 
 - [ ] 16. Implement welcome screen
+
   - Create welcome screen component with friendly greeting
   - Add BRI introduction and tagline ("Ask. Understand. Remember.")
   - Implement upload prompt with drag-and-drop area
@@ -132,6 +149,7 @@
   - _Requirements: 1.2, 2.3_
 
 - [ ] 17. Implement video upload functionality
+
   - Create file uploader component accepting MP4, AVI, MOV, MKV formats
   - Implement handle_video_upload to process uploaded files
   - Add video validation (format, size limits)
@@ -142,6 +160,7 @@
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.6_
 
 - [ ] 18. Implement video processing workflow
+
   - Trigger MCP server batch processing on video upload
   - Display processing status with friendly progress messages
   - Show progress indicators for each processing step
@@ -150,6 +169,7 @@
   - _Requirements: 1.3, 3.6, 3.7_
 
 - [ ] 19. Build video library view
+
   - Create grid layout for displaying uploaded videos
   - Generate and display video thumbnails
   - Show video metadata (filename, duration, upload date)
@@ -158,6 +178,7 @@
   - _Requirements: 2.5, 11.1, 11.5_
 
 - [ ] 20. Implement chat window interface
+
   - Create chat window component with message history display
   - Implement message input field with send button
   - Display user and assistant messages with distinct styling
@@ -167,6 +188,7 @@
   - _Requirements: 1.4, 11.2, 11.3_
 
 - [ ] 21. Implement video player with timestamp navigation
+
   - Embed video player in UI using Streamlit video component
   - Implement timestamp navigation from clickable timestamps in responses
   - Add playback controls
@@ -174,6 +196,7 @@
   - _Requirements: 8.4_
 
 - [ ] 22. Implement conversation history panel
+
   - Create sidebar panel showing past conversations for selected video
   - Display conversation turns with timestamps
   - Implement conversation selection to load context
@@ -181,6 +204,7 @@
   - _Requirements: 5.5, 11.2, 11.3, 11.4_
 
 - [ ] 23. Integrate agent with UI
+
   - Connect chat input to GroqAgent.chat method
   - Display agent responses with proper formatting
   - Render frame thumbnails in responses
@@ -190,6 +214,7 @@
   - _Requirements: 4.1, 4.6, 8.1, 8.2, 9.4_
 
 - [ ] 24. Implement caching layer
+
   - Set up Redis connection for MCP server
   - Implement cache key generation for tool results
   - Add cache lookup before tool execution
@@ -198,6 +223,7 @@
   - _Requirements: 6.6, 12.3_
 
 - [ ] 25. Add performance optimizations
+
   - Implement lazy loading for frame images in UI
   - Add pagination for conversation history (limit to last 10 messages)
   - Optimize database queries with proper indexing
@@ -206,6 +232,7 @@
   - _Requirements: 12.1, 12.2, 12.4, 5.6_
 
 - [ ] 26. Create configuration and environment setup
+
   - Create .env.example file with required environment variables
   - Implement settings loader using python-dotenv
   - Add configuration validation on startup
@@ -213,6 +240,7 @@
   - _Requirements: All requirements depend on proper configuration_
 
 - [ ] 27. Add logging and monitoring
+
   - Implement structured logging throughout application
   - Add log levels (DEBUG, INFO, WARNING, ERROR)
   - Log tool execution times and cache hit rates
@@ -221,6 +249,7 @@
   - _Requirements: 10.4, 12.1_
 
 - [ ] 28. Create deployment scripts
+
   - Create Dockerfile for MCP server
   - Create Dockerfile for Streamlit UI
   - Create docker-compose.yml for local development
@@ -229,6 +258,7 @@
   - _Requirements: All requirements for deployment_
 
 - [ ] 29. Write documentation
+
   - Create comprehensive README.md with project overview, setup instructions, and usage guide
   - Document API endpoints for MCP server
   - Create user guide for BRI interface
@@ -236,45 +266,53 @@
   - Add troubleshooting section
   - _Requirements: All requirements for user adoption_
 
-- [ ]* 30. Create test suite
-  - [ ]* 30.1 Write unit tests for Memory class
+- [ ]\* 30. Create test suite
+
+  - [ ]\* 30.1 Write unit tests for Memory class
+
     - Test insert, retrieve, and reset operations
     - Test conversation history retrieval with limits
     - _Requirements: 5.1, 5.2, 5.5_
-  
-  - [ ]* 30.2 Write unit tests for FrameExtractor
+
+  - [ ]\* 30.2 Write unit tests for FrameExtractor
+
     - Test frame extraction at intervals
     - Test timestamp-specific extraction
     - Test metadata retrieval
     - _Requirements: 3.1_
-  
-  - [ ]* 30.3 Write unit tests for ImageCaptioner
+
+  - [ ]\* 30.3 Write unit tests for ImageCaptioner
+
     - Test single frame captioning
     - Test batch captioning
     - _Requirements: 3.2_
-  
-  - [ ]* 30.4 Write unit tests for AudioTranscriber
+
+  - [ ]\* 30.4 Write unit tests for AudioTranscriber
+
     - Test full video transcription
     - Test segment transcription
     - _Requirements: 3.3_
-  
-  - [ ]* 30.5 Write unit tests for ObjectDetector
+
+  - [ ]\* 30.5 Write unit tests for ObjectDetector
+
     - Test object detection in frames
     - Test object search functionality
     - _Requirements: 3.4_
-  
-  - [ ]* 30.6 Write unit tests for ToolRouter
+
+  - [ ]\* 30.6 Write unit tests for ToolRouter
+
     - Test query analysis and tool selection
     - Test timestamp extraction
     - _Requirements: 7.1, 7.2_
-  
-  - [ ]* 30.7 Write integration tests for end-to-end video processing
+
+  - [ ]\* 30.7 Write integration tests for end-to-end video processing
+
     - Test upload → process → query → response flow
     - Test multi-tool queries
     - Test conversation continuity
     - _Requirements: 3.7, 4.1, 5.3_
-  
-  - [ ]* 30.8 Write integration tests for error handling
+
+  - [ ]\* 30.8 Write integration tests for error handling
     - Test graceful degradation when tools fail
     - Test error message generation
     - _Requirements: 10.1, 10.2, 10.3_

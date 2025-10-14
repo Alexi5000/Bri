@@ -1,1 +1,1 @@
-# Utility scripts
+"""Utility scripts for BRI video agent."""
