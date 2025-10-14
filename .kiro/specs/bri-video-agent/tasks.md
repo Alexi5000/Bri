@@ -25,7 +25,9 @@
   - Add indexing on video_id and timestamp for performance
   - _Requirements: 5.1, 5.2, 5.3, 5.5, 5.6_
 
-- [-] 4. Implement Frame Extractor tool
+- [x] 4. Implement Frame Extractor tool
+
+
 
 
 
