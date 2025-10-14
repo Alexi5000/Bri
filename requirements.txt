@@ -1,0 +1,43 @@
+# Core Framework
+streamlit>=1.28.0
+
+# LLM and AI
+groq>=0.4.0
+
+# Video Processing
+opencv-python>=4.8.0
+
+# Image Captioning
+transformers>=4.35.0
+torch>=2.1.0
+pillow>=10.0.0
+
+# Audio Transcription
+openai-whisper>=20231117
+
+# Object Detection
+ultralytics>=8.0.0
+
+# API Server
+fastapi>=0.104.0
+uvicorn>=0.24.0
+
+# Caching
+redis>=5.0.0
+
+# Database
+# sqlite3 is included in Python standard library
+
+# Configuration
+python-dotenv>=1.0.0
+
+# Data Validation
+pydantic>=2.5.0
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-asyncio>=0.21.0
+
+# Utilities
+requests>=2.31.0
