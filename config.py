@@ -49,6 +49,9 @@ class Config:
     # Application Configuration
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+    LOG_DIR: str = os.getenv("LOG_DIR", "logs")
+    LOG_ROTATION_ENABLED: bool = os.getenv("LOG_ROTATION_ENABLED", "true").lower() == "true"
+    LOG_JSON_FORMAT: bool = os.getenv("LOG_JSON_FORMAT", "false").lower() == "true"
     
     @classmethod
     def validate(cls) -> None:
@@ -102,6 +105,7 @@ class Config:
             cls.FRAME_STORAGE_PATH,
             cls.CACHE_STORAGE_PATH,
             Path(cls.DATABASE_PATH).parent,
+            cls.LOG_DIR,
         ]
         
         for directory in directories:
@@ -156,6 +160,8 @@ class Config:
         print("\n🔍 Application:")
         print(f"  Debug: {'Yes' if cls.DEBUG else 'No'}")
         print(f"  Log Level: {cls.LOG_LEVEL}")
+        print(f"  Log Directory: {cls.LOG_DIR}")
+        print(f"  Log Rotation: {'Yes' if cls.LOG_ROTATION_ENABLED else 'No'}")
         
         print("\n" + "="*60 + "\n")
 

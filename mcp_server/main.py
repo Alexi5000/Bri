@@ -1,6 +1,5 @@
 """FastAPI MCP Server for BRI video processing tools."""
 
-import logging
 import time
 from typing import Optional
 from pydantic import BaseModel
@@ -12,13 +11,18 @@ from models.responses import ToolExecutionRequest, ToolExecutionResponse
 from mcp_server.registry import ToolRegistry
 from mcp_server.cache import CacheManager
 from config import Config
+from utils.logging_config import setup_logging, get_logger, get_performance_logger
 
-# Configure logging
-logging.basicConfig(
-    level=getattr(logging, Config.LOG_LEVEL),
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+# Setup logging
+setup_logging(
+    log_level=Config.LOG_LEVEL,
+    log_dir=Config.LOG_DIR,
+    json_format=Config.LOG_JSON_FORMAT,
+    enable_rotation=Config.LOG_ROTATION_ENABLED
 )
-logger = logging.getLogger(__name__)
+
+logger = get_logger(__name__)
+perf_logger = get_performance_logger(__name__)
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -150,6 +154,7 @@ async def execute_tool(tool_name: str, request: ToolExecutionRequest):
         if cached_result is not None:
             execution_time = time.time() - start_time
             logger.info(f"Cache hit for {tool_name} on video {request.video_id}")
+            perf_logger.log_cache_hit(cache_key, hit=True)
             return ToolExecutionResponse(
                 status="success",
                 result=cached_result,
@@ -159,6 +164,7 @@ async def execute_tool(tool_name: str, request: ToolExecutionRequest):
         
         # Execute tool with timeout
         logger.info(f"Executing tool '{tool_name}' for video {request.video_id} (timeout: {timeout_seconds}s)")
+        perf_logger.log_cache_hit(cache_key, hit=False)
         
         try:
             result = await asyncio.wait_for(
@@ -168,6 +174,13 @@ async def execute_tool(tool_name: str, request: ToolExecutionRequest):
         except asyncio.TimeoutError:
             execution_time = time.time() - start_time
             logger.error(f"Tool '{tool_name}' execution timed out after {timeout_seconds}s")
+            perf_logger.log_execution_time(
+                f"tool_{tool_name}",
+                execution_time,
+                success=False,
+                video_id=request.video_id,
+                error="timeout"
+            )
             return ToolExecutionResponse(
                 status="error",
                 result={"error": f"Tool execution timed out after {timeout_seconds} seconds"},
@@ -181,6 +194,13 @@ async def execute_tool(tool_name: str, request: ToolExecutionRequest):
         execution_time = time.time() - start_time
         logger.info(
             f"Tool '{tool_name}' executed successfully in {execution_time:.2f}s"
+        )
+        perf_logger.log_execution_time(
+            f"tool_{tool_name}",
+            execution_time,
+            success=True,
+            video_id=request.video_id,
+            cached=False
         )
         
         return ToolExecutionResponse(
@@ -308,6 +328,14 @@ async def process_video(
         logger.info(
             f"Video processing complete: {len(results)} succeeded, "
             f"{len(errors)} failed in {execution_time:.2f}s (parallel)"
+        )
+        perf_logger.log_execution_time(
+            "video_processing",
+            execution_time,
+            success=len(errors) == 0,
+            video_id=video_id,
+            tools_succeeded=len(results),
+            tools_failed=len(errors)
         )
         
         return response

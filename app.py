@@ -5,16 +5,32 @@ Main Streamlit Application Entry Point
 
 import streamlit as st
 
+# Initialize logging first
+from utils.logging_config import setup_logging, get_logger
+from config import Config
+
+setup_logging(
+    log_level=Config.LOG_LEVEL,
+    log_dir=Config.LOG_DIR,
+    json_format=Config.LOG_JSON_FORMAT,
+    enable_rotation=Config.LOG_ROTATION_ENABLED
+)
+
+logger = get_logger(__name__)
+logger.info("Starting BRI Streamlit application")
+
 # Validate configuration on startup
 try:
-    from config import Config
     Config.validate()
     Config.ensure_directories()
+    logger.info("Configuration validated successfully")
 except ValueError as e:
+    logger.error(f"Configuration validation failed: {e}")
     st.error(f"⚠️ Configuration Error\n\n{e}")
     st.info("Please check your .env file and ensure all required values are set.")
     st.stop()
 except Exception as e:
+    logger.error(f"Startup error: {e}", exc_info=True)
     st.error(f"⚠️ Startup Error\n\n{e}")
     st.stop()
 

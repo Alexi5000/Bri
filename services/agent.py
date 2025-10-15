@@ -1,7 +1,7 @@
 """Groq Agent for conversational video analysis."""
 
-import logging
 import httpx
+import time
 from typing import Optional, Dict, Any, List
 
 from groq import Groq
@@ -12,8 +12,11 @@ from services.context import ContextBuilder
 from services.media_utils import MediaUtils
 from services.error_handler import ErrorHandler
 from config import Config
+from utils.logging_config import get_logger, get_performance_logger, get_api_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
+perf_logger = get_performance_logger(__name__)
+api_logger = get_api_logger(__name__)
 
 
 class AgentError(Exception):
@@ -109,6 +112,7 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
         Raises:
             AgentError: If processing fails
         """
+        start_time = time.time()
         try:
             logger.info(f"Processing message for video {video_id}: {message[:50]}...")
             
@@ -135,7 +139,16 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
             # Store interaction in memory
             self._add_memory_pair(video_id, message, response_text)
             
+            execution_time = time.time() - start_time
             logger.info(f"Generated response with {len(frames)} frames and {len(timestamps)} timestamps")
+            perf_logger.log_execution_time(
+                "chat_processing",
+                execution_time,
+                success=True,
+                video_id=video_id,
+                used_tools=tool_type is not None,
+                frames_count=len(frames)
+            )
             
             # Convert frame_contexts to FrameWithContext objects
             from models.responses import FrameWithContext
@@ -152,7 +165,15 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
             )
             
         except Exception as e:
+            execution_time = time.time() - start_time
             logger.error(f"Chat processing failed: {e}", exc_info=True)
+            perf_logger.log_execution_time(
+                "chat_processing",
+                execution_time,
+                success=False,
+                video_id=video_id,
+                error=str(e)
+            )
             # Return friendly error message using ErrorHandler
             error_message = ErrorHandler.format_error_for_user(
                 e,
@@ -487,6 +508,7 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
         Returns:
             Generated response text
         """
+        start_time = time.time()
         try:
             messages = [
                 {"role": "system", "content": self.SYSTEM_PROMPT},
@@ -500,10 +522,27 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
                 max_tokens=Config.GROQ_MAX_TOKENS
             )
             
+            execution_time = time.time() - start_time
+            api_logger.log_api_call(
+                "Groq",
+                f"/chat/completions (model: {Config.GROQ_MODEL})",
+                method="POST",
+                status_code=200,
+                execution_time=execution_time
+            )
+            
             return response.choices[0].message.content.strip()
             
         except Exception as e:
+            execution_time = time.time() - start_time
             logger.error(f"Groq API call failed: {e}")
+            api_logger.log_api_call(
+                "Groq",
+                f"/chat/completions (model: {Config.GROQ_MODEL})",
+                method="POST",
+                execution_time=execution_time,
+                error=str(e)
+            )
             # Use ErrorHandler for friendly API error messages
             friendly_message = ErrorHandler.handle_api_error(e)
             raise AgentError(friendly_message)

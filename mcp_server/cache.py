@@ -2,13 +2,14 @@
 
 import json
 import hashlib
-import logging
 from typing import Any, Optional, Dict
 from datetime import timedelta
 
 from config import Config
+from utils.logging_config import get_logger, get_performance_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
+perf_logger = get_performance_logger(__name__)
 
 
 class CacheManager:
@@ -84,9 +85,11 @@ class CacheManager:
             value = self.redis_client.get(key)
             if value is not None:
                 logger.debug(f"Cache hit: {key}")
+                perf_logger.log_cache_hit(key, hit=True)
                 return json.loads(value)
             else:
                 logger.debug(f"Cache miss: {key}")
+                perf_logger.log_cache_hit(key, hit=False)
                 return None
         except Exception as e:
             logger.error(f"Cache get failed for key {key}: {str(e)}")
