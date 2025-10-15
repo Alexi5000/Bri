@@ -77,14 +77,16 @@ class Memory:
     def get_conversation_history(
         self,
         video_id: str,
-        limit: Optional[int] = None
+        limit: Optional[int] = None,
+        offset: int = 0
     ) -> List[MemoryRecord]:
-        """Retrieve conversation history for a video.
+        """Retrieve conversation history for a video with pagination support.
         
         Args:
             video_id: Video identifier
             limit: Maximum number of messages to retrieve (most recent first).
                    Uses Config.MAX_CONVERSATION_HISTORY if not provided.
+            offset: Number of messages to skip (for pagination)
             
         Returns:
             List of MemoryRecord objects in chronological order (oldest first)
@@ -93,23 +95,26 @@ class Memory:
             MemoryError: If retrieval fails
             
         Example:
+            # Get first page (most recent 10 messages)
             history = memory.get_conversation_history("vid_456", limit=10)
-            for record in history:
-                print(f"{record.role}: {record.content}")
+            
+            # Get second page (next 10 messages)
+            history_page2 = memory.get_conversation_history("vid_456", limit=10, offset=10)
         """
         try:
             if limit is None:
                 limit = Config.MAX_CONVERSATION_HISTORY
             
-            # Query retrieves most recent messages and orders them chronologically
+            # Query retrieves most recent messages with pagination support
+            # Uses index on (video_id, timestamp DESC) for performance
             query = """
                 SELECT message_id, video_id, role, content, timestamp
                 FROM memory
                 WHERE video_id = ?
                 ORDER BY timestamp DESC
-                LIMIT ?
+                LIMIT ? OFFSET ?
             """
-            parameters = (video_id, limit)
+            parameters = (video_id, limit, offset)
             
             rows = self.db.execute_query(query, parameters)
             
@@ -124,7 +129,7 @@ class Memory:
                     timestamp=datetime.fromisoformat(row['timestamp'])
                 ))
             
-            logger.debug(f"Retrieved {len(memory_records)} memory records for video {video_id}")
+            logger.debug(f"Retrieved {len(memory_records)} memory records for video {video_id} (offset: {offset})")
             return memory_records
             
         except DatabaseError as e:

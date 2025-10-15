@@ -107,7 +107,7 @@ async def list_tools():
 @app.post("/tools/{tool_name}/execute")
 async def execute_tool(tool_name: str, request: ToolExecutionRequest):
     """
-    Execute a specific tool with provided parameters.
+    Execute a specific tool with provided parameters and timeout handling.
     
     Args:
         tool_name: Name of the tool to execute
@@ -116,7 +116,10 @@ async def execute_tool(tool_name: str, request: ToolExecutionRequest):
     Returns:
         Tool execution response with result, status, and metadata
     """
+    import asyncio
+    
     start_time = time.time()
+    timeout_seconds = Config.TOOL_EXECUTION_TIMEOUT
     
     try:
         # Validate tool exists
@@ -145,9 +148,23 @@ async def execute_tool(tool_name: str, request: ToolExecutionRequest):
                 execution_time=execution_time
             )
         
-        # Execute tool
-        logger.info(f"Executing tool '{tool_name}' for video {request.video_id}")
-        result = await tool.execute(request.video_id, request.parameters)
+        # Execute tool with timeout
+        logger.info(f"Executing tool '{tool_name}' for video {request.video_id} (timeout: {timeout_seconds}s)")
+        
+        try:
+            result = await asyncio.wait_for(
+                tool.execute(request.video_id, request.parameters),
+                timeout=timeout_seconds
+            )
+        except asyncio.TimeoutError:
+            execution_time = time.time() - start_time
+            logger.error(f"Tool '{tool_name}' execution timed out after {timeout_seconds}s")
+            return ToolExecutionResponse(
+                status="error",
+                result={"error": f"Tool execution timed out after {timeout_seconds} seconds"},
+                cached=False,
+                execution_time=execution_time
+            )
         
         # Cache the result
         cache_manager.set(cache_key, result)
@@ -188,7 +205,7 @@ async def process_video(
     request: ProcessVideoRequest = ProcessVideoRequest()
 ):
     """
-    Process a video with multiple tools in batch.
+    Process a video with multiple tools in batch with parallel execution.
     
     Args:
         video_id: Video identifier
@@ -197,6 +214,8 @@ async def process_video(
     Returns:
         Processing status and results from all tools
     """
+    import asyncio
+    
     start_time = time.time()
     
     try:
@@ -205,50 +224,66 @@ async def process_video(
         if tools is None:
             tools = [tool["name"] for tool in tool_registry.list_tools()]
         
-        logger.info(f"Processing video {video_id} with tools: {tools}")
+        logger.info(f"Processing video {video_id} with tools: {tools} (parallel execution)")
         
+        # Create tasks for parallel execution
+        tasks = []
+        tool_names = []
+        
+        for tool_name in tools:
+            tool = tool_registry.get_tool(tool_name)
+            if tool is None:
+                logger.warning(f"Tool '{tool_name}' not found, skipping")
+                continue
+            
+            # Check cache first
+            cache_key = cache_manager.generate_cache_key(
+                tool_name,
+                video_id,
+                {}
+            )
+            
+            cached_result = cache_manager.get(cache_key)
+            if cached_result is not None:
+                logger.info(f"Cache hit for {tool_name}")
+                # Skip creating task for cached results
+                continue
+            
+            # Create async task for tool execution
+            tasks.append(_execute_tool_with_cache(tool, tool_name, video_id, cache_key))
+            tool_names.append(tool_name)
+        
+        # Execute all tools in parallel
+        if tasks:
+            task_results = await asyncio.gather(*tasks, return_exceptions=True)
+        else:
+            task_results = []
+        
+        # Process results
         results = {}
         errors = {}
         
-        # Execute each tool
+        # Add cached results
         for tool_name in tools:
-            try:
-                tool = tool_registry.get_tool(tool_name)
-                if tool is None:
-                    errors[tool_name] = f"Tool '{tool_name}' not found"
-                    continue
-                
-                # Check cache
-                cache_key = cache_manager.generate_cache_key(
-                    tool_name,
-                    video_id,
-                    {}
-                )
-                
-                cached_result = cache_manager.get(cache_key)
-                if cached_result is not None:
-                    results[tool_name] = {
-                        "result": cached_result,
-                        "cached": True
-                    }
-                    logger.info(f"Cache hit for {tool_name}")
-                    continue
-                
-                # Execute tool
-                result = await tool.execute(video_id, {})
+            cache_key = cache_manager.generate_cache_key(tool_name, video_id, {})
+            cached_result = cache_manager.get(cache_key)
+            if cached_result is not None and tool_name not in tool_names:
+                results[tool_name] = {
+                    "result": cached_result,
+                    "cached": True
+                }
+        
+        # Add parallel execution results
+        for tool_name, result in zip(tool_names, task_results):
+            if isinstance(result, Exception):
+                logger.error(f"Tool '{tool_name}' failed: {str(result)}")
+                errors[tool_name] = str(result)
+            else:
                 results[tool_name] = {
                     "result": result,
                     "cached": False
                 }
-                
-                # Cache result
-                cache_manager.set(cache_key, result)
-                
                 logger.info(f"Tool '{tool_name}' completed successfully")
-                
-            except Exception as e:
-                logger.error(f"Tool '{tool_name}' failed: {str(e)}")
-                errors[tool_name] = str(e)
         
         execution_time = time.time() - start_time
         
@@ -257,12 +292,13 @@ async def process_video(
             "video_id": video_id,
             "results": results,
             "errors": errors if errors else None,
-            "execution_time": execution_time
+            "execution_time": execution_time,
+            "parallel_execution": True
         }
         
         logger.info(
             f"Video processing complete: {len(results)} succeeded, "
-            f"{len(errors)} failed in {execution_time:.2f}s"
+            f"{len(errors)} failed in {execution_time:.2f}s (parallel)"
         )
         
         return response
@@ -274,6 +310,31 @@ async def process_video(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Video processing failed: {str(e)}"
         )
+
+
+async def _execute_tool_with_cache(tool, tool_name: str, video_id: str, cache_key: str):
+    """Execute a tool and cache the result.
+    
+    Args:
+        tool: Tool instance to execute
+        tool_name: Name of the tool
+        video_id: Video identifier
+        cache_key: Cache key for storing result
+        
+    Returns:
+        Tool execution result
+        
+    Raises:
+        Exception: If tool execution fails
+    """
+    try:
+        result = await tool.execute(video_id, {})
+        # Cache the result
+        cache_manager.set(cache_key, result)
+        return result
+    except Exception as e:
+        logger.error(f"Tool '{tool_name}' execution failed: {str(e)}")
+        raise
 
 
 @app.get("/cache/stats")

@@ -187,12 +187,51 @@ class Database:
             conn.executescript(schema_sql)
             conn.commit()
             logger.info("Database schema initialized successfully")
+            
+            # Create performance indexes
+            self._create_performance_indexes()
         except FileNotFoundError:
             logger.error(f"Schema file not found: {schema_path}")
             raise DatabaseError(f"Schema file not found: {schema_path}")
         except sqlite3.Error as e:
             logger.error(f"Schema initialization failed: {e}")
             raise DatabaseError(f"Schema initialization failed: {e}")
+    
+    def _create_performance_indexes(self) -> None:
+        """Create indexes for performance optimization."""
+        try:
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            
+            # Index for memory table queries (video_id + timestamp for conversation history)
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_memory_video_timestamp 
+                ON memory(video_id, timestamp DESC)
+            """)
+            
+            # Index for video_context queries (video_id + context_type + timestamp)
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_video_context_lookup 
+                ON video_context(video_id, context_type, timestamp)
+            """)
+            
+            # Index for video_context timestamp queries
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_video_context_timestamp 
+                ON video_context(video_id, timestamp)
+            """)
+            
+            # Index for videos processing status
+            cursor.execute("""
+                CREATE INDEX IF NOT EXISTS idx_videos_status 
+                ON videos(processing_status)
+            """)
+            
+            conn.commit()
+            logger.info("Performance indexes created successfully")
+            
+        except sqlite3.Error as e:
+            logger.warning(f"Failed to create performance indexes: {e}")
     
     def close(self) -> None:
         """Close database connection."""

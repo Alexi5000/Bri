@@ -20,38 +20,72 @@ def render_conversation_history_panel(
     memory: Memory,
     on_conversation_select: Optional[callable] = None
 ) -> None:
-    """Render conversation history panel in sidebar.
+    """Render conversation history panel in sidebar with pagination.
     
     Args:
         video_id: Current video ID
         memory: Memory instance for retrieving conversation history
         on_conversation_select: Optional callback when conversation is selected
     """
+    from config import Config
     
     st.markdown("### 💬 Conversation History")
     
     try:
-        # Get conversation history for this video
-        conversation_history = memory.get_conversation_history(video_id, limit=50)
+        # Initialize pagination state
+        page_key = f"history_page_{video_id}"
+        if page_key not in st.session_state:
+            st.session_state[page_key] = 0
         
-        if not conversation_history:
+        # Get total message count
+        total_messages = memory.count_messages(video_id)
+        
+        if total_messages == 0:
             _render_empty_history()
             return
+        
+        # Calculate pagination
+        messages_per_page = Config.MAX_CONVERSATION_HISTORY
+        current_page = st.session_state[page_key]
+        offset = current_page * messages_per_page
+        
+        # Get conversation history for current page
+        conversation_history = memory.get_conversation_history(
+            video_id,
+            limit=messages_per_page,
+            offset=offset
+        )
         
         # Group conversations by session (pairs of user-assistant messages)
         conversation_sessions = _group_into_sessions(conversation_history)
         
         # Display conversation count
+        total_pages = (total_messages + messages_per_page - 1) // messages_per_page
         st.markdown(
             f"<div style='color: {COLORS['text_light']}; font-size: 0.9rem; margin-bottom: 1rem;'>"
-            f"📝 {len(conversation_sessions)} conversation{'s' if len(conversation_sessions) != 1 else ''}"
+            f"📝 {total_messages} message{'s' if total_messages != 1 else ''} "
+            f"(Page {current_page + 1}/{total_pages})"
             f"</div>",
             unsafe_allow_html=True
         )
         
         # Display each conversation session
         for idx, session in enumerate(conversation_sessions):
-            _render_conversation_session(session, idx, on_conversation_select)
+            _render_conversation_session(session, idx + offset, on_conversation_select)
+        
+        # Pagination controls
+        if total_pages > 1:
+            col1, col2 = st.columns(2)
+            with col1:
+                if current_page > 0:
+                    if st.button("⬅️ Newer", key=f"history_prev_{video_id}", use_container_width=True):
+                        st.session_state[page_key] -= 1
+                        st.rerun()
+            with col2:
+                if current_page < total_pages - 1:
+                    if st.button("Older ➡️", key=f"history_next_{video_id}", use_container_width=True):
+                        st.session_state[page_key] += 1
+                        st.rerun()
         
         # Memory wipe button
         st.markdown("---")

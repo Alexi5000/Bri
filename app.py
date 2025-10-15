@@ -345,6 +345,9 @@ def display_agent_response(response):
     Args:
         response: AssistantMessageResponse object
     """
+    from ui.lazy_loader import LazyImageLoader
+    from config import Config
+    
     # Display main message
     st.markdown(f"""
     <div style="margin-bottom: 1rem;">
@@ -359,39 +362,17 @@ def display_agent_response(response):
     </div>
     """, unsafe_allow_html=True)
     
-    # Display frames if present
+    # Display frames if present with lazy loading
     if response.frames and response.timestamps:
         st.markdown("**Relevant moments:**")
         
-        # Display frames in columns (max 3 per row)
-        num_frames = len(response.frames)
-        cols_per_row = min(num_frames, 3)
-        
-        for i in range(0, num_frames, cols_per_row):
-            cols = st.columns(cols_per_row)
-            for j in range(cols_per_row):
-                idx = i + j
-                if idx < num_frames:
-                    with cols[j]:
-                        try:
-                            # Display frame image
-                            st.image(response.frames[idx], use_container_width=True)
-                            
-                            # Display clickable timestamp
-                            timestamp = response.timestamps[idx]
-                            timestamp_str = format_video_timestamp(timestamp)
-                            
-                            if st.button(
-                                f"⏱️ {timestamp_str}",
-                                key=f"frame_ts_{idx}_{timestamp}",
-                                help="Click to jump to this moment"
-                            ):
-                                st.session_state["clicked_timestamp"] = timestamp
-                                st.rerun()
-                        except Exception as e:
-                            import logging
-                            logger = logging.getLogger(__name__)
-                            logger.warning(f"Failed to display frame: {e}")
+        # Use lazy loader for better performance
+        lazy_loader = LazyImageLoader(batch_size=Config.LAZY_LOAD_BATCH_SIZE)
+        lazy_loader.render_lazy_images(
+            image_paths=response.frames,
+            timestamps=response.timestamps,
+            columns=3
+        )
     
     # Display follow-up suggestions
     if response.suggestions:

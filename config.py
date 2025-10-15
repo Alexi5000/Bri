@@ -42,6 +42,11 @@ class Config:
     # Memory Configuration
     MAX_CONVERSATION_HISTORY: int = int(os.getenv("MAX_CONVERSATION_HISTORY", "10"))
     
+    # Performance Configuration
+    TOOL_EXECUTION_TIMEOUT: int = int(os.getenv("TOOL_EXECUTION_TIMEOUT", "120"))  # seconds
+    REQUEST_TIMEOUT: int = int(os.getenv("REQUEST_TIMEOUT", "30"))  # seconds
+    LAZY_LOAD_BATCH_SIZE: int = int(os.getenv("LAZY_LOAD_BATCH_SIZE", "3"))  # images per batch
+    
     # Application Configuration
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
