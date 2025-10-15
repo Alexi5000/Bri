@@ -6,12 +6,37 @@ BRI is an open-source, empathetic multimodal agent for video processing that ena
 
 ## Features
 
-- 🎥 **Video Upload & Management**: Drag-and-drop upload with library view
-- 💬 **Conversational Interface**: Chat naturally about your video content
-- 🔍 **Multimodal Analysis**: Frame captioning, audio transcription, object detection
-- 🧠 **Smart Memory**: Maintains conversation history for seamless follow-ups
+### Core Capabilities
+
+- 🎥 **Video Upload & Management**: Drag-and-drop upload with library view and thumbnails
+- 💬 **Conversational Interface**: Chat naturally about your video content with context awareness
+- 🔍 **Multimodal Analysis**: 
+  - Frame extraction and captioning (BLIP)
+  - Audio transcription with timestamps (Whisper)
+  - Object detection and tracking (YOLOv8)
+- 🧠 **Smart Memory**: Maintains conversation history per video for seamless follow-ups
 - 🎨 **Warm UI/UX**: Feminine design touches with soft colors and friendly interactions
-- ⚡ **Fast Responses**: Intelligent caching and optimized processing
+- ⚡ **Fast Responses**: Intelligent Redis caching and optimized processing
+- 🎯 **Intelligent Routing**: Automatically determines which tools to use based on your question
+- 📍 **Timestamp Navigation**: Click timestamps in responses to jump to specific moments
+- 💡 **Proactive Suggestions**: Get relevant follow-up questions after each response
+
+### What You Can Ask
+
+- **Content Questions**: "What's happening in this video?"
+- **Timestamp Queries**: "What did they say at 2:30?"
+- **Object Search**: "Show me all the cats in this video"
+- **Transcript Search**: "Find when they mentioned 'deadline'"
+- **Follow-ups**: "Tell me more about that" (BRI remembers context!)
+
+### Design Philosophy
+
+BRI is designed to be:
+- **Empathetic**: Warm, supportive tone throughout
+- **Accessible**: No technical knowledge required
+- **Conversational**: Like discussing content with a knowledgeable friend
+- **Privacy-Focused**: Local storage by default
+- **Graceful**: Friendly error messages and fallback strategies
 
 ## Quick Start
 
@@ -132,6 +157,29 @@ The application validates configuration on startup and will:
 - ⚠️ **Warn** about suboptimal settings (e.g., Redis disabled, debug mode enabled)
 - ✓ **Create** necessary directories automatically
 
+## Documentation
+
+📚 **[Complete Documentation Index](docs/INDEX.md)** - Find all documentation in one place
+
+### User Documentation
+
+- **[User Guide](docs/USER_GUIDE.md)** - Complete guide to using BRI
+- **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Solutions to common issues
+- **[Configuration Reference](docs/CONFIGURATION.md)** - All configuration options explained
+
+### Developer Documentation
+
+- **[MCP Server API](mcp_server/README.md)** - API endpoints and tool documentation
+- **[API Examples](docs/API_EXAMPLES.md)** - Practical code examples for API integration
+- **[Requirements](.kiro/specs/bri-video-agent/requirements.md)** - Feature requirements
+- **[Design](.kiro/specs/bri-video-agent/design.md)** - System architecture and design
+- **[Implementation Tasks](.kiro/specs/bri-video-agent/tasks.md)** - Development task list
+
+### Deployment Documentation
+
+- **[Deployment Guide](DEPLOYMENT.md)** - Production deployment instructions
+- **[Quick Start](QUICKSTART.md)** - Get started in 5 minutes
+
 ## Development
 
 ### Running Tests
@@ -145,65 +193,252 @@ pytest --cov=. tests/
 
 # Run specific test file
 pytest tests/unit/test_memory.py
+
+# Run integration tests
+pytest tests/integration/
 ```
 
-### Project Documentation
+### Development Workflow
 
-- [Requirements](.kiro/specs/bri-video-agent/requirements.md)
-- [Design](.kiro/specs/bri-video-agent/design.md)
-- [Implementation Tasks](.kiro/specs/bri-video-agent/tasks.md)
+1. **Setup Development Environment**:
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # Windows: .venv\Scripts\activate
+   pip install -r requirements.txt
+   cp .env.example .env
+   # Edit .env with your API key
+   ```
+
+2. **Run in Development Mode**:
+   ```bash
+   # Terminal 1: MCP Server with auto-reload
+   python mcp_server/main.py
+   
+   # Terminal 2: Streamlit with auto-reload
+   streamlit run app.py
+   ```
+
+3. **Run Tests Before Committing**:
+   ```bash
+   pytest
+   ```
+
+4. **Check Code Quality**:
+   ```bash
+   # Format code
+   black .
+   
+   # Lint code
+   flake8 .
+   
+   # Type checking
+   mypy .
+   ```
+
+## Architecture
+
+BRI uses a modular, layered architecture:
+
+```
+┌─────────────────────────────────────────┐
+│         Streamlit UI Layer              │
+│  (Chat, Library, Player, History)       │
+└─────────────┬───────────────────────────┘
+              │
+┌─────────────▼───────────────────────────┐
+│         Agent Layer                      │
+│  (Groq Agent, Router, Memory, Context)  │
+└─────────────┬───────────────────────────┘
+              │
+┌─────────────▼───────────────────────────┐
+│         MCP Server Layer                 │
+│  (FastAPI, Tool Registry, Redis Cache)  │
+└─────────────┬───────────────────────────┘
+              │
+┌─────────────▼───────────────────────────┐
+│      Video Processing Tools              │
+│  (OpenCV, BLIP, Whisper, YOLO)          │
+└─────────────┬───────────────────────────┘
+              │
+┌─────────────▼───────────────────────────┐
+│         Storage Layer                    │
+│  (SQLite Database, File System)         │
+└──────────────────────────────────────────┘
+```
+
+### Key Components
+
+- **UI Layer**: Streamlit-based interface with warm, approachable design
+- **Agent Layer**: Groq-powered conversational agent with intelligent tool routing
+- **MCP Server**: FastAPI server exposing video processing capabilities
+- **Tools Layer**: Open-source video processing tools (OpenCV, BLIP, Whisper, YOLO)
+- **Storage Layer**: SQLite for metadata and memory, file system for videos and frames
+
+For detailed architecture documentation, see [Design Document](.kiro/specs/bri-video-agent/design.md).
 
 ## Technology Stack
 
-- **Frontend**: Streamlit
-- **LLM**: Groq API (Llama 3.1)
-- **Video Processing**: OpenCV, BLIP, Whisper, YOLOv8
-- **API Server**: FastAPI
-- **Caching**: Redis
+### Core Technologies
+
+- **Frontend**: Streamlit with custom CSS
+- **LLM**: Groq API (Llama 3.1 70B)
+- **Video Processing**: 
+  - OpenCV (frame extraction)
+  - BLIP (image captioning)
+  - Whisper (audio transcription)
+  - YOLOv8 (object detection)
+- **API Server**: FastAPI with CORS support
+- **Caching**: Redis (optional but recommended)
 - **Database**: SQLite
+- **Language**: Python 3.9+
+
+### Why These Technologies?
+
+- **Groq**: Fast, high-quality LLM inference
+- **Open-source tools**: No vendor lock-in, community-driven
+- **Streamlit**: Rapid UI development with Python
+- **SQLite**: Simple, reliable, no separate server needed
+- **Redis**: Optional caching for performance boost
+
+## API Reference
+
+BRI exposes a REST API through the MCP server for programmatic access to video processing tools.
+
+### Base URL
+
+```
+http://localhost:8000
+```
+
+### Key Endpoints
+
+- `GET /` - Server information
+- `GET /health` - Health check
+- `GET /tools` - List available tools
+- `POST /tools/{tool_name}/execute` - Execute a tool
+- `POST /videos/{video_id}/process` - Batch process video
+- `GET /cache/stats` - Cache statistics
+
+For complete API documentation, see [MCP Server README](mcp_server/README.md).
 
 ## Troubleshooting
 
-### Common Issues
+### Quick Fixes
 
-#### "GROQ_API_KEY is required"
-- Make sure you've created a `.env` file (copy from `.env.example`)
-- Add your Groq API key: `GROQ_API_KEY=your_key_here`
-- Get a key at [console.groq.com](https://console.groq.com)
+| Issue | Quick Fix |
+|-------|-----------|
+| Missing API key | Copy `.env.example` to `.env` and add your Groq API key |
+| Connection refused | Ensure both MCP server and Streamlit are running |
+| Redis errors | Set `REDIS_ENABLED=false` in `.env` (Redis is optional) |
+| Slow processing | Reduce `MAX_FRAMES_PER_VIDEO` in `.env` |
+| Out of memory | Reduce `MAX_FRAMES_PER_VIDEO` and `LAZY_LOAD_BATCH_SIZE` |
 
-#### "Connection refused" when accessing UI
-- Make sure both the MCP server and Streamlit are running
-- Check that ports 8000 (MCP) and 8501 (Streamlit) are available
-- Try accessing `http://localhost:8501` directly
+### Detailed Troubleshooting
 
-#### Redis connection errors
-- Redis is optional - set `REDIS_ENABLED=false` in `.env` to disable
-- Or install Redis: `brew install redis` (Mac) or `apt-get install redis` (Linux)
-- Start Redis: `redis-server`
+For comprehensive troubleshooting, see the **[Troubleshooting Guide](docs/TROUBLESHOOTING.md)** which covers:
 
-#### Video processing is slow
-- Reduce `MAX_FRAMES_PER_VIDEO` for faster processing
-- Increase `FRAME_EXTRACTION_INTERVAL` to extract fewer frames
-- Enable Redis caching for repeated queries
-
-#### Out of memory errors
-- Reduce `MAX_FRAMES_PER_VIDEO` to process fewer frames
-- Reduce `LAZY_LOAD_BATCH_SIZE` for lower memory usage
-- Process shorter videos or split long videos into segments
+- Installation issues
+- Configuration problems
+- Server startup failures
+- Video processing errors
+- Performance optimization
+- Database and cache issues
+- Complete error message reference
 
 ### Getting Help
 
-- Check the [Requirements](.kiro/specs/bri-video-agent/requirements.md) document
-- Review the [Design](.kiro/specs/bri-video-agent/design.md) document
-- Open an issue on GitHub with:
-  - Your configuration (mask sensitive values)
-  - Error messages
-  - Steps to reproduce
+1. **Check Documentation**:
+   - [User Guide](docs/USER_GUIDE.md) - How to use BRI
+   - [Troubleshooting Guide](docs/TROUBLESHOOTING.md) - Common issues and solutions
+   - [Configuration Reference](docs/CONFIGURATION.md) - All settings explained
 
-## License
+2. **Run Diagnostics**:
+   ```bash
+   python scripts/validate_setup.py
+   ```
 
-[Add your license here]
+3. **Enable Debug Mode**:
+   ```bash
+   # In .env:
+   DEBUG=true
+   LOG_LEVEL=DEBUG
+   ```
+
+4. **Report Issues**:
+   - Open a GitHub issue with:
+     - Error messages and logs
+     - Configuration (mask sensitive values)
+     - Steps to reproduce
+     - System information
 
 ## Contributing
 
-[Add contribution guidelines here]
+We welcome contributions to BRI! Here's how you can help:
+
+### Ways to Contribute
+
+- 🐛 **Report Bugs**: Open an issue with details and reproduction steps
+- 💡 **Suggest Features**: Share your ideas for new capabilities
+- 📝 **Improve Documentation**: Help make docs clearer and more comprehensive
+- 🔧 **Submit Pull Requests**: Fix bugs or implement features
+- 🧪 **Write Tests**: Improve test coverage
+- 🎨 **Enhance UI/UX**: Suggest or implement design improvements
+
+### Development Setup
+
+1. Fork the repository
+2. Clone your fork: `git clone https://github.com/your-username/bri-video-agent.git`
+3. Create a branch: `git checkout -b feature/your-feature-name`
+4. Make your changes
+5. Run tests: `pytest`
+6. Commit: `git commit -m "Add your feature"`
+7. Push: `git push origin feature/your-feature-name`
+8. Open a Pull Request
+
+### Contribution Guidelines
+
+- Follow existing code style and conventions
+- Write tests for new features
+- Update documentation as needed
+- Keep commits focused and atomic
+- Write clear commit messages
+- Be respectful and constructive in discussions
+
+### Code of Conduct
+
+- Be welcoming and inclusive
+- Respect differing viewpoints
+- Accept constructive criticism gracefully
+- Focus on what's best for the community
+- Show empathy towards others
+
+## License
+
+[Add your license here - e.g., MIT, Apache 2.0, GPL]
+
+## Acknowledgments
+
+BRI is built with amazing open-source technologies:
+
+- **Groq** - Fast LLM inference
+- **OpenCV** - Computer vision library
+- **Hugging Face** - BLIP image captioning model
+- **OpenAI Whisper** - Audio transcription
+- **Ultralytics YOLOv8** - Object detection
+- **Streamlit** - Web UI framework
+- **FastAPI** - Modern API framework
+
+Special thanks to the open-source community for making projects like BRI possible! 💜
+
+## Support
+
+- 📖 **Documentation**: See [docs/](docs/) directory
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/your-repo/discussions)
+- 🐛 **Issues**: [GitHub Issues](https://github.com/your-repo/issues)
+- 📧 **Email**: [your-email@example.com]
+
+---
+
+**Made with 💜 by the BRI community**
+
+*Ask. Understand. Remember.*
