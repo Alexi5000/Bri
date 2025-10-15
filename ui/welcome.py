@@ -319,38 +319,32 @@ def _handle_upload(uploaded_file):
             unsafe_allow_html=True
         )
         
-        # Encouraging next steps message
-        st.info(
-            "🎉 Your video is uploaded! Next, I'll need to process it to understand the content. "
-            "(Video processing will be implemented in Task 18)"
+        # Start video processing
+        st.markdown("---")
+        st.markdown(
+            """
+            <div style='text-align: center; padding: 1rem 0;'>
+                <h3 style='font-size: 1.5rem; color: #333;'>
+                    🔄 Processing Your Video
+                </h3>
+                <p style='font-size: 1rem; color: #666;'>
+                    Give me a moment to understand your video...
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True
         )
         
-        # Show what's coming next
-        with st.expander("🔮 What happens next?"):
-            st.markdown(
-                """
-                When video processing is fully implemented, I'll:
-                
-                1. 🎞️ **Extract key frames** from your video
-                2. 🖼️ **Describe what's happening** in each scene
-                3. 🎤 **Transcribe any audio** with timestamps
-                4. 🔍 **Detect objects and people** throughout
-                5. ✅ **Let you know** when I'm ready to chat!
-                
-                Then you can ask me things like:
-                - "What happens at 2:30?"
-                - "Show me all the scenes with a dog"
-                - "Summarize the first minute"
-                - "What did they say about the project?"
-                
-                Pretty cool, right? 😊
-                """
-            )
+        # Trigger video processing
+        _process_video_with_progress(video_id)
         
         # Show button to view in library
-        if st.button("📚 View in Library", type="primary"):
-            st.session_state.current_view = 'library'
-            st.rerun()
+        st.markdown("---")
+        col1, col2, col3 = st.columns([1, 1, 1])
+        with col2:
+            if st.button("📚 View in Library", type="primary", use_container_width=True):
+                st.session_state.current_view = 'library'
+                st.rerun()
     
     except Exception as e:
         # Catch-all error handler
@@ -361,6 +355,153 @@ def _handle_upload(uploaded_file):
             {'upload': True, 'filename': uploaded_file.name}
         )
         st.error(f"😅 {error_msg}")
+
+
+def _process_video_with_progress(video_id: str):
+    """
+    Process video with progress indicators and friendly messages.
+    
+    Args:
+        video_id: Video identifier to process
+        
+    Requirements: 1.3, 3.6, 3.7
+    """
+    from services.video_processor import get_video_processor
+    from services.error_handler import ErrorHandler
+    import asyncio
+    
+    try:
+        processor = get_video_processor()
+        
+        # Check if MCP server is available
+        if not processor.check_mcp_server_health():
+            st.warning(
+                "⚠️ The processing server isn't running right now. "
+                "Your video is saved, but I'll need the server to analyze it. "
+                "Please start the MCP server and try processing again!"
+            )
+            with st.expander("🔧 How to start the MCP server"):
+                st.code("python mcp_server/main.py", language="bash")
+            return
+        
+        # Create progress tracking containers
+        progress_bar = st.progress(0)
+        status_text = st.empty()
+        step_status = st.empty()
+        
+        # Track processing state
+        current_step = {"name": "", "progress": 0, "message": ""}
+        
+        def update_progress(step_name: str, progress: float, message: str):
+            """Callback to update UI with progress"""
+            current_step["name"] = step_name
+            current_step["progress"] = progress
+            current_step["message"] = message
+            
+            # Update progress bar
+            progress_bar.progress(int(progress))
+            
+            # Update status text
+            status_text.markdown(
+                f"""
+                <div style='text-align: center; padding: 0.5rem;'>
+                    <p style='font-size: 1.1rem; color: #555; font-weight: 500;'>
+                        {step_name}
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+            
+            # Update step message
+            step_status.markdown(
+                f"""
+                <div style='text-align: center; padding: 0.5rem;'>
+                    <p style='font-size: 0.95rem; color: #888; font-style: italic;'>
+                        {message}
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+        
+        # Process video with progress updates
+        with st.spinner("Starting video processing..."):
+            # Run async processing in sync context
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                result = loop.run_until_complete(
+                    processor.process_video(video_id, update_progress)
+                )
+            finally:
+                loop.close()
+        
+        # Clear progress indicators
+        progress_bar.empty()
+        status_text.empty()
+        step_status.empty()
+        
+        # Show completion message
+        if result.get("status") == "complete":
+            st.success(
+                "🎉 **All set!** I've analyzed your video and I'm ready to answer your questions!"
+            )
+            
+            # Show processing summary
+            with st.expander("📊 Processing Summary"):
+                results = result.get("results", {})
+                
+                st.markdown("**Completed Tasks:**")
+                for tool_name, tool_result in results.items():
+                    cached = "💾 (cached)" if tool_result.get("cached") else "✨ (new)"
+                    st.markdown(f"- ✅ {tool_name.replace('_', ' ').title()} {cached}")
+                
+                execution_time = result.get("execution_time", 0)
+                st.markdown(f"\n**Total Time:** {execution_time:.2f} seconds")
+        
+        elif result.get("status") == "partial":
+            st.warning(
+                "⚠️ **Almost there!** I processed most of your video, but some features "
+                "may be limited. I can still help with what I found!"
+            )
+            
+            # Show what worked and what didn't
+            with st.expander("📊 Processing Details"):
+                results = result.get("results", {})
+                errors = result.get("errors", {})
+                
+                if results:
+                    st.markdown("**✅ Successful:**")
+                    for tool_name in results.keys():
+                        st.markdown(f"- {tool_name.replace('_', ' ').title()}")
+                
+                if errors:
+                    st.markdown("\n**❌ Issues:**")
+                    for tool_name, error in errors.items():
+                        st.markdown(f"- {tool_name.replace('_', ' ').title()}: {error}")
+        
+        else:
+            st.error(
+                "😅 Hmm, something went wrong during processing. "
+                "Your video is saved, but I couldn't analyze it yet."
+            )
+    
+    except Exception as e:
+        logger.error(f"Video processing failed: {e}")
+        
+        # Show friendly error message
+        error_msg = ErrorHandler.format_error_for_user(
+            e,
+            {'processing': True, 'video_id': video_id}
+        )
+        st.error(f"😅 {error_msg}")
+        
+        # Offer retry option
+        st.info(
+            "💡 Your video is still saved! You can try processing it again later "
+            "from the video library."
+        )
 
 
 def render_empty_state():

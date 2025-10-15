@@ -139,17 +139,13 @@
 
 - [x] 16. Implement welcome screen
 
-
   - Create welcome screen component with friendly greeting
   - Add BRI introduction and tagline ("Ask. Understand. Remember.")
   - Implement upload prompt with drag-and-drop area
   - Add friendly microcopy and emoji touches
   - _Requirements: 1.2, 2.3_
 
-- [-] 17. Implement video upload functionality
-
-
-
+- [x] 17. Implement video upload functionality
 
   - Create file uploader component accepting MP4, AVI, MOV, MKV formats
   - Implement handle_video_upload to process uploaded files
@@ -160,7 +156,7 @@
   - Implement error handling with playful error messages
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.6_
 
-- [ ] 18. Implement video processing workflow
+- [x] 18. Implement video processing workflow
 
   - Trigger MCP server batch processing on video upload
   - Display processing status with friendly progress messages
@@ -169,16 +165,21 @@
   - Display completion notification
   - _Requirements: 1.3, 3.6, 3.7_
 
-- [ ] 19. Build video library view
+- [x] 19. Build video library view
+
 
   - Create grid layout for displaying uploaded videos
   - Generate and display video thumbnails
-  - Show video metadata (filename, duration, upload date)
+  - Show video metadata (filename, duration, upload
+    date)
   - Implement video selection to open chat interface
   - Add delete functionality with confirmation
   - _Requirements: 2.5, 11.1, 11.5_
 
-- [ ] 20. Implement chat window interface
+- [-] 20. Implement chat window interface
+
+
+
 
   - Create chat window component with message history display
   - Implement message input field with send button

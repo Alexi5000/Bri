@@ -7,7 +7,7 @@ import streamlit as st
 
 # Import UI components
 from ui.welcome import render_welcome_screen
-# from ui.library import render_video_library  # Task 19
+from ui.library import render_video_library  # Task 19
 # from ui.chat import render_chat_window  # Task 20
 # from ui.player import render_video_player  # Task 21
 from ui.styles import apply_custom_styles
@@ -55,6 +55,9 @@ def initialize_session_state():
     
     if 'user_message' not in st.session_state:
         st.session_state.user_message = ""
+    
+    if 'delete_confirm_video_id' not in st.session_state:
+        st.session_state.delete_confirm_video_id = None
 
 def render_sidebar():
     """Render sidebar with navigation and video selection"""
@@ -115,14 +118,8 @@ def render_welcome_placeholder():
     render_welcome_screen()
 
 def render_library_placeholder():
-    """Placeholder for video library (Task 19)"""
-    st.markdown("# 📚 Video Library")
-    st.markdown("---")
-    if not st.session_state.uploaded_videos:
-        st.info("No videos yet! Upload your first video to get started.")
-    else:
-        video_count = len(st.session_state.uploaded_videos)
-        st.success(f"You have {video_count} video(s)")
+    """Video library view (Task 19 - Implemented)"""
+    render_video_library()
 
 def render_chat_placeholder():
     """Placeholder for chat interface (Task 20)"""
