@@ -5,7 +5,7 @@ Provides conversational interface with message history and input
 
 import streamlit as st
 from datetime import datetime
-from typing import List, Optional
+from typing import List
 import logging
 
 from models.memory import MemoryRecord
@@ -229,8 +229,8 @@ def _render_message_input(video_id: str, on_send_message: callable) -> None:
         st.rerun()
     
     # Add keyboard shortcut hint
-    st.markdown(f"""
-        <div style="text-align: center; margin-top: 0.5rem; font-size: 0.85rem; color: {COLORS['text_light']};">
+    st.markdown("""
+        <div style="text-align: center; margin-top: 0.5rem; font-size: 0.85rem; color: #666666;">
             Press Enter to send 💌
         </div>
     """, unsafe_allow_html=True)
@@ -316,7 +316,7 @@ def render_assistant_response(response: AssistantMessageResponse) -> None:
 
 
 def _render_response_frames(frames: List[str], timestamps: List[float]) -> None:
-    """Render frame thumbnails with timestamps.
+    """Render frame thumbnails with clickable timestamps.
     
     Args:
         frames: List of frame image paths
@@ -333,7 +333,17 @@ def _render_response_frames(frames: List[str], timestamps: List[float]) -> None:
         with cols[col_idx]:
             try:
                 st.image(frame_path, use_container_width=True)
-                st.caption(f"⏱️ {_format_video_timestamp(timestamp)}")
+                
+                # Clickable timestamp button
+                if st.button(
+                    f"⏱️ {_format_video_timestamp(timestamp)}",
+                    key=f"frame_ts_{idx}_{timestamp}",
+                    help="Click to jump to this moment in the video"
+                ):
+                    # Store clicked timestamp in session state
+                    st.session_state["clicked_timestamp"] = timestamp
+                    st.rerun()
+                    
             except Exception as e:
                 logger.warning(f"Failed to display frame {frame_path}: {e}")
                 st.caption(f"⏱️ {_format_video_timestamp(timestamp)}")
@@ -363,7 +373,7 @@ def _render_suggestions(suggestions: List[str]) -> None:
             help="Click to ask this question"
         ):
             # Store selected suggestion in session state
-            st.session_state[f"selected_suggestion"] = suggestion
+            st.session_state["selected_suggestion"] = suggestion
             st.rerun()
 
 

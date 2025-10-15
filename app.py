@@ -8,8 +8,9 @@ import streamlit as st
 # Import UI components
 from ui.welcome import render_welcome_screen
 from ui.library import render_video_library  # Task 19
-# from ui.chat import render_chat_window  # Task 20
-# from ui.player import render_video_player  # Task 21
+from ui.chat import render_chat_window  # Task 20
+from ui.player import render_video_player, extract_timestamps_from_conversation, navigate_to_timestamp  # Task 21
+from ui.history import render_conversation_history_panel  # Task 22
 from ui.styles import apply_custom_styles
 
 # Configure page
@@ -92,6 +93,24 @@ def render_sidebar():
         
         st.markdown("---")
         
+        # Conversation history panel (Task 22)
+        # Show history panel when a video is selected and in chat view
+        if st.session_state.current_video_id and st.session_state.current_view == 'chat':
+            from services.memory import Memory
+            
+            try:
+                memory = Memory()
+                render_conversation_history_panel(
+                    video_id=st.session_state.current_video_id,
+                    memory=memory,
+                    on_conversation_select=lambda session: load_conversation_context(
+                        session,
+                        st.session_state.current_video_id
+                    )
+                )
+            except Exception as e:
+                st.error(f"Failed to load conversation history: {e}")
+        
         # Footer
         st.markdown("---")
         st.markdown(
@@ -101,6 +120,17 @@ def render_sidebar():
             "</div>",
             unsafe_allow_html=True  # noqa: S308
         )
+
+
+def load_conversation_context(session, video_id):
+    """Load a conversation session into the current context.
+    
+    Args:
+        session: List of MemoryRecord objects to load
+        video_id: Current video ID
+    """
+    from ui.history import load_conversation_context as load_context
+    load_context(session, video_id)
 
 def render_main_content():
     """Render main content area based on current view"""
@@ -122,11 +152,98 @@ def render_library_placeholder():
     render_video_library()
 
 def render_chat_placeholder():
-    """Placeholder for chat interface (Task 20)"""
+    """Chat interface with video player (Tasks 20 & 21)"""
     if st.session_state.current_video_id:
-        st.markdown("# 💬 Chat")
+        video_id = st.session_state.current_video_id
+        
+        # Get video info from uploaded videos
+        video_info = None
+        for video in st.session_state.uploaded_videos:
+            if video['video_id'] == video_id:
+                video_info = video
+                break
+        
+        if not video_info:
+            st.error("Video not found!")
+            return
+        
+        # Page header
+        st.markdown(f"# 💬 Chat with BRI")
+        st.markdown(f"**Video:** {video_info['filename']}")
         st.markdown("---")
-        st.info("Chat interface coming soon! You'll be able to ask questions about your video here.")
+        
+        # Create two columns: video player (left) and chat (right)
+        col1, col2 = st.columns([1, 1])
+        
+        with col1:
+            # Get conversation history for this video
+            conversation_history = st.session_state.conversation_history.get(video_id, [])
+            
+            # Extract timestamps from conversation
+            timestamps = extract_timestamps_from_conversation(conversation_history)
+            
+            # Check if user clicked a timestamp in chat
+            clicked_timestamp = st.session_state.get("clicked_timestamp")
+            if clicked_timestamp is not None:
+                navigate_to_timestamp(video_id, clicked_timestamp)
+                # Clear the clicked timestamp
+                st.session_state["clicked_timestamp"] = None
+            
+            # Render video player with timestamps
+            render_video_player(
+                video_path=video_info['file_path'],
+                video_id=video_id,
+                current_timestamp=None,
+                timestamps=timestamps
+            )
+        
+        with col2:
+            # Render chat window
+            st.markdown("### 💭 Conversation")
+            
+            # Get conversation history
+            conversation_history = st.session_state.conversation_history.get(video_id, [])
+            
+            # Placeholder for chat functionality
+            if not conversation_history:
+                st.info("👋 Hi! I'm BRI. Ask me anything about this video!")
+            else:
+                # Display conversation history
+                for message in conversation_history:
+                    role = message.get('role', 'user')
+                    content = message.get('content', '')
+                    
+                    if role == 'user':
+                        st.markdown(f"**You:** {content}")
+                    else:
+                        st.markdown(f"**BRI:** {content}")
+            
+            # Message input
+            st.markdown("---")
+            user_input = st.text_input(
+                "Ask me anything...",
+                key=f"chat_input_{video_id}",
+                placeholder="What's happening in this video? 💭"
+            )
+            
+            if st.button("Send", key=f"send_{video_id}"):
+                if user_input.strip():
+                    # Add to conversation history
+                    if video_id not in st.session_state.conversation_history:
+                        st.session_state.conversation_history[video_id] = []
+                    
+                    st.session_state.conversation_history[video_id].append({
+                        'role': 'user',
+                        'content': user_input
+                    })
+                    
+                    # Placeholder response
+                    st.session_state.conversation_history[video_id].append({
+                        'role': 'assistant',
+                        'content': "I'm still learning! Full chat functionality coming soon. 💜"
+                    })
+                    
+                    st.rerun()
     else:
         st.warning("Please select a video from the sidebar to start chatting!")
 
