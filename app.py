@@ -8,7 +8,6 @@ import streamlit as st
 # Import UI components
 from ui.welcome import render_welcome_screen
 from ui.library import render_video_library  # Task 19
-from ui.chat import render_chat_window  # Task 20
 from ui.player import render_video_player, extract_timestamps_from_conversation, navigate_to_timestamp  # Task 21
 from ui.history import render_conversation_history_panel  # Task 22
 from ui.styles import apply_custom_styles
@@ -152,7 +151,7 @@ def render_library_placeholder():
     render_video_library()
 
 def render_chat_placeholder():
-    """Chat interface with video player (Tasks 20 & 21)"""
+    """Chat interface with video player (Tasks 20, 21, 23)"""
     if st.session_state.current_video_id:
         video_id = st.session_state.current_video_id
         
@@ -168,7 +167,7 @@ def render_chat_placeholder():
             return
         
         # Page header
-        st.markdown(f"# 💬 Chat with BRI")
+        st.markdown("# 💬 Chat with BRI")
         st.markdown(f"**Video:** {video_info['filename']}")
         st.markdown("---")
         
@@ -177,7 +176,9 @@ def render_chat_placeholder():
         
         with col1:
             # Get conversation history for this video
-            conversation_history = st.session_state.conversation_history.get(video_id, [])
+            from services.memory import Memory
+            memory = Memory()
+            conversation_history = memory.get_conversation_history(video_id, limit=20)
             
             # Extract timestamps from conversation
             timestamps = extract_timestamps_from_conversation(conversation_history)
@@ -198,54 +199,270 @@ def render_chat_placeholder():
             )
         
         with col2:
-            # Render chat window
-            st.markdown("### 💭 Conversation")
-            
-            # Get conversation history
-            conversation_history = st.session_state.conversation_history.get(video_id, [])
-            
-            # Placeholder for chat functionality
-            if not conversation_history:
-                st.info("👋 Hi! I'm BRI. Ask me anything about this video!")
-            else:
-                # Display conversation history
-                for message in conversation_history:
-                    role = message.get('role', 'user')
-                    content = message.get('content', '')
-                    
-                    if role == 'user':
-                        st.markdown(f"**You:** {content}")
-                    else:
-                        st.markdown(f"**BRI:** {content}")
-            
-            # Message input
-            st.markdown("---")
-            user_input = st.text_input(
-                "Ask me anything...",
-                key=f"chat_input_{video_id}",
-                placeholder="What's happening in this video? 💭"
-            )
-            
-            if st.button("Send", key=f"send_{video_id}"):
-                if user_input.strip():
-                    # Add to conversation history
-                    if video_id not in st.session_state.conversation_history:
-                        st.session_state.conversation_history[video_id] = []
-                    
-                    st.session_state.conversation_history[video_id].append({
-                        'role': 'user',
-                        'content': user_input
-                    })
-                    
-                    # Placeholder response
-                    st.session_state.conversation_history[video_id].append({
-                        'role': 'assistant',
-                        'content': "I'm still learning! Full chat functionality coming soon. 💜"
-                    })
-                    
-                    st.rerun()
+            # Render chat window with agent integration
+            render_chat_with_agent(video_id, video_info)
     else:
         st.warning("Please select a video from the sidebar to start chatting!")
+
+
+def render_chat_with_agent(video_id: str, video_info: dict):
+    """Render chat window with full agent integration.
+    
+    Args:
+        video_id: Current video ID
+        video_info: Video information dictionary
+    """
+    import asyncio
+    from services.memory import Memory
+    from services.agent import GroqAgent
+    from models.responses import AssistantMessageResponse
+    
+    # Initialize components
+    memory = Memory()
+    
+    # Get conversation history
+    conversation_history = memory.get_conversation_history(video_id, limit=20)
+    
+    # Display conversation history
+    st.markdown("### 💭 Conversation")
+    
+    if not conversation_history:
+        st.info("👋 Hi! I'm BRI. Ask me anything about this video!")
+    else:
+        # Display messages with proper formatting
+        for message in conversation_history:
+            role = message.role
+            content = message.content
+            timestamp = message.timestamp
+            
+            if role == 'user':
+                st.markdown(f"""
+                <div style="margin-bottom: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                        <span style="font-size: 1.2rem;">👤</span>
+                        <span style="font-weight: 600; color: #40E0D0;">You</span>
+                        <span style="font-size: 0.85rem; color: #999;">{format_message_timestamp(timestamp)}</span>
+                    </div>
+                    <div style="padding: 1rem 1.25rem; border-radius: 20px; background: linear-gradient(135deg, #40E0D0 0%, rgba(64, 224, 208, 0.8) 100%); color: white; margin-left: 2rem; border-bottom-right-radius: 5px;">
+                        {content}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown(f"""
+                <div style="margin-bottom: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                        <span style="font-size: 1.2rem;">💖</span>
+                        <span style="font-weight: 600; color: #FF69B4;">BRI</span>
+                        <span style="font-size: 0.85rem; color: #999;">{format_message_timestamp(timestamp)}</span>
+                    </div>
+                    <div style="padding: 1rem 1.25rem; border-radius: 20px; background: white; border: 2px solid #E6E6FA; margin-right: 2rem; border-bottom-left-radius: 5px;">
+                        {content}
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+    
+    # Check if there's a pending response to display
+    if 'pending_response' in st.session_state and st.session_state.pending_response:
+        response = st.session_state.pending_response
+        display_agent_response(response)
+        # Clear pending response
+        st.session_state.pending_response = None
+    
+    # Message input area
+    st.markdown("---")
+    
+    # Handle suggestion clicks
+    if 'selected_suggestion' in st.session_state and st.session_state.selected_suggestion:
+        user_input = st.session_state.selected_suggestion
+        st.session_state.selected_suggestion = None
+        # Process the suggestion as a message
+        process_user_message(video_id, user_input)
+        st.rerun()
+    
+    # Create input form
+    with st.form(key=f"chat_form_{video_id}", clear_on_submit=True):
+        user_input = st.text_input(
+            "Message",
+            placeholder="Ask me anything about this video... 💭",
+            label_visibility="collapsed",
+            key=f"chat_input_{video_id}"
+        )
+        
+        col1, col2 = st.columns([5, 1])
+        with col2:
+            submit_button = st.form_submit_button("Send", use_container_width=True)
+        
+        if submit_button and user_input.strip():
+            # Show loading state
+            with st.spinner("🤔 Thinking..."):
+                process_user_message(video_id, user_input.strip())
+            st.rerun()
+    
+    # Keyboard shortcut hint
+    st.markdown("""
+        <div style="text-align: center; margin-top: 0.5rem; font-size: 0.85rem; color: #666666;">
+            Press Enter to send 💌
+        </div>
+    """, unsafe_allow_html=True)
+
+
+def process_user_message(video_id: str, message: str):
+    """Process user message with the agent.
+    
+    Args:
+        video_id: Current video ID
+        message: User's message
+    """
+    import asyncio
+    from services.agent import GroqAgent
+    
+    try:
+        # Initialize agent
+        agent = GroqAgent()
+        
+        # Process message (run async function in sync context)
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        response = loop.run_until_complete(agent.chat(message, video_id))
+        loop.close()
+        
+        # Store response for display
+        st.session_state.pending_response = response
+        
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to process message: {e}", exc_info=True)
+        
+        # Show error message
+        st.error(f"Oops! Something went wrong: {str(e)}")
+
+
+def display_agent_response(response):
+    """Display agent response with frames, timestamps, and suggestions.
+    
+    Args:
+        response: AssistantMessageResponse object
+    """
+    # Display main message
+    st.markdown(f"""
+    <div style="margin-bottom: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+            <span style="font-size: 1.2rem;">💖</span>
+            <span style="font-weight: 600; color: #FF69B4;">BRI</span>
+            <span style="font-size: 0.85rem; color: #999;">just now</span>
+        </div>
+        <div style="padding: 1rem 1.25rem; border-radius: 20px; background: white; border: 2px solid #E6E6FA; margin-right: 2rem; border-bottom-left-radius: 5px;">
+            {response.message}
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Display frames if present
+    if response.frames and response.timestamps:
+        st.markdown("**Relevant moments:**")
+        
+        # Display frames in columns (max 3 per row)
+        num_frames = len(response.frames)
+        cols_per_row = min(num_frames, 3)
+        
+        for i in range(0, num_frames, cols_per_row):
+            cols = st.columns(cols_per_row)
+            for j in range(cols_per_row):
+                idx = i + j
+                if idx < num_frames:
+                    with cols[j]:
+                        try:
+                            # Display frame image
+                            st.image(response.frames[idx], use_container_width=True)
+                            
+                            # Display clickable timestamp
+                            timestamp = response.timestamps[idx]
+                            timestamp_str = format_video_timestamp(timestamp)
+                            
+                            if st.button(
+                                f"⏱️ {timestamp_str}",
+                                key=f"frame_ts_{idx}_{timestamp}",
+                                help="Click to jump to this moment"
+                            ):
+                                st.session_state["clicked_timestamp"] = timestamp
+                                st.rerun()
+                        except Exception as e:
+                            import logging
+                            logger = logging.getLogger(__name__)
+                            logger.warning(f"Failed to display frame: {e}")
+    
+    # Display follow-up suggestions
+    if response.suggestions:
+        st.markdown("""
+        <div style="margin-top: 1rem; padding: 1rem; background: #F5F5F5; border-radius: 15px; border-left: 4px solid #FFB6C1;">
+            <div style="font-weight: 600; margin-bottom: 0.5rem; color: #333;">
+                💡 You might also want to ask:
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Display suggestion buttons
+        for idx, suggestion in enumerate(response.suggestions):
+            if st.button(
+                suggestion,
+                key=f"suggestion_{idx}_{hash(suggestion)}",
+                help="Click to ask this question"
+            ):
+                st.session_state["selected_suggestion"] = suggestion
+                st.rerun()
+
+
+def format_message_timestamp(timestamp) -> str:
+    """Format message timestamp for display.
+    
+    Args:
+        timestamp: Datetime object
+        
+    Returns:
+        Formatted timestamp string
+    """
+    from datetime import datetime
+    
+    if isinstance(timestamp, str):
+        try:
+            timestamp = datetime.fromisoformat(timestamp)
+        except Exception:
+            return "recently"
+    
+    now = datetime.now()
+    diff = now - timestamp
+    
+    if diff.total_seconds() < 60:
+        return "just now"
+    elif diff.total_seconds() < 3600:
+        minutes = int(diff.total_seconds() / 60)
+        return f"{minutes}m ago"
+    elif diff.total_seconds() < 86400:
+        hours = int(diff.total_seconds() / 3600)
+        return f"{hours}h ago"
+    else:
+        return timestamp.strftime("%b %d, %I:%M %p")
+
+
+def format_video_timestamp(seconds: float) -> str:
+    """Format video timestamp in MM:SS or HH:MM:SS format.
+    
+    Args:
+        seconds: Timestamp in seconds
+        
+    Returns:
+        Formatted timestamp string
+    """
+    hours = int(seconds // 3600)
+    minutes = int((seconds % 3600) // 60)
+    secs = int(seconds % 60)
+    
+    if hours > 0:
+        return f"{hours:02d}:{minutes:02d}:{secs:02d}"
+    else:
+        return f"{minutes:02d}:{secs:02d}"
 
 def main():
     """Main application entry point"""
