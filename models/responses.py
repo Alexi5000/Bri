@@ -4,12 +4,23 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 
 
+class FrameWithContext(BaseModel):
+    """Frame with associated context information."""
+    frame_path: str = Field(..., description="Path to frame image")
+    timestamp: float = Field(..., description="Timestamp in seconds")
+    description: Optional[str] = Field(None, description="Brief description of what's happening")
+
+
 class AssistantMessageResponse(BaseModel):
     """Response from the assistant to the user."""
     message: str = Field(..., description="Response message text")
     frames: List[str] = Field(default_factory=list, description="List of frame image paths")
     timestamps: List[float] = Field(default_factory=list, description="List of relevant timestamps")
     suggestions: List[str] = Field(default_factory=list, description="Follow-up question suggestions")
+    frame_contexts: Optional[List[FrameWithContext]] = Field(
+        None,
+        description="Frames with their context (timestamp and description)"
+    )
 
 
 class UserQuery(BaseModel):

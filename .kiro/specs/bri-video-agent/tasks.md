@@ -75,7 +75,6 @@
 
 - [x] 9. Implement Context Builder
 
-
   - Create ContextBuilder class to aggregate video processing results
   - Implement build_video_context to compile all available data for a video
   - Implement search_captions using text similarity for relevant caption retrieval
@@ -84,10 +83,7 @@
   - Implement get_context_at_timestamp to retrieve all context around a specific time
   - _Requirements: 4.4, 8.1, 8.2_
 
-- [-] 10. Implement Tool Router
-
-
-
+- [x] 10. Implement Tool Router
 
   - Create ToolRouter class for query analysis and tool selection
   - Implement analyze_query to determine which tools are needed based on query content
@@ -97,7 +93,7 @@
   - Add logic to optimize tool execution order
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
 
-- [ ] 11. Build Groq Agent core
+- [x] 11. Build Groq Agent core
 
   - Create GroqAgent class with Groq API client initialization
   - Implement chat method as main entry point for processing user messages
@@ -109,7 +105,7 @@
   - Create system prompt defining BRI's warm, supportive personality
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 5.1, 7.1_
 
-- [ ] 12. Implement response generation with media
+- [x] 12. Implement response generation with media
 
   - Extend agent to include relevant frames in responses
   - Add timestamp extraction and formatting in responses
@@ -117,14 +113,14 @@
   - Add logic to present multiple relevant moments in chronological order
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
 
-- [ ] 13. Implement follow-up suggestion generation
+- [x] 13. Implement follow-up suggestion generation
 
   - Add logic to generate 1-3 relevant follow-up questions based on response
   - Implement suggestion templates for different query types
   - Add proactive content discovery suggestions
   - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
-- [ ] 14. Build error handling system
+- [x] 14. Build error handling system
 
   - Create ErrorHandler class with friendly error message generation
   - Implement handle_tool_error for tool-specific failures
@@ -133,7 +129,7 @@
   - Add graceful degradation logic when tools are unavailable
   - _Requirements: 3.8, 4.7, 6.4, 10.1, 10.2, 10.3, 10.4, 10.5_
 
-- [ ] 15. Create Streamlit UI foundation
+- [x] 15. Create Streamlit UI foundation
 
   - Set up Streamlit app structure with session state management
   - Implement color scheme with feminine touches (blush pink, lavender, teal)
@@ -141,7 +137,8 @@
   - Create page layout with sidebar and main content area
   - _Requirements: 1.1, 1.2, 1.5_
 
-- [ ] 16. Implement welcome screen
+- [x] 16. Implement welcome screen
+
 
   - Create welcome screen component with friendly greeting
   - Add BRI introduction and tagline ("Ask. Understand. Remember.")
@@ -149,7 +146,10 @@
   - Add friendly microcopy and emoji touches
   - _Requirements: 1.2, 2.3_
 
-- [ ] 17. Implement video upload functionality
+- [-] 17. Implement video upload functionality
+
+
+
 
   - Create file uploader component accepting MP4, AVI, MOV, MKV formats
   - Implement handle_video_upload to process uploaded files

@@ -1,1 +1,3 @@
-# Streamlit UI components
+"""
+UI Components for BRI Video Assistant
+"""
