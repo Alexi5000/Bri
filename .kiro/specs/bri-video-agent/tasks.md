@@ -248,7 +248,11 @@
   - Create log rotation policy
   - _Requirements: 10.4, 12.1_
 
-- [ ] 28. Create deployment scripts
+- [x] 28. Create deployment scripts
+
+
+
+
 
   - Create Dockerfile for MCP server
   - Create Dockerfile for Streamlit UI
