@@ -236,3 +236,95 @@ def initialize_database(schema_path: Optional[str] = None) -> None:
     """
     db = get_database()
     db.initialize_schema(schema_path)
+
+
+# Video-specific database operations
+
+def insert_video(
+    video_id: str,
+    filename: str,
+    file_path: str,
+    duration: float,
+    thumbnail_path: Optional[str] = None
+) -> None:
+    """
+    Insert a new video record into the database.
+    
+    Args:
+        video_id: Unique video identifier
+        filename: Original filename
+        file_path: Path to video file
+        duration: Video duration in seconds
+        thumbnail_path: Optional path to thumbnail
+        
+    Raises:
+        DatabaseError: If insert fails
+    """
+    db = get_database()
+    query = """
+        INSERT INTO videos (video_id, filename, file_path, duration, thumbnail_path, processing_status)
+        VALUES (?, ?, ?, ?, ?, 'pending')
+    """
+    db.execute_update(query, (video_id, filename, file_path, duration, thumbnail_path))
+    logger.info(f"Inserted video record: {video_id}")
+
+
+def get_video(video_id: str) -> Optional[sqlite3.Row]:
+    """
+    Retrieve a video record by ID.
+    
+    Args:
+        video_id: Video identifier
+        
+    Returns:
+        Video record or None if not found
+    """
+    db = get_database()
+    query = "SELECT * FROM videos WHERE video_id = ?"
+    results = db.execute_query(query, (video_id,))
+    return results[0] if results else None
+
+
+def get_all_videos() -> List[sqlite3.Row]:
+    """
+    Retrieve all video records.
+    
+    Returns:
+        List of video records
+    """
+    db = get_database()
+    query = "SELECT * FROM videos ORDER BY upload_timestamp DESC"
+    return db.execute_query(query)
+
+
+def update_video_status(video_id: str, status: str) -> None:
+    """
+    Update video processing status.
+    
+    Args:
+        video_id: Video identifier
+        status: New status ('pending', 'processing', 'complete', 'error')
+        
+    Raises:
+        DatabaseError: If update fails
+    """
+    db = get_database()
+    query = "UPDATE videos SET processing_status = ? WHERE video_id = ?"
+    db.execute_update(query, (status, video_id))
+    logger.info(f"Updated video {video_id} status to: {status}")
+
+
+def delete_video(video_id: str) -> None:
+    """
+    Delete a video record from the database.
+    
+    Args:
+        video_id: Video identifier
+        
+    Raises:
+        DatabaseError: If delete fails
+    """
+    db = get_database()
+    query = "DELETE FROM videos WHERE video_id = ?"
+    db.execute_update(query, (video_id,))
+    logger.info(f"Deleted video record: {video_id}")

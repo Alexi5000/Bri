@@ -29,7 +29,23 @@ def initialize_session_state():
         st.session_state.conversation_history = {}
     
     if 'uploaded_videos' not in st.session_state:
-        st.session_state.uploaded_videos = []
+        # Load videos from database
+        from storage.database import get_all_videos
+        try:
+            videos = get_all_videos()
+            st.session_state.uploaded_videos = [
+                {
+                    'video_id': video['video_id'],
+                    'filename': video['filename'],
+                    'file_path': video['file_path'],
+                    'duration': video['duration'],
+                    'processing_status': video['processing_status']
+                }
+                for video in videos
+            ]
+        except Exception:
+            # If database not initialized yet, start with empty list
+            st.session_state.uploaded_videos = []
     
     if 'current_view' not in st.session_state:
         st.session_state.current_view = 'welcome'  # 'welcome', 'library', 'chat'

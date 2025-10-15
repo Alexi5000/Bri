@@ -4,6 +4,9 @@ Implements friendly greeting, introduction, and upload prompt
 """
 
 import streamlit as st
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def render_welcome_screen():
@@ -202,64 +205,162 @@ def _handle_upload(uploaded_file):
     """
     Handle video file upload with friendly confirmation.
     
+    Validates the file, saves it to storage, creates database record,
+    and displays friendly confirmation or error messages.
+    
     Args:
         uploaded_file: Streamlit UploadedFile object
+        
+    Requirements: 2.1, 2.2, 2.3, 2.4, 2.6
     """
-    # Show friendly confirmation message
-    st.success(
-        f"✨ Got it! I received **{uploaded_file.name}**. "
-        "Let me take a look... (Upload functionality will be fully implemented in Task 17)"
-    )
+    from storage.file_store import get_file_store
+    from storage.database import insert_video
+    from services.error_handler import ErrorHandler
+    import cv2
+    import uuid
     
-    # Show file details in a friendly way
-    file_size_mb = uploaded_file.size / (1024 * 1024)
-    
-    st.markdown(
-        f"""
-        <div style='
-            background: rgba(64, 224, 208, 0.1);
-            border-left: 4px solid #40E0D0;
-            border-radius: 15px;
-            padding: 1rem 1.5rem;
-            margin: 1rem 0;
-        '>
-            <p style='margin: 0; color: #333;'>
-                📹 <strong>File:</strong> {uploaded_file.name}<br>
-                📊 <strong>Size:</strong> {file_size_mb:.2f} MB<br>
-                🎬 <strong>Type:</strong> {uploaded_file.type}
-            </p>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-    
-    # Encouraging next steps message
-    st.info(
-        "🎉 Once I finish processing (coming in Task 17-18), "
-        "you'll be able to ask me anything about this video!"
-    )
-    
-    # Show what's coming next
-    with st.expander("🔮 What happens next?"):
-        st.markdown(
-            """
-            When video processing is fully implemented, I'll:
+    try:
+        # Show initial friendly message
+        with st.spinner("Got it! Let me take a look... 🔍"):
+            file_store = get_file_store()
             
-            1. 🎞️ **Extract key frames** from your video
-            2. 🖼️ **Describe what's happening** in each scene
-            3. 🎤 **Transcribe any audio** with timestamps
-            4. 🔍 **Detect objects and people** throughout
-            5. ✅ **Let you know** when I'm ready to chat!
+            # Validate file format and size
+            is_valid, error_msg = file_store.validate_video_file(
+                uploaded_file.name,
+                uploaded_file.size
+            )
             
-            Then you can ask me things like:
-            - "What happens at 2:30?"
-            - "Show me all the scenes with a dog"
-            - "Summarize the first minute"
-            - "What did they say about the project?"
+            if not is_valid:
+                # Show playful error message
+                st.error(f"😅 {error_msg}")
+                st.info("💡 Try uploading a different video that meets the requirements!")
+                return
             
-            Pretty cool, right? 😊
-            """
+            # Generate unique video ID
+            video_id = str(uuid.uuid4())
+            
+            # Save video file
+            try:
+                video_id, file_path = file_store.save_uploaded_video(
+                    uploaded_file,
+                    uploaded_file.name,
+                    video_id
+                )
+            except Exception as e:
+                error_msg = ErrorHandler.handle_video_upload_error(e, uploaded_file.name)
+                st.error(f"😅 {error_msg}")
+                return
+            
+            # Get video metadata using OpenCV
+            try:
+                cap = cv2.VideoCapture(file_path)
+                duration = cap.get(cv2.CAP_PROP_FRAME_COUNT) / cap.get(cv2.CAP_PROP_FPS)
+                cap.release()
+            except Exception as e:
+                # If we can't get duration, use a default
+                duration = 0.0
+                logger.warning(f"Could not extract video duration: {e}")
+            
+            # Create database record
+            try:
+                insert_video(
+                    video_id=video_id,
+                    filename=uploaded_file.name,
+                    file_path=file_path,
+                    duration=duration
+                )
+            except Exception as e:
+                # Clean up file if database insert fails
+                file_store.delete_video(video_id)
+                error_msg = ErrorHandler.format_error_for_user(
+                    e,
+                    {'upload': True, 'filename': uploaded_file.name}
+                )
+                st.error(f"😅 {error_msg}")
+                return
+            
+            # Add to session state
+            if 'uploaded_videos' not in st.session_state:
+                st.session_state.uploaded_videos = []
+            
+            st.session_state.uploaded_videos.append({
+                'video_id': video_id,
+                'filename': uploaded_file.name,
+                'file_path': file_path,
+                'duration': duration
+            })
+        
+        # Show friendly success message
+        st.success(
+            f"✨ Perfect! I've got **{uploaded_file.name}** saved and ready to go!"
         )
+        
+        # Show file details in a friendly way
+        file_size_mb = uploaded_file.size / (1024 * 1024)
+        duration_str = f"{int(duration // 60)}:{int(duration % 60):02d}" if duration > 0 else "Unknown"
+        
+        st.markdown(
+            f"""
+            <div style='
+                background: rgba(64, 224, 208, 0.1);
+                border-left: 4px solid #40E0D0;
+                border-radius: 15px;
+                padding: 1rem 1.5rem;
+                margin: 1rem 0;
+            '>
+                <p style='margin: 0; color: #333;'>
+                    📹 <strong>File:</strong> {uploaded_file.name}<br>
+                    📊 <strong>Size:</strong> {file_size_mb:.2f} MB<br>
+                    ⏱️ <strong>Duration:</strong> {duration_str}<br>
+                    🎬 <strong>Type:</strong> {uploaded_file.type}
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+        
+        # Encouraging next steps message
+        st.info(
+            "🎉 Your video is uploaded! Next, I'll need to process it to understand the content. "
+            "(Video processing will be implemented in Task 18)"
+        )
+        
+        # Show what's coming next
+        with st.expander("🔮 What happens next?"):
+            st.markdown(
+                """
+                When video processing is fully implemented, I'll:
+                
+                1. 🎞️ **Extract key frames** from your video
+                2. 🖼️ **Describe what's happening** in each scene
+                3. 🎤 **Transcribe any audio** with timestamps
+                4. 🔍 **Detect objects and people** throughout
+                5. ✅ **Let you know** when I'm ready to chat!
+                
+                Then you can ask me things like:
+                - "What happens at 2:30?"
+                - "Show me all the scenes with a dog"
+                - "Summarize the first minute"
+                - "What did they say about the project?"
+                
+                Pretty cool, right? 😊
+                """
+            )
+        
+        # Show button to view in library
+        if st.button("📚 View in Library", type="primary"):
+            st.session_state.current_view = 'library'
+            st.rerun()
+    
+    except Exception as e:
+        # Catch-all error handler
+        logger.error(f"Unexpected error during upload: {e}")
+        
+        error_msg = ErrorHandler.format_error_for_user(
+            e,
+            {'upload': True, 'filename': uploaded_file.name}
+        )
+        st.error(f"😅 {error_msg}")
 
 
 def render_empty_state():
