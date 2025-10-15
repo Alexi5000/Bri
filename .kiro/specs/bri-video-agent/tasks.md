@@ -17,7 +17,6 @@
 
 - [x] 3. Build Memory Manager component
 
-
   - Implement Memory class with SQLite backend for storing conversation history
   - Create methods for inserting memory records (insert)
   - Create methods for retrieving conversation history (get_conversation_history)
@@ -27,11 +26,6 @@
 
 - [x] 4. Implement Frame Extractor tool
 
-
-
-
-
-
   - Create FrameExtractor class using OpenCV for video frame extraction
   - Implement extract_frames method with configurable interval and max_frames
   - Implement extract_frame_at_timestamp for specific timestamp extraction
@@ -40,16 +34,17 @@
   - Store extracted frames to file system with organized directory structure
   - _Requirements: 3.1, 3.5, 12.5_
 
-- [ ] 5. Implement Image Captioner tool
+- [x] 5. Implement Image Captioner tool
 
   - Create ImageCaptioner class using Hugging Face BLIP model
   - Load BLIP model and processor (Salesforce/blip-image-captioning-large)
   - Implement caption_frame method for single frame captioning
   - Implement caption_frames_batch for efficient batch processing
   - Add confidence scoring to caption results
+
   - _Requirements: 3.2, 3.5_
 
-- [ ] 6. Implement Audio Transcriber tool
+- [x] 6. Implement Audio Transcriber tool
 
   - Create AudioTranscriber class using OpenAI Whisper
   - Load Whisper model (base or small for balance of speed/accuracy)
@@ -58,7 +53,7 @@
   - Store transcript data with proper timestamp alignment
   - _Requirements: 3.3, 3.5_
 
-- [ ] 7. Implement Object Detector tool
+- [x] 7. Implement Object Detector tool
 
   - Create ObjectDetector class using YOLO (YOLOv8)
   - Load YOLOv8 model (yolov8n.pt for speed)
@@ -67,7 +62,8 @@
   - Store detection results with bounding boxes and confidence scores
   - _Requirements: 3.4, 3.5_
 
-- [ ] 8. Build MCP Server with FastAPI
+- [x] 8. Build MCP Server with FastAPI
+
 
   - Create FastAPI application with CORS middleware
   - Implement tool registry for dynamic tool discovery
@@ -78,7 +74,10 @@
   - Implement proper error handling and status responses
   - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6_
 
-- [ ] 9. Implement Context Builder
+- [-] 9. Implement Context Builder
+
+
+
 
   - Create ContextBuilder class to aggregate video processing results
   - Implement build_video_context to compile all available data for a video
