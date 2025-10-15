@@ -2,12 +2,12 @@
 
 import logging
 import json
-from typing import List, Optional, Dict, Any
+from typing import List, Optional
 from dataclasses import dataclass
-from models.video import Video, VideoMetadata, Frame
+from models.video import VideoMetadata, Frame
 from models.memory import MemoryRecord
 from models.tools import Caption, Transcript, TranscriptSegment, DetectionResult, DetectedObject
-from storage.database import Database, DatabaseError
+from storage.database import Database
 
 logger = logging.getLogger(__name__)
 
@@ -381,3 +381,213 @@ class ContextBuilder:
         except Exception as e:
             logger.error(f"Failed to get context at timestamp: {e}")
             raise ContextError(f"Failed to get timestamp context: {e}")
+
+    # Private helper methods for data retrieval
+    
+    def _get_video_metadata(self, video_id: str) -> Optional[VideoMetadata]:
+        """Retrieve video metadata from database.
+        
+        Args:
+            video_id: Video identifier
+            
+        Returns:
+            VideoMetadata if found, None otherwise
+        """
+        try:
+            query = """
+                SELECT data
+                FROM video_context
+                WHERE video_id = ? AND context_type = 'metadata'
+                ORDER BY created_at DESC
+                LIMIT 1
+            """
+            rows = self.db.execute_query(query, (video_id,))
+            
+            if not rows:
+                return None
+            
+            data = json.loads(rows[0]['data'])
+            return VideoMetadata(**data)
+            
+        except Exception as e:
+            logger.warning(f"Failed to retrieve metadata for video {video_id}: {e}")
+            return None
+    
+    def _get_frames(self, video_id: str) -> List[Frame]:
+        """Retrieve all frames for a video.
+        
+        Args:
+            video_id: Video identifier
+            
+        Returns:
+            List of Frame objects
+        """
+        try:
+            query = """
+                SELECT data, timestamp
+                FROM video_context
+                WHERE video_id = ? AND context_type = 'frame'
+                ORDER BY timestamp ASC
+            """
+            rows = self.db.execute_query(query, (video_id,))
+            
+            frames = []
+            for row in rows:
+                data = json.loads(row['data'])
+                frames.append(Frame(**data))
+            
+            return frames
+            
+        except Exception as e:
+            logger.warning(f"Failed to retrieve frames for video {video_id}: {e}")
+            return []
+    
+    def _get_captions(self, video_id: str) -> List[Caption]:
+        """Retrieve all captions for a video.
+        
+        Args:
+            video_id: Video identifier
+            
+        Returns:
+            List of Caption objects
+        """
+        try:
+            query = """
+                SELECT data, timestamp
+                FROM video_context
+                WHERE video_id = ? AND context_type = 'caption'
+                ORDER BY timestamp ASC
+            """
+            rows = self.db.execute_query(query, (video_id,))
+            
+            captions = []
+            for row in rows:
+                data = json.loads(row['data'])
+                captions.append(Caption(**data))
+            
+            return captions
+            
+        except Exception as e:
+            logger.warning(f"Failed to retrieve captions for video {video_id}: {e}")
+            return []
+    
+    def _get_transcript(self, video_id: str) -> Optional[Transcript]:
+        """Retrieve transcript for a video.
+        
+        Args:
+            video_id: Video identifier
+            
+        Returns:
+            Transcript if found, None otherwise
+        """
+        try:
+            query = """
+                SELECT data
+                FROM video_context
+                WHERE video_id = ? AND context_type = 'transcript'
+                ORDER BY created_at DESC
+                LIMIT 1
+            """
+            rows = self.db.execute_query(query, (video_id,))
+            
+            if not rows:
+                return None
+            
+            data = json.loads(rows[0]['data'])
+            return Transcript(**data)
+            
+        except Exception as e:
+            logger.warning(f"Failed to retrieve transcript for video {video_id}: {e}")
+            return None
+    
+    def _get_object_detections(self, video_id: str) -> List[DetectionResult]:
+        """Retrieve all object detections for a video.
+        
+        Args:
+            video_id: Video identifier
+            
+        Returns:
+            List of DetectionResult objects
+        """
+        try:
+            query = """
+                SELECT data, timestamp
+                FROM video_context
+                WHERE video_id = ? AND context_type = 'object'
+                ORDER BY timestamp ASC
+            """
+            rows = self.db.execute_query(query, (video_id,))
+            
+            detections = []
+            for row in rows:
+                data = json.loads(row['data'])
+                detections.append(DetectionResult(**data))
+            
+            return detections
+            
+        except Exception as e:
+            logger.warning(f"Failed to retrieve object detections for video {video_id}: {e}")
+            return []
+    
+    def _get_conversation_history(self, video_id: str) -> List[MemoryRecord]:
+        """Retrieve conversation history for a video.
+        
+        Args:
+            video_id: Video identifier
+            
+        Returns:
+            List of MemoryRecord objects
+        """
+        try:
+            from services.memory import Memory
+            memory = Memory(self.db)
+            return memory.get_conversation_history(video_id)
+            
+        except Exception as e:
+            logger.warning(f"Failed to retrieve conversation history for video {video_id}: {e}")
+            return []
+    
+    def _get_transcript_segment_at_timestamp(
+        self,
+        video_id: str,
+        timestamp: float
+    ) -> Optional[TranscriptSegment]:
+        """Get the transcript segment at a specific timestamp.
+        
+        Args:
+            video_id: Video identifier
+            timestamp: Target timestamp in seconds
+            
+        Returns:
+            TranscriptSegment if found, None otherwise
+        """
+        try:
+            transcript = self._get_transcript(video_id)
+            
+            if not transcript or not transcript.segments:
+                return None
+            
+            # Find segment containing the timestamp
+            for segment in transcript.segments:
+                if segment.start <= timestamp <= segment.end:
+                    return segment
+            
+            return None
+            
+        except Exception as e:
+            logger.warning(f"Failed to get transcript segment at {timestamp}s: {e}")
+            return None
+    
+    def close(self) -> None:
+        """Close database connection."""
+        if self.db:
+            self.db.close()
+            logger.info("Context Builder closed")
+    
+    def __enter__(self):
+        """Context manager entry."""
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit."""
+        self.close()

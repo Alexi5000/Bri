@@ -64,7 +64,6 @@
 
 - [x] 8. Build MCP Server with FastAPI
 
-
   - Create FastAPI application with CORS middleware
   - Implement tool registry for dynamic tool discovery
   - Create GET /tools endpoint to list available tools with schemas
@@ -74,9 +73,7 @@
   - Implement proper error handling and status responses
   - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6_
 
-- [-] 9. Implement Context Builder
-
-
+- [x] 9. Implement Context Builder
 
 
   - Create ContextBuilder class to aggregate video processing results
@@ -87,7 +84,10 @@
   - Implement get_context_at_timestamp to retrieve all context around a specific time
   - _Requirements: 4.4, 8.1, 8.2_
 
-- [ ] 10. Implement Tool Router
+- [-] 10. Implement Tool Router
+
+
+
 
   - Create ToolRouter class for query analysis and tool selection
   - Implement analyze_query to determine which tools are needed based on query content
