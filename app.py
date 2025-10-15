@@ -5,6 +5,19 @@ Main Streamlit Application Entry Point
 
 import streamlit as st
 
+# Validate configuration on startup
+try:
+    from config import Config
+    Config.validate()
+    Config.ensure_directories()
+except ValueError as e:
+    st.error(f"⚠️ Configuration Error\n\n{e}")
+    st.info("Please check your .env file and ensure all required values are set.")
+    st.stop()
+except Exception as e:
+    st.error(f"⚠️ Startup Error\n\n{e}")
+    st.stop()
+
 # Import UI components
 from ui.welcome import render_welcome_screen
 from ui.library import render_video_library  # Task 19

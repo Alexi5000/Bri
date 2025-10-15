@@ -2,7 +2,6 @@
 
 import os
 from pathlib import Path
-from typing import Optional
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -55,12 +54,45 @@ class Config:
     def validate(cls) -> None:
         """Validate required configuration values."""
         errors = []
+        warnings = []
         
+        # Required configurations
         if not cls.GROQ_API_KEY:
             errors.append("GROQ_API_KEY is required. Please set it in .env file.")
         
+        # Validate numeric ranges
+        if cls.GROQ_TEMPERATURE < 0 or cls.GROQ_TEMPERATURE > 2:
+            errors.append(f"GROQ_TEMPERATURE must be between 0 and 2 (got {cls.GROQ_TEMPERATURE})")
+        
+        if cls.GROQ_MAX_TOKENS < 1:
+            errors.append(f"GROQ_MAX_TOKENS must be positive (got {cls.GROQ_MAX_TOKENS})")
+        
+        if cls.MAX_FRAMES_PER_VIDEO < 1:
+            errors.append(f"MAX_FRAMES_PER_VIDEO must be positive (got {cls.MAX_FRAMES_PER_VIDEO})")
+        
+        if cls.FRAME_EXTRACTION_INTERVAL <= 0:
+            errors.append(f"FRAME_EXTRACTION_INTERVAL must be positive (got {cls.FRAME_EXTRACTION_INTERVAL})")
+        
+        if cls.MAX_CONVERSATION_HISTORY < 1:
+            errors.append(f"MAX_CONVERSATION_HISTORY must be positive (got {cls.MAX_CONVERSATION_HISTORY})")
+        
+        # Optional configurations with warnings
+        if not cls.REDIS_ENABLED:
+            warnings.append("Redis caching is disabled. Performance may be impacted.")
+        
+        if cls.DEBUG:
+            warnings.append("DEBUG mode is enabled. This should be disabled in production.")
+        
+        # Print warnings
+        if warnings:
+            print("Configuration warnings:")
+            for warning in warnings:
+                print(f"  ⚠️  {warning}")
+        
+        # Raise errors if any
         if errors:
-            raise ValueError(f"Configuration validation failed:\n" + "\n".join(f"  - {e}" for e in errors))
+            error_msg = "Configuration validation failed:\n" + "\n".join(f"  ❌ {e}" for e in errors)
+            raise ValueError(error_msg)
     
     @classmethod
     def ensure_directories(cls) -> None:
@@ -79,6 +111,53 @@ class Config:
     def get_mcp_server_url(cls) -> str:
         """Get the full MCP server URL."""
         return f"http://{cls.MCP_SERVER_HOST}:{cls.MCP_SERVER_PORT}"
+    
+    @classmethod
+    def display_config(cls) -> None:
+        """Display current configuration (masking sensitive values)."""
+        print("\n" + "="*60)
+        print("BRI Configuration")
+        print("="*60)
+        
+        print("\n🤖 Groq API:")
+        print(f"  Model: {cls.GROQ_MODEL}")
+        print(f"  Temperature: {cls.GROQ_TEMPERATURE}")
+        print(f"  Max Tokens: {cls.GROQ_MAX_TOKENS}")
+        api_key_status = '✓ Set' if cls.GROQ_API_KEY else '✗ Missing'
+        print(f"  API Key: {api_key_status}")
+        
+        print("\n💾 Storage:")
+        print(f"  Database: {cls.DATABASE_PATH}")
+        print(f"  Videos: {cls.VIDEO_STORAGE_PATH}")
+        print(f"  Frames: {cls.FRAME_STORAGE_PATH}")
+        print(f"  Cache: {cls.CACHE_STORAGE_PATH}")
+        
+        print("\n🔧 Processing:")
+        print(f"  Max Frames: {cls.MAX_FRAMES_PER_VIDEO}")
+        print(f"  Frame Interval: {cls.FRAME_EXTRACTION_INTERVAL}s")
+        print(f"  Cache TTL: {cls.CACHE_TTL_HOURS}h")
+        
+        print("\n🧠 Memory:")
+        print(f"  Max History: {cls.MAX_CONVERSATION_HISTORY} messages")
+        
+        print("\n⚡ Performance:")
+        print(f"  Tool Timeout: {cls.TOOL_EXECUTION_TIMEOUT}s")
+        print(f"  Request Timeout: {cls.REQUEST_TIMEOUT}s")
+        print(f"  Lazy Load Batch: {cls.LAZY_LOAD_BATCH_SIZE} images")
+        
+        print("\n🌐 MCP Server:")
+        print(f"  URL: {cls.get_mcp_server_url()}")
+        
+        print("\n📦 Redis:")
+        print(f"  Enabled: {'Yes' if cls.REDIS_ENABLED else 'No'}")
+        if cls.REDIS_ENABLED:
+            print(f"  URL: {cls.REDIS_URL}")
+        
+        print("\n🔍 Application:")
+        print(f"  Debug: {'Yes' if cls.DEBUG else 'No'}")
+        print(f"  Log Level: {cls.LOG_LEVEL}")
+        
+        print("\n" + "="*60 + "\n")
 
 
 # Validate configuration on import

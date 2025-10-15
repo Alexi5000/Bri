@@ -46,8 +46,17 @@ async def startup_event():
     """Initialize server components on startup."""
     logger.info("Starting BRI MCP Server...")
     
+    # Validate configuration
+    try:
+        Config.validate()
+        logger.info("Configuration validated successfully")
+    except ValueError as e:
+        logger.error(f"Configuration validation failed: {e}")
+        raise
+    
     # Ensure directories exist
     Config.ensure_directories()
+    logger.info("Required directories verified")
     
     # Register all available tools
     tool_registry.register_all_tools()
