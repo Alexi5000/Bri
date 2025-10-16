@@ -38,14 +38,19 @@ CREATE TABLE IF NOT EXISTS video_context (
     context_type TEXT NOT NULL,
     timestamp REAL,
     data TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     -- Data lineage fields
     tool_name TEXT,
     tool_version TEXT,
     model_version TEXT,
     processing_params TEXT,
     FOREIGN KEY (video_id) REFERENCES videos(video_id) ON DELETE CASCADE,
-    CHECK (context_type IN ('frame', 'caption', 'transcript', 'object', 'metadata', 'idempotency'))
+    CHECK (context_type IN ('frame', 'caption', 'transcript', 'object', 'metadata', 'idempotency')),
+    CHECK (timestamp IS NULL OR timestamp >= 0),  -- Timestamp must be non-negative if provided
+    CHECK (data != ''),  -- Data cannot be empty
+    CHECK (context_id != ''),  -- Context ID cannot be empty
+    -- Prevent duplicate context entries for same video/type/timestamp
+    UNIQUE (video_id, context_type, timestamp, tool_name)
 );
 
 -- Data lineage audit table: tracks all data modifications
