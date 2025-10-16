@@ -294,7 +294,12 @@
     - Test segment transcription
     - _Requirements: 3.3_
 
-  - [ ] 30.5 Write unit tests for ObjectDetector
+  - [x] 30.5 Write unit tests for ObjectDetector
+
+
+
+
+
 
 
 
@@ -308,7 +313,11 @@
     - Test object search functionality
     - _Requirements: 3.4_
 
-  - [ ]\* 30.6 Write unit tests for ToolRouter
+  - [-] 30.6 Write unit tests for ToolRouter
+
+
+
+
 
     - Test query analysis and tool selection
     - Test timestamp extraction
