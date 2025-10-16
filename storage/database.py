@@ -2,8 +2,9 @@
 
 import sqlite3
 import logging
+import json
 from pathlib import Path
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Dict, Any
 from contextlib import contextmanager
 from config import Config
 

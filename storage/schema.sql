@@ -72,9 +72,33 @@ CREATE TABLE IF NOT EXISTS data_lineage (
 );
 
 -- Indexes for performance optimization
+
+-- Single-column indexes
 CREATE INDEX IF NOT EXISTS idx_memory_video_id ON memory(video_id);
 CREATE INDEX IF NOT EXISTS idx_memory_timestamp ON memory(timestamp);
 CREATE INDEX IF NOT EXISTS idx_video_context_video_id ON video_context(video_id);
 CREATE INDEX IF NOT EXISTS idx_video_context_type ON video_context(context_type);
 CREATE INDEX IF NOT EXISTS idx_video_context_timestamp ON video_context(timestamp);
 CREATE INDEX IF NOT EXISTS idx_videos_processing_status ON videos(processing_status);
+CREATE INDEX IF NOT EXISTS idx_videos_deleted_at ON videos(deleted_at);
+
+-- Composite indexes for common query patterns
+CREATE INDEX IF NOT EXISTS idx_memory_video_timestamp ON memory(video_id, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_video_context_lookup ON video_context(video_id, context_type, timestamp);
+CREATE INDEX IF NOT EXISTS idx_video_context_type_timestamp ON video_context(context_type, timestamp);
+CREATE INDEX IF NOT EXISTS idx_data_lineage_video ON data_lineage(video_id, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_data_lineage_context ON data_lineage(context_id, timestamp DESC);
+
+-- Index for soft delete queries (active videos only)
+CREATE INDEX IF NOT EXISTS idx_videos_active ON videos(processing_status) WHERE deleted_at IS NULL;
+
+-- Schema version tracking table
+CREATE TABLE IF NOT EXISTS schema_version (
+    version INTEGER PRIMARY KEY,
+    description TEXT NOT NULL,
+    applied_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    applied_by TEXT DEFAULT 'system'
+);
+
+-- Insert initial schema version
+INSERT OR IGNORE INTO schema_version (version, description) VALUES (2, 'Enhanced constraints and composite indexes');
