@@ -9,6 +9,13 @@ from models.memory import MemoryRecord
 from models.tools import Caption, Transcript, TranscriptSegment, DetectionResult, DetectedObject
 from storage.database import Database
 
+# Import semantic search service (optional)
+try:
+    from services.semantic_search import get_semantic_search_service
+    SEMANTIC_SEARCH_AVAILABLE = True
+except ImportError:
+    SEMANTIC_SEARCH_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 
 
@@ -50,16 +57,31 @@ class ContextBuilder:
     - Retrieve context around specific timestamps
     """
     
-    def __init__(self, db: Optional[Database] = None):
+    def __init__(self, db: Optional[Database] = None, enable_semantic_search: bool = True):
         """Initialize Context Builder.
         
         Args:
             db: Database instance. Creates new instance if not provided.
+            enable_semantic_search: Whether to enable semantic search (requires chromadb + sentence-transformers)
         """
         self.db = db or Database()
         if not self.db._connection:
             self.db.connect()
-        logger.info("Context Builder initialized")
+        
+        # Initialize semantic search if available and enabled
+        self.semantic_search = None
+        if enable_semantic_search and SEMANTIC_SEARCH_AVAILABLE:
+            try:
+                self.semantic_search = get_semantic_search_service()
+                if self.semantic_search.is_enabled():
+                    logger.info("Context Builder initialized with semantic search enabled")
+                else:
+                    logger.info("Context Builder initialized (semantic search unavailable)")
+            except Exception as e:
+                logger.warning(f"Failed to initialize semantic search: {e}")
+                self.semantic_search = None
+        else:
+            logger.info("Context Builder initialized (semantic search disabled)")
     
     def build_video_context(
         self,
@@ -245,7 +267,8 @@ class ContextBuilder:
         self,
         video_id: str,
         query: str,
-        top_k: int = 5
+        top_k: int = 5,
+        use_semantic: bool = True
     ) -> List[Caption]:
         """Find relevant captions using text similarity.
         
@@ -253,11 +276,14 @@ class ContextBuilder:
         - Stemming/lemmatization for better word matching
         - Multiple relevance scoring factors
         - Ranked results by relevance score
+        - Optional semantic search with embeddings (if available)
+        - Hybrid search combining keyword + semantic matching
         
         Args:
             video_id: Video identifier
             query: Search query text
             top_k: Maximum number of results to return
+            use_semantic: Whether to use semantic search (if available)
             
         Returns:
             List of Caption objects sorted by relevance
@@ -325,13 +351,59 @@ class ContextBuilder:
                 
                 scored_captions.append((score, caption))
             
-            # Sort by score (descending) and return top_k
+            # Sort by score (descending)
             scored_captions.sort(key=lambda x: x[0], reverse=True)
-            results = [caption for score, caption in scored_captions[:top_k] if score > 0]
+            keyword_results = [(score, caption) for score, caption in scored_captions if score > 0]
+            
+            # If semantic search is available and enabled, perform hybrid search
+            if use_semantic and self.semantic_search and self.semantic_search.is_enabled():
+                try:
+                    # Convert keyword results to format expected by hybrid search
+                    kw_results_dict = [
+                        {
+                            'text': caption.text,
+                            'score': score,
+                            'caption': caption
+                        }
+                        for score, caption in keyword_results
+                    ]
+                    
+                    # Perform hybrid search
+                    hybrid_results = self.semantic_search.hybrid_search(
+                        query=query,
+                        keyword_results=kw_results_dict,
+                        video_id=video_id,
+                        top_k=top_k,
+                        semantic_weight=0.7  # 70% semantic, 30% keyword
+                    )
+                    
+                    # Extract captions from hybrid results
+                    results = []
+                    for result in hybrid_results:
+                        if 'caption' in result:
+                            results.append(result['caption'])
+                        else:
+                            # Semantic-only result, find matching caption
+                            for _, caption in keyword_results:
+                                if caption.text == result['text']:
+                                    results.append(caption)
+                                    break
+                    
+                    logger.info(
+                        f"Hybrid search found {len(results)} captions for query: {query} "
+                        f"(keyword: {len(keyword_results)}, semantic: enabled)"
+                    )
+                    return results[:top_k]
+                    
+                except Exception as e:
+                    logger.warning(f"Hybrid search failed, falling back to keyword search: {e}")
+            
+            # Fallback to keyword-only results
+            results = [caption for score, caption in keyword_results[:top_k]]
             
             logger.info(
-                f"Found {len(results)} relevant captions for query: {query} "
-                f"(top score: {scored_captions[0][0]:.1f})" if scored_captions else ""
+                f"Keyword search found {len(results)} captions for query: {query} "
+                f"(top score: {keyword_results[0][0]:.1f})" if keyword_results else ""
             )
             return results
             
@@ -843,11 +915,130 @@ class ContextBuilder:
             logger.warning(f"Failed to get transcript segment at {timestamp}s: {e}")
             return None
     
+    def index_video_for_semantic_search(self, video_id: str) -> bool:
+        """Index video captions and transcripts for semantic search.
+        
+        This should be called after video processing is complete to enable
+        semantic search capabilities.
+        
+        Args:
+            video_id: Video identifier
+            
+        Returns:
+            True if indexing successful, False otherwise
+        """
+        if not self.semantic_search or not self.semantic_search.is_enabled():
+            logger.info("Semantic search not available, skipping indexing")
+            return False
+        
+        try:
+            logger.info(f"Indexing video {video_id} for semantic search")
+            
+            # Index captions
+            captions = self._get_captions(video_id)
+            if captions:
+                caption_dicts = [
+                    {
+                        'text': cap.text,
+                        'frame_timestamp': cap.frame_timestamp,
+                        'confidence': cap.confidence
+                    }
+                    for cap in captions
+                ]
+                self.semantic_search.index_captions(video_id, caption_dicts)
+                logger.info(f"Indexed {len(captions)} captions")
+            
+            # Index transcript segments
+            transcript = self._get_transcript(video_id)
+            if transcript and transcript.segments:
+                segment_dicts = [
+                    {
+                        'text': seg.text,
+                        'start': seg.start,
+                        'end': seg.end,
+                        'confidence': seg.confidence if hasattr(seg, 'confidence') else 1.0
+                    }
+                    for seg in transcript.segments
+                ]
+                self.semantic_search.index_transcripts(video_id, segment_dicts)
+                logger.info(f"Indexed {len(transcript.segments)} transcript segments")
+            
+            logger.info(f"Successfully indexed video {video_id} for semantic search")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to index video for semantic search: {e}")
+            return False
+    
+    def search_captions_semantic(
+        self,
+        video_id: str,
+        query: str,
+        top_k: int = 5,
+        min_score: float = 0.3
+    ) -> List[Caption]:
+        """Search captions using pure semantic similarity (no keyword matching).
+        
+        Args:
+            video_id: Video identifier
+            query: Search query text
+            top_k: Maximum number of results to return
+            min_score: Minimum similarity score threshold (0-1)
+            
+        Returns:
+            List of Caption objects sorted by semantic similarity
+        """
+        if not self.semantic_search or not self.semantic_search.is_enabled():
+            logger.warning("Semantic search not available, falling back to keyword search")
+            return self.search_captions(video_id, query, top_k, use_semantic=False)
+        
+        try:
+            # Perform semantic search
+            results = self.semantic_search.search(
+                query=query,
+                video_id=video_id,
+                content_type="caption",
+                top_k=top_k,
+                min_score=min_score
+            )
+            
+            if not results:
+                logger.info(f"No semantic results found for query: {query}")
+                return []
+            
+            # Convert semantic results back to Caption objects
+            all_captions = self._get_captions(video_id)
+            caption_map = {cap.text: cap for cap in all_captions}
+            
+            matched_captions = []
+            for result in results:
+                if result.text in caption_map:
+                    matched_captions.append(caption_map[result.text])
+            
+            logger.info(f"Semantic search found {len(matched_captions)} captions for query: {query}")
+            return matched_captions
+            
+        except Exception as e:
+            logger.error(f"Semantic search failed: {e}")
+            return []
+    
+    def get_semantic_search_stats(self) -> dict:
+        """Get statistics about semantic search indexing.
+        
+        Returns:
+            Dictionary with stats or empty dict if not available
+        """
+        if not self.semantic_search:
+            return {"enabled": False}
+        return self.semantic_search.get_stats()
+    
     def close(self) -> None:
-        """Close database connection."""
+        """Close database connection and semantic search service."""
         if self.db:
             self.db.close()
-            logger.info("Context Builder closed")
+        if self.semantic_search:
+            self.semantic_search.close()
+        logger.info("Context Builder closed")
     
     def __enter__(self):
         """Context manager entry."""

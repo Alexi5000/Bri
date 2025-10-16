@@ -1,10 +1,8 @@
 """Semantic search service using vector embeddings and ChromaDB."""
 
 import logging
-import json
-from typing import List, Optional, Dict, Any, Tuple
+from typing import List, Optional, Dict, Any
 from dataclasses import dataclass
-import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +52,8 @@ class SemanticSearchService:
         self,
         model_name: str = "all-MiniLM-L6-v2",
         persist_directory: str = "data/vector_db",
-        collection_name: str = "bri_captions"
+        collection_name: str = "bri_captions",
+        enable_cache: bool = True
     ):
         """Initialize semantic search service.
         
@@ -65,6 +64,7 @@ class SemanticSearchService:
                 - "paraphrase-MiniLM-L6-v2": Fast, 384 dims, paraphrase focused
             persist_directory: Directory to store vector database
             collection_name: Name of the ChromaDB collection
+            enable_cache: Whether to enable query result caching
         """
         self.model_name = model_name
         self.persist_directory = persist_directory
@@ -74,6 +74,15 @@ class SemanticSearchService:
         self.client = None
         self.collection = None
         self.enabled = False
+        
+        # Initialize optimizer for performance
+        self.optimizer = None
+        if enable_cache:
+            try:
+                from services.vector_search_optimizer import get_vector_search_optimizer
+                self.optimizer = get_vector_search_optimizer()
+            except Exception as e:
+                logger.warning(f"Failed to initialize optimizer: {e}")
         
         # Initialize if dependencies available
         if CHROMADB_AVAILABLE and SENTENCE_TRANSFORMERS_AVAILABLE:
@@ -307,9 +316,50 @@ class SemanticSearchService:
         video_id: Optional[str] = None,
         content_type: Optional[str] = None,
         top_k: int = 5,
-        min_score: float = 0.0
+        min_score: float = 0.0,
+        use_cache: bool = True
     ) -> List[SemanticSearchResult]:
         """Perform semantic similarity search.
+        
+        Args:
+            query: Search query text
+            video_id: Optional video ID to filter results
+            content_type: Optional content type filter ("caption" or "transcript")
+            top_k: Number of results to return
+            min_score: Minimum similarity score threshold (0-1)
+            use_cache: Whether to use cached results (if available)
+            
+        Returns:
+            List of SemanticSearchResult objects sorted by relevance
+        """
+        if not self.enabled or not self.collection:
+            logger.warning("Semantic search not enabled")
+            return []
+        
+        # Use optimizer cache if available
+        if use_cache and self.optimizer:
+            results, was_cached = self.optimizer.search_with_cache(
+                search_func=self._search_internal,
+                query=query,
+                video_id=video_id,
+                content_type=content_type,
+                top_k=top_k,
+                min_score=min_score
+            )
+            return results
+        
+        # Direct search without cache
+        return self._search_internal(query, video_id, content_type, top_k, min_score)
+    
+    def _search_internal(
+        self,
+        query: str,
+        video_id: Optional[str] = None,
+        content_type: Optional[str] = None,
+        top_k: int = 5,
+        min_score: float = 0.0
+    ) -> List[SemanticSearchResult]:
+        """Internal search implementation (called by search() with/without cache).
         
         Args:
             query: Search query text
@@ -321,10 +371,6 @@ class SemanticSearchService:
         Returns:
             List of SemanticSearchResult objects sorted by relevance
         """
-        if not self.enabled or not self.collection:
-            logger.warning("Semantic search not enabled")
-            return []
-        
         try:
             # Generate query embedding
             query_embedding = self.generate_embedding(query)
@@ -501,7 +547,7 @@ class SemanticSearchService:
         
         try:
             count = self.collection.count()
-            return {
+            stats = {
                 "enabled": True,
                 "model": self.model_name,
                 "embedding_dim": self.model.get_sentence_embedding_dimension() if self.model else None,
@@ -509,9 +555,39 @@ class SemanticSearchService:
                 "collection_name": self.collection_name,
                 "persist_directory": self.persist_directory
             }
+            
+            # Add performance stats if optimizer available
+            if self.optimizer:
+                stats["performance"] = self.optimizer.get_performance_stats()
+            
+            return stats
         except Exception as e:
             logger.error(f"Failed to get stats: {e}")
             return {"enabled": True, "error": str(e)}
+    
+    def get_performance_recommendations(self) -> List[str]:
+        """Get performance optimization recommendations.
+        
+        Returns:
+            List of recommendation strings
+        """
+        if not self.optimizer:
+            return ["Performance optimizer not available"]
+        
+        stats = self.get_stats()
+        if "performance" in stats:
+            return self.optimizer.recommend_optimizations(stats["performance"])
+        
+        return []
+    
+    def invalidate_cache(self, video_id: Optional[str] = None) -> None:
+        """Invalidate query cache.
+        
+        Args:
+            video_id: If provided, only invalidate entries for this video
+        """
+        if self.optimizer:
+            self.optimizer.invalidate_cache(video_id)
     
     def close(self) -> None:
         """Clean up resources."""

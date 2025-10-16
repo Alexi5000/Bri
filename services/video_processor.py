@@ -174,6 +174,45 @@ class VideoProcessor:
                 update_video_status(video_id, "complete")
                 logger.info(f"Video processing completed successfully for {video_id}")
                 
+                # Index for semantic search (if available)
+                try:
+                    from services.embedding_pipeline import get_embedding_pipeline
+                    pipeline = get_embedding_pipeline()
+                    if pipeline.is_enabled():
+                        logger.info(f"Indexing video {video_id} for semantic search")
+                        
+                        # Fetch caption and transcript data
+                        from services.context import ContextBuilder
+                        context_builder = ContextBuilder()
+                        
+                        captions = context_builder._get_captions(video_id)
+                        transcript = context_builder._get_transcript(video_id)
+                        
+                        caption_dicts = [
+                            {
+                                'text': cap.text,
+                                'frame_timestamp': cap.frame_timestamp,
+                                'confidence': cap.confidence
+                            }
+                            for cap in captions
+                        ] if captions else []
+                        
+                        segment_dicts = [
+                            {
+                                'text': seg.text,
+                                'start': seg.start,
+                                'end': seg.end,
+                                'confidence': seg.confidence if hasattr(seg, 'confidence') else 1.0
+                            }
+                            for seg in transcript.segments
+                        ] if transcript and transcript.segments else []
+                        
+                        pipeline.process_video(video_id, caption_dicts, segment_dicts)
+                        logger.info(f"Semantic search indexing complete for {video_id}")
+                except Exception as e:
+                    logger.warning(f"Failed to index video for semantic search: {e}")
+                    # Don't fail the whole process if semantic indexing fails
+                
                 if progress_callback:
                     progress_callback(
                         "Complete",
