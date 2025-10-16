@@ -41,3 +41,7 @@ pytest-asyncio>=0.21.0
 
 # Utilities
 requests>=2.31.0
+
+# Vector Database & Semantic Search (Optional - for Task 49)
+chromadb>=0.4.0
+sentence-transformers>=2.2.0

@@ -16,6 +16,11 @@ class DatabaseError(Exception):
     pass
 
 
+class ValidationError(Exception):
+    """Custom exception for data validation errors."""
+    pass
+
+
 class Database:
     """SQLite database connection manager with error handling."""
     
@@ -288,6 +293,183 @@ class Database:
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit."""
         self.close()
+    
+    @staticmethod
+    def validate_json(data: str, schema_type: Optional[str] = None) -> bool:
+        """Validate JSON data structure.
+        
+        Args:
+            data: JSON string to validate
+            schema_type: Optional schema type for specific validation
+            
+        Returns:
+            True if valid JSON
+            
+        Raises:
+            ValidationError: If JSON is invalid
+        """
+        try:
+            parsed = json.loads(data)
+            
+            # Type-specific validation
+            if schema_type == 'caption':
+                if not isinstance(parsed, dict):
+                    raise ValidationError("Caption data must be a dictionary")
+                if 'text' not in parsed:
+                    raise ValidationError("Caption data must contain 'text' field")
+                if 'confidence' in parsed:
+                    confidence = parsed['confidence']
+                    if not (0 <= confidence <= 1):
+                        raise ValidationError("Confidence must be between 0 and 1")
+                        
+            elif schema_type == 'transcript':
+                if not isinstance(parsed, dict):
+                    raise ValidationError("Transcript data must be a dictionary")
+                if 'text' not in parsed:
+                    raise ValidationError("Transcript data must contain 'text' field")
+                    
+            elif schema_type == 'object':
+                if not isinstance(parsed, dict):
+                    raise ValidationError("Object detection data must be a dictionary")
+                if 'objects' in parsed:
+                    if not isinstance(parsed['objects'], list):
+                        raise ValidationError("Objects field must be a list")
+                    for obj in parsed['objects']:
+                        if 'confidence' in obj:
+                            confidence = obj['confidence']
+                            if not (0 <= confidence <= 1):
+                                raise ValidationError("Object confidence must be between 0 and 1")
+            
+            return True
+            
+        except json.JSONDecodeError as e:
+            raise ValidationError(f"Invalid JSON: {e}")
+    
+    def validate_video_data(
+        self,
+        video_id: str,
+        filename: str,
+        file_path: str,
+        duration: float
+    ) -> None:
+        """Validate video data before insertion.
+        
+        Args:
+            video_id: Video identifier
+            filename: Video filename
+            file_path: Path to video file
+            duration: Video duration in seconds
+            
+        Raises:
+            ValidationError: If validation fails
+        """
+        if not video_id or not isinstance(video_id, str):
+            raise ValidationError("video_id must be a non-empty string")
+        if not filename or not isinstance(filename, str):
+            raise ValidationError("filename must be a non-empty string")
+        if not file_path or not isinstance(file_path, str):
+            raise ValidationError("file_path must be a non-empty string")
+        if not isinstance(duration, (int, float)) or duration <= 0:
+            raise ValidationError("duration must be a positive number")
+    
+    def validate_context_data(
+        self,
+        context_id: str,
+        video_id: str,
+        context_type: str,
+        data: str,
+        timestamp: Optional[float] = None
+    ) -> None:
+        """Validate video context data before insertion.
+        
+        Args:
+            context_id: Context identifier
+            video_id: Video identifier
+            context_type: Type of context data
+            data: JSON data string
+            timestamp: Optional timestamp
+            
+        Raises:
+            ValidationError: If validation fails
+        """
+        if not context_id or not isinstance(context_id, str):
+            raise ValidationError("context_id must be a non-empty string")
+        if not video_id or not isinstance(video_id, str):
+            raise ValidationError("video_id must be a non-empty string")
+        if context_type not in ['frame', 'caption', 'transcript', 'object', 'metadata', 'idempotency']:
+            raise ValidationError(f"Invalid context_type: {context_type}")
+        if not data or not isinstance(data, str):
+            raise ValidationError("data must be a non-empty string")
+        if timestamp is not None and (not isinstance(timestamp, (int, float)) or timestamp < 0):
+            raise ValidationError("timestamp must be a non-negative number")
+        
+        # Validate JSON structure
+        self.validate_json(data, context_type)
+    
+    def get_schema_version(self) -> Optional[int]:
+        """Get current database schema version.
+        
+        Returns:
+            Current schema version or None if not found
+        """
+        try:
+            query = "SELECT MAX(version) as version FROM schema_version"
+            results = self.execute_query(query)
+            if results and results[0]['version']:
+                return results[0]['version']
+            return None
+        except sqlite3.Error:
+            return None
+    
+    def check_constraints(self) -> Dict[str, Any]:
+        """Check database constraints and integrity.
+        
+        Returns:
+            Dictionary with constraint check results
+        """
+        results = {
+            'foreign_keys_enabled': False,
+            'orphaned_memory': 0,
+            'orphaned_context': 0,
+            'invalid_durations': 0,
+            'invalid_timestamps': 0
+        }
+        
+        try:
+            # Check if foreign keys are enabled
+            fk_check = self.execute_query("PRAGMA foreign_keys")
+            results['foreign_keys_enabled'] = fk_check[0][0] == 1 if fk_check else False
+            
+            # Check for orphaned memory records
+            orphaned_memory = self.execute_query("""
+                SELECT COUNT(*) as count FROM memory 
+                WHERE video_id NOT IN (SELECT video_id FROM videos)
+            """)
+            results['orphaned_memory'] = orphaned_memory[0]['count'] if orphaned_memory else 0
+            
+            # Check for orphaned context records
+            orphaned_context = self.execute_query("""
+                SELECT COUNT(*) as count FROM video_context 
+                WHERE video_id NOT IN (SELECT video_id FROM videos)
+            """)
+            results['orphaned_context'] = orphaned_context[0]['count'] if orphaned_context else 0
+            
+            # Check for invalid durations
+            invalid_durations = self.execute_query("""
+                SELECT COUNT(*) as count FROM videos WHERE duration <= 0
+            """)
+            results['invalid_durations'] = invalid_durations[0]['count'] if invalid_durations else 0
+            
+            # Check for invalid timestamps
+            invalid_timestamps = self.execute_query("""
+                SELECT COUNT(*) as count FROM video_context WHERE timestamp < 0
+            """)
+            results['invalid_timestamps'] = invalid_timestamps[0]['count'] if invalid_timestamps else 0
+            
+        except sqlite3.Error as e:
+            logger.error(f"Constraint check failed: {e}")
+        
+        return results
 
 
 class Transaction:
@@ -574,8 +756,13 @@ def insert_video(
         
     Raises:
         DatabaseError: If insert fails
+        ValidationError: If data validation fails
     """
     db = get_database()
+    
+    # Validate data before insertion
+    db.validate_video_data(video_id, filename, file_path, duration)
+    
     query = """
         INSERT INTO videos (video_id, filename, file_path, duration, thumbnail_path, processing_status)
         VALUES (?, ?, ?, ?, ?, 'pending')

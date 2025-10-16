@@ -199,8 +199,8 @@
 - [ ] Task 43: Testing & validation
 
 ### Phase 5: Data Engineering (Weeks 2-3)
-- [ ] Task 44: Database optimization
-- [ ] Task 45: Pipeline integrity
+- [x] Task 44: Database optimization
+- [x] Task 45: Database architecture & schema optimization ✅
 - [ ] Task 46: API hardening
 - [ ] Task 47: Data flow optimization
 - [ ] Task 48: Data quality
@@ -248,6 +248,11 @@ python tests/eval_bri_performance.py <video_id>
 
 # Monitor logs
 python scripts/log_dashboard.py logs/bri_app.log
+
+# Database management (NEW - Task 45)
+python scripts/health_check.py report      # Health report
+python scripts/archival_cli.py status      # Retention status
+python scripts/migrate_db.py status        # Migration status
 ```
 
 ### Most Important Concepts
