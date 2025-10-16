@@ -24,9 +24,11 @@ CREATE TABLE IF NOT EXISTS memory (
     video_id TEXT NOT NULL,
     role TEXT NOT NULL,
     content TEXT NOT NULL,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     FOREIGN KEY (video_id) REFERENCES videos(video_id) ON DELETE CASCADE,
-    CHECK (role IN ('user', 'assistant'))
+    CHECK (role IN ('user', 'assistant')),
+    CHECK (content != ''),  -- Content cannot be empty
+    CHECK (message_id != '')  -- Message ID cannot be empty
 );
 
 -- Video context table: stores processed video data (frames, captions, transcripts, objects)
