@@ -7,6 +7,11 @@ from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+import sys
+import os
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from models.responses import ToolExecutionRequest, ToolExecutionResponse
 from mcp_server.registry import ToolRegistry
 from mcp_server.cache import CacheManager
@@ -368,10 +373,65 @@ async def _execute_tool_with_cache(tool, tool_name: str, video_id: str, cache_ke
         result = await tool.execute(video_id, {})
         # Cache the result
         cache_manager.set(cache_key, result)
+        # Store result in database for later retrieval
+        _store_tool_result_in_db(video_id, tool_name, result)
         return result
     except Exception as e:
         logger.error(f"Tool '{tool_name}' execution failed: {str(e)}")
         raise
+
+
+def _store_tool_result_in_db(video_id: str, tool_name: str, result: dict):
+    """Store tool result in database for later retrieval by the agent."""
+    try:
+        from storage.database import Database
+        import json
+        
+        db = Database()
+        db.connect()
+        
+        # Store based on tool type
+        if tool_name == 'caption_frames' and result:
+            # Store each caption
+            for caption in result.get('captions', []):
+                db.execute_query(
+                    """INSERT INTO video_context (video_id, context_type, timestamp, data)
+                       VALUES (?, ?, ?, ?)""",
+                    (video_id, 'caption', caption.get('timestamp', 0), json.dumps(caption))
+                )
+        
+        elif tool_name == 'transcribe_audio' and result:
+            # Store transcript segments
+            for segment in result.get('segments', []):
+                db.execute_query(
+                    """INSERT INTO video_context (video_id, context_type, timestamp, data)
+                       VALUES (?, ?, ?, ?)""",
+                    (video_id, 'transcript', segment.get('start', 0), json.dumps(segment))
+                )
+        
+        elif tool_name == 'detect_objects' and result:
+            # Store object detections
+            for detection in result.get('detections', []):
+                db.execute_query(
+                    """INSERT INTO video_context (video_id, context_type, timestamp, data)
+                       VALUES (?, ?, ?, ?)""",
+                    (video_id, 'object', detection.get('timestamp', 0), json.dumps(detection))
+                )
+        
+        elif tool_name == 'extract_frames' and result:
+            # Store frame information
+            for frame in result.get('frames', []):
+                db.execute_query(
+                    """INSERT INTO video_context (video_id, context_type, timestamp, data)
+                       VALUES (?, ?, ?, ?)""",
+                    (video_id, 'frame', frame.get('timestamp', 0), json.dumps(frame))
+                )
+        
+        db.close()
+        logger.info(f"Stored {tool_name} results in database for video {video_id}")
+        
+    except Exception as e:
+        logger.error(f"Failed to store tool result in database: {e}")
 
 
 @app.get("/cache/stats")

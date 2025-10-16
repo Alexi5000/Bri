@@ -5,18 +5,19 @@ Implements feminine color scheme with soft touches
 
 import streamlit as st
 
-# Color Palette
+# Color Palette - Dark Theme
 COLORS = {
-    'blush_pink': '#FFB6C1',
-    'lavender': '#E6E6FA',
-    'teal': '#40E0D0',
-    'cream': '#FFFDD0',
-    'soft_gray': '#F5F5F5',
-    'text_dark': '#333333',
-    'text_light': '#666666',
-    'white': '#FFFFFF',
-    'accent_pink': '#FF69B4',
-    'accent_purple': '#DDA0DD',
+    'bg_dark': '#0a0a0a',           # Main background - deep black
+    'bg_secondary': '#1a1a1a',      # Secondary background
+    'bg_tertiary': '#2a2a2a',       # Cards and containers
+    'text_primary': '#ffffff',      # Primary text - white
+    'text_secondary': '#a0a0a0',    # Secondary text - light gray
+    'text_muted': '#666666',        # Muted text
+    'accent_pink': '#FF69B4',       # Pink accent
+    'accent_purple': '#BA68C8',     # Purple accent
+    'accent_teal': '#40E0D0',       # Teal accent
+    'border': '#333333',            # Border color
+    'hover': '#2d2d2d',             # Hover state
 }
 
 def apply_custom_styles():
@@ -24,174 +25,382 @@ def apply_custom_styles():
     
     custom_css = f"""
     <style>
-    /* Import Google Fonts - Rounded, friendly typography */
-    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&family=Quicksand:wght@400;500;600&display=swap');
+    /* Import Google Fonts - Modern, clean typography */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     
-    /* Global Styles */
-    html, body, [class*="css"] {{
-        font-family: 'Nunito', sans-serif;
-        color: {COLORS['text_dark']};
+    /* ========================================
+       HARDENED DARK THEME - Maximum Priority
+       ======================================== */
+    
+    /* CRITICAL: Universal dark background enforcement */
+    *, *::before, *::after {{
+        box-sizing: border-box;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }}
     
-    /* Main container */
-    .main {{
-        background: linear-gradient(135deg, {COLORS['cream']} 0%, {COLORS['white']} 50%, {COLORS['lavender']} 100%);
-        padding: 2rem;
+    /* Root level - Absolute priority */
+    :root {{
+        color-scheme: dark;
+        --background-color: {COLORS['bg_dark']};
+        --text-color: {COLORS['text_primary']};
+        --secondary-bg: {COLORS['bg_secondary']};
+        --tertiary-bg: {COLORS['bg_tertiary']};
     }}
     
-    /* Sidebar styling */
-    [data-testid="stSidebar"] {{
-        background: linear-gradient(180deg, {COLORS['lavender']} 0%, {COLORS['blush_pink']} 100%);
-        padding: 2rem 1rem;
+    /* Global Styles - Maximum specificity */
+    html, body, #root, [data-testid="stAppViewContainer"] {{
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        background-color: {COLORS['bg_dark']} !important;
+        color: {COLORS['text_primary']} !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }}
     
-    [data-testid="stSidebar"] .css-1d391kg {{
-        padding-top: 2rem;
+    /* Force all backgrounds to dark */
+    body, .main, .stApp, [class*="css"], [data-testid="stApp"] {{
+        background-color: {COLORS['bg_dark']} !important;
+        background-image: none !important;
     }}
     
-    /* Headers */
+    /* Main container - Black background */
+    .main, [data-testid="stAppViewContainer"] > section {{
+        background-color: {COLORS['bg_dark']} !important;
+        padding: 1rem 2rem !important;
+    }}
+    
+    /* Streamlit app background - Hardened */
+    .stApp, [data-testid="stApp"], [data-testid="stDecoration"] {{
+        background-color: {COLORS['bg_dark']} !important;
+    }}
+    
+    /* ========================================
+       TEXT COLOR ENFORCEMENT - White Text
+       ======================================== */
+    
+    /* All text elements - Maximum priority white */
+    p, span, div, label, li, td, th, a, h1, h2, h3, h4, h5, h6, small,
+    strong, em, b, i, u, code, pre, blockquote {{
+        color: {COLORS['text_primary']} !important;
+    }}
+    
+    /* Streamlit specific text elements */
+    .stMarkdown, .stMarkdown *, 
+    .stText, .stText *, 
+    .element-container *,
+    [data-testid="stMarkdownContainer"] *,
+    [data-testid="stText"] * {{
+        color: {COLORS['text_primary']} !important;
+    }}
+    
+    /* Secondary text - Muted but readable */
+    .text-secondary, .stCaption, [data-testid="stCaption"] {{
+        color: {COLORS['text_secondary']} !important;
+    }}
+    
+    /* Block container */
+    .block-container {{
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+        background-color: {COLORS['bg_dark']} !important;
+    }}
+    
+    /* ========================================
+       SIDEBAR - Hardened Dark Theme
+       ======================================== */
+    
+    /* Sidebar container - Maximum priority */
+    [data-testid="stSidebar"],
+    [data-testid="stSidebar"] > div,
+    section[data-testid="stSidebar"],
+    .css-1d391kg {{
+        background-color: {COLORS['bg_secondary']} !important;
+        background-image: none !important;
+        padding: 2rem 1rem !important;
+        border-right: 1px solid {COLORS['border']} !important;
+    }}
+    
+    /* Sidebar text - Absolute white enforcement */
+    [data-testid="stSidebar"] *,
+    [data-testid="stSidebar"] p,
+    [data-testid="stSidebar"] span,
+    [data-testid="stSidebar"] div,
+    [data-testid="stSidebar"] label {{
+        color: {COLORS['text_primary']} !important;
+    }}
+    
+    /* Sidebar headers */
+    [data-testid="stSidebar"] h1,
+    [data-testid="stSidebar"] h2,
+    [data-testid="stSidebar"] h3,
+    [data-testid="stSidebar"] h4 {{
+        color: {COLORS['text_primary']} !important;
+        font-weight: 600 !important;
+    }}
+    
+    /* Remove any sidebar background images or gradients */
+    [data-testid="stSidebar"]::before,
+    [data-testid="stSidebar"]::after {{
+        display: none !important;
+    }}
+    
+    /* Sidebar buttons - Dark cards */
+    [data-testid="stSidebar"] .stButton > button {{
+        background-color: {COLORS['bg_tertiary']} !important;
+        color: {COLORS['text_primary']} !important;
+        border: 1px solid {COLORS['border']} !important;
+        box-shadow: none !important;
+    }}
+    
+    [data-testid="stSidebar"] .stButton > button:hover {{
+        background-color: {COLORS['hover']} !important;
+        border-color: {COLORS['accent_pink']} !important;
+    }}
+    
+    /* Force all sidebar button containers to be dark */
+    [data-testid="stSidebar"] .stButton {{
+        background-color: transparent !important;
+    }}
+    
+    [data-testid="stSidebar"] button {{
+        background-color: {COLORS['bg_tertiary']} !important;
+        color: {COLORS['text_primary']} !important;
+        border: 1px solid {COLORS['border']} !important;
+    }}
+    
+    [data-testid="stSidebar"] button:hover {{
+        background-color: {COLORS['hover']} !important;
+        border-color: {COLORS['accent_pink']} !important;
+    }}
+    
+    /* All cards and containers - Dark background */
+    div[class*="css"] {{
+        background-color: transparent !important;
+    }}
+    
+    /* Specific card elements */
+    .element-container > div {{
+        background-color: transparent !important;
+    }}
+    
+    /* Feature cards and info boxes */
+    div[style*="background"] {{
+        background-color: {COLORS['bg_tertiary']} !important;
+    }}
+    
+    /* Override any white backgrounds */
+    div[style*="background: white"],
+    div[style*="background-color: white"],
+    div[style*="background: #fff"],
+    div[style*="background-color: #fff"],
+    div[style*="background: #ffffff"],
+    div[style*="background-color: #ffffff"] {{
+        background-color: {COLORS['bg_tertiary']} !important;
+    }}
+    
+    /* Sidebar specific overrides */
+    [data-testid="stSidebar"] div[style*="background"],
+    [data-testid="stSidebar"] div[class*="css"] {{
+        background-color: transparent !important;
+    }}
+    
+    /* Button base styles in sidebar */
+    [data-testid="stSidebar"] [data-testid="baseButton-secondary"],
+    [data-testid="stSidebar"] [data-testid="baseButton-primary"] {{
+        background-color: {COLORS['bg_tertiary']} !important;
+        color: {COLORS['text_primary']} !important;
+        border: 1px solid {COLORS['border']} !important;
+    }}
+    
+    [data-testid="stSidebar"] [data-testid="baseButton-secondary"]:hover,
+    [data-testid="stSidebar"] [data-testid="baseButton-primary"]:hover {{
+        background-color: {COLORS['hover']} !important;
+        border-color: {COLORS['accent_pink']} !important;
+    }}
+    
+    /* Headers - White text */
     h1, h2, h3, h4, h5, h6 {{
-        font-family: 'Quicksand', sans-serif;
+        font-family: 'Inter', sans-serif;
         font-weight: 600;
-        color: {COLORS['text_dark']};
+        color: {COLORS['text_primary']} !important;
+        letter-spacing: -0.02em;
     }}
     
     h1 {{
         font-size: 2.5rem;
         margin-bottom: 1rem;
+        font-weight: 700;
     }}
     
     h2 {{
         font-size: 2rem;
         margin-bottom: 0.8rem;
+        font-weight: 600;
     }}
     
     h3 {{
         font-size: 1.5rem;
         margin-bottom: 0.6rem;
+        font-weight: 600;
     }}
     
-    /* Buttons */
+    /* Buttons - Modern dark theme */
     .stButton > button {{
-        background: linear-gradient(135deg, {COLORS['blush_pink']} 0%, {COLORS['accent_pink']} 100%);
-        color: {COLORS['white']};
-        border: none;
-        border-radius: 25px;
-        padding: 0.75rem 2rem;
-        font-family: 'Quicksand', sans-serif;
-        font-weight: 600;
-        font-size: 1rem;
-        box-shadow: 0 4px 15px rgba(255, 182, 193, 0.3);
-        transition: all 0.3s ease;
-        cursor: pointer;
+        background: {COLORS['bg_tertiary']} !important;
+        color: {COLORS['text_primary']} !important;
+        border: 1px solid {COLORS['border']} !important;
+        border-radius: 8px !important;
+        padding: 0.75rem 1.5rem !important;
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 500 !important;
+        font-size: 0.95rem !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
     }}
     
     .stButton > button:hover {{
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(255, 182, 193, 0.4);
-        background: linear-gradient(135deg, {COLORS['accent_pink']} 0%, {COLORS['blush_pink']} 100%);
+        background: {COLORS['hover']} !important;
+        border-color: {COLORS['accent_pink']} !important;
+        transform: translateY(-1px);
     }}
     
     .stButton > button:active {{
         transform: translateY(0);
     }}
     
-    /* Sidebar buttons */
-    [data-testid="stSidebar"] .stButton > button {{
-        background: {COLORS['white']};
-        color: {COLORS['accent_pink']};
-        border: 2px solid {COLORS['accent_pink']};
-        box-shadow: 0 2px 8px rgba(255, 105, 180, 0.2);
+    /* Primary action buttons */
+    .stButton > button[kind="primary"] {{
+        background: {COLORS['accent_pink']} !important;
+        border-color: {COLORS['accent_pink']} !important;
+        color: {COLORS['text_primary']} !important;
     }}
     
-    [data-testid="stSidebar"] .stButton > button:hover {{
-        background: {COLORS['accent_pink']};
-        color: {COLORS['white']};
-        border-color: {COLORS['accent_pink']};
+    .stButton > button[kind="primary"]:hover {{
+        background: {COLORS['accent_purple']} !important;
+        border-color: {COLORS['accent_purple']} !important;
     }}
     
-    /* Input fields */
+    /* Input fields - Dark theme */
     .stTextInput > div > div > input,
-    .stTextArea > div > div > textarea {{
-        border-radius: 15px;
-        border: 2px solid {COLORS['lavender']};
-        padding: 0.75rem 1rem;
-        font-family: 'Nunito', sans-serif;
-        transition: all 0.3s ease;
+    .stTextArea > div > div > textarea,
+    .stChatInput > div > div > input {{
+        background-color: {COLORS['bg_tertiary']} !important;
+        border: 1px solid {COLORS['border']} !important;
+        border-radius: 8px !important;
+        padding: 0.75rem 1rem !important;
+        font-family: 'Inter', sans-serif !important;
+        color: {COLORS['text_primary']} !important;
+        transition: all 0.2s ease !important;
     }}
     
     .stTextInput > div > div > input:focus,
-    .stTextArea > div > div > textarea:focus {{
-        border-color: {COLORS['teal']};
-        box-shadow: 0 0 0 3px rgba(64, 224, 208, 0.1);
+    .stTextArea > div > div > textarea:focus,
+    .stChatInput > div > div > input:focus {{
+        border-color: {COLORS['accent_pink']} !important;
+        box-shadow: 0 0 0 2px rgba(255, 105, 180, 0.2) !important;
+        outline: none !important;
     }}
     
-    /* Cards and containers */
+    /* Placeholder text */
+    input::placeholder, textarea::placeholder {{
+        color: {COLORS['text_muted']} !important;
+    }}
+    
+    /* Cards and containers - Dark theme */
     .stAlert {{
-        border-radius: 15px;
-        border: none;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        background-color: {COLORS['bg_tertiary']} !important;
+        border: 1px solid {COLORS['border']} !important;
+        border-radius: 8px !important;
+        color: {COLORS['text_primary']} !important;
     }}
     
     /* Info boxes */
     .stAlert[data-baseweb="notification"] {{
-        background-color: {COLORS['lavender']};
-        border-left: 4px solid {COLORS['accent_purple']};
+        background-color: {COLORS['bg_tertiary']} !important;
+        border-left: 3px solid {COLORS['accent_purple']} !important;
     }}
     
     /* Success boxes */
     .stSuccess {{
-        background-color: rgba(64, 224, 208, 0.1);
-        border-left: 4px solid {COLORS['teal']};
-        border-radius: 15px;
+        background-color: {COLORS['bg_tertiary']} !important;
+        border-left: 3px solid {COLORS['accent_teal']} !important;
+        border-radius: 8px !important;
+        color: {COLORS['text_primary']} !important;
     }}
     
     /* Warning boxes */
     .stWarning {{
-        background-color: rgba(255, 182, 193, 0.1);
-        border-left: 4px solid {COLORS['blush_pink']};
-        border-radius: 15px;
+        background-color: {COLORS['bg_tertiary']} !important;
+        border-left: 3px solid {COLORS['accent_pink']} !important;
+        border-radius: 8px !important;
+        color: {COLORS['text_primary']} !important;
     }}
     
-    /* File uploader */
+    /* Error boxes */
+    .stError {{
+        background-color: {COLORS['bg_tertiary']} !important;
+        border-left: 3px solid #ff4444 !important;
+        border-radius: 8px !important;
+        color: {COLORS['text_primary']} !important;
+    }}
+    
+    /* File uploader - Dark theme */
     [data-testid="stFileUploader"] {{
-        border: 2px dashed {COLORS['teal']};
-        border-radius: 20px;
-        padding: 2rem;
-        background: {COLORS['white']};
-        transition: all 0.3s ease;
+        border: 2px dashed {COLORS['border']} !important;
+        border-radius: 12px !important;
+        padding: 2rem !important;
+        background-color: {COLORS['bg_tertiary']} !important;
+        transition: all 0.2s ease !important;
     }}
     
     [data-testid="stFileUploader"]:hover {{
-        border-color: {COLORS['accent_pink']};
-        background: rgba(255, 182, 193, 0.05);
+        border-color: {COLORS['accent_pink']} !important;
+        background-color: {COLORS['hover']} !important;
     }}
     
-    /* Expander */
+    [data-testid="stFileUploader"] * {{
+        color: {COLORS['text_primary']} !important;
+    }}
+    
+    /* Expander - Dark theme */
     .streamlit-expanderHeader {{
-        border-radius: 15px;
-        background-color: {COLORS['soft_gray']};
-        font-family: 'Quicksand', sans-serif;
-        font-weight: 600;
+        background-color: {COLORS['bg_tertiary']} !important;
+        border: 1px solid {COLORS['border']} !important;
+        border-radius: 8px !important;
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 500 !important;
+        color: {COLORS['text_primary']} !important;
     }}
     
-    /* Tabs */
+    .streamlit-expanderContent {{
+        background-color: {COLORS['bg_tertiary']} !important;
+        border: 1px solid {COLORS['border']} !important;
+        border-top: none !important;
+        color: {COLORS['text_primary']} !important;
+    }}
+    
+    /* Tabs - Dark theme */
     .stTabs [data-baseweb="tab-list"] {{
-        gap: 1rem;
+        gap: 0.5rem;
+        background-color: {COLORS['bg_dark']} !important;
+        border-bottom: 1px solid {COLORS['border']};
     }}
     
     .stTabs [data-baseweb="tab"] {{
-        border-radius: 15px 15px 0 0;
-        padding: 0.75rem 1.5rem;
-        font-family: 'Quicksand', sans-serif;
-        font-weight: 600;
-        background-color: {COLORS['soft_gray']};
-        color: {COLORS['text_light']};
+        border-radius: 8px 8px 0 0 !important;
+        padding: 0.75rem 1.5rem !important;
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 500 !important;
+        background-color: {COLORS['bg_secondary']} !important;
+        color: {COLORS['text_secondary']} !important;
+        border: 1px solid {COLORS['border']} !important;
+        border-bottom: none !important;
     }}
     
     .stTabs [aria-selected="true"] {{
-        background: linear-gradient(135deg, {COLORS['blush_pink']} 0%, {COLORS['lavender']} 100%);
-        color: {COLORS['white']};
+        background-color: {COLORS['bg_tertiary']} !important;
+        color: {COLORS['text_primary']} !important;
+        border-color: {COLORS['accent_pink']} !important;
     }}
     
     /* Markdown styling */
@@ -200,70 +409,91 @@ def apply_custom_styles():
         line-height: 1.6;
     }}
     
-    /* Links */
+    /* Links - Dark theme */
     a {{
-        color: {COLORS['teal']};
+        color: {COLORS['accent_teal']} !important;
         text-decoration: none;
-        transition: color 0.3s ease;
+        transition: color 0.2s ease;
     }}
     
     a:hover {{
-        color: {COLORS['accent_pink']};
+        color: {COLORS['accent_pink']} !important;
     }}
     
-    /* Divider */
+    /* Divider - Dark theme */
     hr {{
         border: none;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, {COLORS['lavender']}, transparent);
+        height: 1px;
+        background: {COLORS['border']};
         margin: 2rem 0;
     }}
     
-    /* Spinner */
+    /* Spinner - Dark theme */
     .stSpinner > div {{
         border-top-color: {COLORS['accent_pink']} !important;
     }}
     
-    /* Progress bar */
+    /* Progress bar - Dark theme */
     .stProgress > div > div > div {{
-        background: linear-gradient(90deg, {COLORS['teal']} 0%, {COLORS['accent_pink']} 100%);
-        border-radius: 10px;
+        background: {COLORS['accent_pink']} !important;
+        border-radius: 4px;
     }}
     
-    /* Selectbox */
+    .stProgress > div > div {{
+        background-color: {COLORS['bg_tertiary']} !important;
+    }}
+    
+    /* Selectbox - Dark theme */
     .stSelectbox > div > div {{
-        border-radius: 15px;
-        border: 2px solid {COLORS['lavender']};
+        background-color: {COLORS['bg_tertiary']} !important;
+        border: 1px solid {COLORS['border']} !important;
+        border-radius: 8px !important;
+        color: {COLORS['text_primary']} !important;
     }}
     
-    /* Slider */
+    /* Slider - Dark theme */
     .stSlider > div > div > div {{
-        background: {COLORS['lavender']};
+        background: {COLORS['bg_tertiary']} !important;
     }}
     
     .stSlider > div > div > div > div {{
-        background: {COLORS['accent_pink']};
+        background: {COLORS['accent_pink']} !important;
     }}
     
-    /* Chat message styling (for future chat interface) */
+    /* Chat message styling - Dark theme */
     .chat-message {{
-        padding: 1rem;
-        border-radius: 20px;
+        padding: 1.25rem;
+        border-radius: 12px;
         margin-bottom: 1rem;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         animation: fadeIn 0.3s ease;
     }}
     
     .chat-message.user {{
-        background: linear-gradient(135deg, {COLORS['teal']} 0%, rgba(64, 224, 208, 0.8) 100%);
-        color: {COLORS['white']};
+        background: {COLORS['accent_teal']} !important;
+        color: {COLORS['bg_dark']} !important;
         margin-left: 2rem;
+        font-weight: 500;
+        border: 1px solid {COLORS['accent_teal']};
+    }}
+    
+    .chat-message.user * {{
+        color: {COLORS['bg_dark']} !important;
     }}
     
     .chat-message.assistant {{
-        background: {COLORS['white']};
-        border: 2px solid {COLORS['lavender']};
+        background: {COLORS['bg_tertiary']} !important;
+        border: 1px solid {COLORS['border']} !important;
         margin-right: 2rem;
+        color: {COLORS['text_primary']} !important;
+    }}
+    
+    .chat-message.assistant * {{
+        color: {COLORS['text_primary']} !important;
+    }}
+    
+    .chat-message.assistant p {{
+        color: {COLORS['text_primary']} !important;
+        margin-bottom: 0.5rem;
     }}
     
     /* Animations */
@@ -278,24 +508,23 @@ def apply_custom_styles():
         }}
     }}
     
-    /* Scrollbar styling */
+    /* Scrollbar styling - Dark theme */
     ::-webkit-scrollbar {{
-        width: 10px;
-        height: 10px;
+        width: 8px;
+        height: 8px;
     }}
     
     ::-webkit-scrollbar-track {{
-        background: {COLORS['soft_gray']};
-        border-radius: 10px;
+        background: {COLORS['bg_secondary']};
     }}
     
     ::-webkit-scrollbar-thumb {{
-        background: linear-gradient(180deg, {COLORS['blush_pink']} 0%, {COLORS['lavender']} 100%);
-        border-radius: 10px;
+        background: {COLORS['border']};
+        border-radius: 4px;
     }}
     
     ::-webkit-scrollbar-thumb:hover {{
-        background: linear-gradient(180deg, {COLORS['accent_pink']} 0%, {COLORS['accent_purple']} 100%);
+        background: {COLORS['text_muted']};
     }}
     
     /* Responsive adjustments */
@@ -315,27 +544,284 @@ def apply_custom_styles():
         }}
     }}
     
-    /* Custom utility classes */
+    /* Custom utility classes - Dark theme */
     .text-center {{
         text-align: center;
     }}
     
     .text-muted {{
-        color: {COLORS['text_light']};
+        color: {COLORS['text_secondary']} !important;
     }}
     
     .rounded-box {{
-        border-radius: 20px;
+        border-radius: 12px;
         padding: 1.5rem;
-        background: {COLORS['white']};
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        background: {COLORS['bg_tertiary']} !important;
+        border: 1px solid {COLORS['border']};
     }}
     
     .gradient-text {{
-        background: linear-gradient(135deg, {COLORS['accent_pink']} 0%, {COLORS['teal']} 100%);
+        background: linear-gradient(135deg, {COLORS['accent_pink']} 0%, {COLORS['accent_teal']} 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+    }}
+    
+    /* Response cards - ensure dark text */
+    .stMarkdown p {{
+        color: {COLORS['text_primary']} !important;
+    }}
+    
+    /* Suggestion boxes */
+    .element-container {{
+        color: {COLORS['text_primary']};
+    }}
+    
+    /* Info/success/warning boxes - better contrast */
+    .stAlert {{
+        color: {COLORS['text_primary']} !important;
+    }}
+    
+    .stAlert * {{
+        color: {COLORS['text_primary']} !important;
+    }}
+    
+    /* Ensure all container text is readable */
+    div[data-testid="stVerticalBlock"] {{
+        color: {COLORS['text_primary']};
+    }}
+    
+    /* Video player section - Dark theme */
+    .video-player-container {{
+        margin-top: 0 !important;
+        padding-top: 0.5rem !important;
+        background-color: {COLORS['bg_dark']} !important;
+    }}
+    
+    /* Video element */
+    video {{
+        border-radius: 12px;
+        border: 1px solid {COLORS['border']};
+    }}
+    
+    [data-testid="stVideo"] {{
+        background-color: {COLORS['bg_tertiary']} !important;
+        border-radius: 12px;
+        padding: 0.5rem;
+    }}
+    
+    /* Chat section styling */
+    .stMarkdown h3 {{
+        margin-top: 0.5rem !important;
+        margin-bottom: 0.75rem !important;
+    }}
+    
+    /* Fix white text on light backgrounds */
+    .stMarkdown, .stText {{
+        color: {COLORS['text_primary']} !important;
+    }}
+    
+    /* Timestamp and metadata text */
+    .stCaption {{
+        color: {COLORS['text_secondary']} !important;
+    }}
+    
+    /* Suggestion buttons - better visibility */
+    .stButton button[kind="secondary"] {{
+        background: {COLORS['text_primary']} !important;
+        color: #6A1B9A !important;
+        border: 2px solid #E1BEE7 !important;
+        font-weight: 600 !important;
+    }}
+    
+    .stButton button[kind="secondary"]:hover {{
+        background: #F3E5F5 !important;
+        border-color: #BA68C8 !important;
+        color: #6A1B9A !important;
+    }}
+    
+    /* CRITICAL: Force all text to be dark and readable */
+    p, span, div, label, li, td, th {{
+        color: {COLORS['text_primary']} !important;
+    }}
+    
+    /* Input placeholders */
+    input::placeholder, textarea::placeholder {{
+        color: {COLORS['text_secondary']} !important;
+        opacity: 0.7;
+    }}
+    
+    /* Chat input box */
+    .stChatInput input {{
+        color: {COLORS['text_primary']} !important;
+        background: {COLORS['text_primary']} !important;
+    }}
+    
+    /* Text areas */
+    textarea {{
+        color: {COLORS['text_primary']} !important;
+        background: {COLORS['text_primary']} !important;
+    }}
+    
+    /* All input fields */
+    input {{
+        color: {COLORS['text_primary']} !important;
+        background: {COLORS['text_primary']} !important;
+    }}
+    
+    /* Conversation header */
+    [data-testid="stChatMessageContainer"] {{
+        color: {COLORS['text_primary']} !important;
+    }}
+    
+    /* Chat messages - force dark text */
+    [data-testid="stChatMessage"] {{
+        color: {COLORS['text_primary']} !important;
+    }}
+    
+    [data-testid="stChatMessage"] * {{
+        color: {COLORS['text_primary']} !important;
+    }}
+    
+    /* Ensure markdown content is dark */
+    .stMarkdown p, .stMarkdown span, .stMarkdown div {{
+        color: {COLORS['text_primary']} !important;
+    }}
+    
+    /* Labels and captions */
+    label, .stCaption, small {{
+        color: {COLORS['text_primary']} !important;
+    }}
+    
+    /* Video player controls text */
+    [data-testid="stVideo"] + div {{
+        color: {COLORS['text_primary']} !important;
+    }}
+    
+    /* Column content */
+    [data-testid="column"] * {{
+        color: {COLORS['text_primary']} !important;
+    }}
+    
+    /* Expander content */
+    .streamlit-expanderContent {{
+        color: {COLORS['text_primary']} !important;
+    }}
+    
+    .streamlit-expanderContent * {{
+        color: {COLORS['text_primary']} !important;
+    }}
+    
+    /* Metrics - Dark theme */
+    [data-testid="stMetricValue"] {{
+        color: {COLORS['text_primary']} !important;
+        font-weight: 600 !important;
+    }}
+    
+    [data-testid="stMetricLabel"] {{
+        color: {COLORS['text_secondary']} !important;
+    }}
+    
+    /* Column backgrounds */
+    [data-testid="column"] {{
+        background-color: {COLORS['bg_dark']} !important;
+    }}
+    
+    /* Radio buttons and checkboxes */
+    .stRadio > label, .stCheckbox > label {{
+        color: {COLORS['text_primary']} !important;
+    }}
+    
+    /* AGGRESSIVE: Force all sidebar buttons to be dark */
+    [data-testid="stSidebar"] button[kind="secondary"],
+    [data-testid="stSidebar"] button[kind="primary"],
+    [data-testid="stSidebar"] button[class*="Button"],
+    [data-testid="stSidebar"] .row-widget.stButton button {{
+        background-color: {COLORS['bg_tertiary']} !important;
+        color: {COLORS['text_primary']} !important;
+        border: 1px solid {COLORS['border']} !important;
+        border-radius: 8px !important;
+    }}
+    
+    [data-testid="stSidebar"] button[kind="secondary"]:hover,
+    [data-testid="stSidebar"] button[kind="primary"]:hover,
+    [data-testid="stSidebar"] button[class*="Button"]:hover,
+    [data-testid="stSidebar"] .row-widget.stButton button:hover {{
+        background-color: {COLORS['hover']} !important;
+        border-color: {COLORS['accent_pink']} !important;
+    }}
+    
+    /* Remove any box shadows from sidebar buttons */
+    [data-testid="stSidebar"] button {{
+        box-shadow: none !important;
+    }}
+    
+    /* Target Streamlit's internal button classes */
+    [data-testid="stSidebar"] .stButton > button[data-testid="baseButton-secondary"] {{
+        background-color: {COLORS['bg_tertiary']} !important;
+        color: {COLORS['text_primary']} !important;
+        border: 1px solid {COLORS['border']} !important;
+    }}
+    
+    /* Force button container backgrounds */
+    [data-testid="stSidebar"] .stButton,
+    [data-testid="stSidebar"] .row-widget {{
+        background-color: transparent !important;
+    }}
+    
+    /* Override Streamlit's default white button background */
+    [data-testid="stSidebar"] button[class*="st-"] {{
+        background-color: {COLORS['bg_tertiary']} !important;
+        color: {COLORS['text_primary']} !important;
+    }}
+    
+    /* ========================================
+       HARDENING - Nuclear Option Overrides
+       ======================================== */
+    
+    /* Eliminate ALL white backgrounds */
+    [style*="background: white"] *,
+    [style*="background-color: white"] *,
+    [style*="background: #fff"] *,
+    [style*="background-color: #fff"] *,
+    [style*="background: #ffffff"] *,
+    [style*="background-color: #ffffff"] * {{
+        background-color: {COLORS['bg_tertiary']} !important;
+    }}
+    
+    /* Force all containers to respect dark theme */
+    div[class], section[class], article[class], aside[class] {{
+        background-color: transparent !important;
+    }}
+    
+    /* Ensure no light colors leak through */
+    [class*="st-"] {{
+        color: {COLORS['text_primary']} !important;
+    }}
+    
+    /* Maximum priority text color */
+    * {{
+        color: {COLORS['text_primary']} !important;
+    }}
+    
+    /* Exception: User input should be visible */
+    input, textarea, select {{
+        color: {COLORS['text_primary']} !important;
+        background-color: {COLORS['bg_tertiary']} !important;
+    }}
+    
+    /* Exception: Buttons keep their styling */
+    button, button * {{
+        color: {COLORS['text_primary']} !important;
+    }}
+    
+    /* Exception: Links keep accent color */
+    a {{
+        color: {COLORS['accent_teal']} !important;
+    }}
+    
+    a:hover {{
+        color: {COLORS['accent_pink']} !important;
     }}
     </style>
     """
@@ -344,4 +830,4 @@ def apply_custom_styles():
 
 def get_color(color_name: str) -> str:
     """Get color value by name"""
-    return COLORS.get(color_name, COLORS['text_dark'])
+    return COLORS.get(color_name, COLORS['bg_dark'])

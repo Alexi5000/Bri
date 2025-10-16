@@ -29,7 +29,7 @@ def render_welcome_screen():
             <h1 style='font-size: 3.5rem; margin-bottom: 0.5rem;'>
                 👋 Hi, I'm BRI!
             </h1>
-            <p style='font-size: 1.3rem; color: #666; font-weight: 300; margin-bottom: 0.5rem;'>
+            <p style='font-size: 1.3rem; color: #222; font-weight: 300; margin-bottom: 0.5rem;'>
                 (That's Brianna, but you can call me BRI 💜)
             </p>
         </div>
@@ -63,7 +63,7 @@ def render_welcome_screen():
         st.markdown(
             """
             <div style='text-align: center; padding: 1.5rem;'>
-                <p style='font-size: 1.2rem; line-height: 1.8; color: #555;'>
+                <p style='font-size: 1.2rem; line-height: 1.8; color: #1a1a1a;'>
                     I'm your friendly video assistant! 🎬✨<br><br>
                     Upload any video and I'll help you explore it through conversation.
                     Ask me questions, find specific moments, or just chat about what's happening.
@@ -80,10 +80,10 @@ def render_welcome_screen():
     st.markdown(
         """
         <div style='text-align: center; padding: 1rem 0;'>
-            <h2 style='font-size: 2rem; color: #333; margin-bottom: 1rem;'>
+            <h2 style='font-size: 2rem; color: #1a1a1a; margin-bottom: 1rem;'>
                 🎥 Ready when you are!
             </h2>
-            <p style='font-size: 1.1rem; color: #666; margin-bottom: 1.5rem;'>
+            <p style='font-size: 1.1rem; color: #1a1a1a; margin-bottom: 1.5rem;'>
                 Drop a video below to start our conversation
             </p>
         </div>
@@ -103,7 +103,7 @@ def render_welcome_screen():
     st.markdown(
         """
         <div style='text-align: center; padding: 0.5rem 0 2rem 0;'>
-            <p style='font-size: 0.95rem; color: #999; font-style: italic;'>
+            <p style='font-size: 0.95rem; color: #444; font-style: italic;'>
                 💡 Tip: I can handle videos up to 500MB. The shorter the video, the faster I can help!
             </p>
         </div>
@@ -120,7 +120,7 @@ def render_welcome_screen():
     st.markdown(
         """
         <div style='text-align: center; padding: 1rem 0 0.5rem 0;'>
-            <h3 style='font-size: 1.5rem; color: #333; margin-bottom: 1.5rem;'>
+            <h3 style='font-size: 1.5rem; color: #1a1a1a; margin-bottom: 1.5rem;'>
                 ✨ What I can do for you
             </h3>
         </div>
@@ -156,7 +156,7 @@ def render_welcome_screen():
     st.markdown(
         """
         <div style='text-align: center; padding: 2rem 0 1rem 0;'>
-            <p style='font-size: 1rem; color: #888;'>
+            <p style='font-size: 1rem; color: #333;'>
                 🌟 I'm here to make video exploration easy and fun!<br>
                 Upload your first video and let's get started! 🚀
             </p>
@@ -178,9 +178,10 @@ def _render_feature_card(emoji: str, title: str, description: str):
     st.markdown(
         f"""
         <div style='
-            background: white;
+            background: #2a2a2a;
             border-radius: 20px;
             padding: 1.5rem;
+            border: 1px solid #333333;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
             text-align: center;
             height: 100%;
@@ -189,10 +190,10 @@ def _render_feature_card(emoji: str, title: str, description: str):
             <div style='font-size: 3rem; margin-bottom: 0.5rem;'>
                 {emoji}
             </div>
-            <h4 style='font-size: 1.2rem; color: #333; margin-bottom: 0.5rem; font-weight: 600;'>
+            <h4 style='font-size: 1.2rem; color: #1a1a1a; margin-bottom: 0.5rem; font-weight: 600;'>
                 {title}
             </h4>
-            <p style='font-size: 0.95rem; color: #666; line-height: 1.5;'>
+            <p style='font-size: 0.95rem; color: #1a1a1a; line-height: 1.5;'>
                 {description}
             </p>
         </div>
@@ -308,7 +309,7 @@ def _handle_upload(uploaded_file):
                 padding: 1rem 1.5rem;
                 margin: 1rem 0;
             '>
-                <p style='margin: 0; color: #333;'>
+                <p style='margin: 0; color: #1a1a1a;'>
                     📹 <strong>File:</strong> {uploaded_file.name}<br>
                     📊 <strong>Size:</strong> {file_size_mb:.2f} MB<br>
                     ⏱️ <strong>Duration:</strong> {duration_str}<br>
@@ -324,10 +325,10 @@ def _handle_upload(uploaded_file):
         st.markdown(
             """
             <div style='text-align: center; padding: 1rem 0;'>
-                <h3 style='font-size: 1.5rem; color: #333;'>
+                <h3 style='font-size: 1.5rem; color: #1a1a1a;'>
                     🔄 Processing Your Video
                 </h3>
-                <p style='font-size: 1rem; color: #666;'>
+                <p style='font-size: 1rem; color: #1a1a1a;'>
                     Give me a moment to understand your video...
                 </p>
             </div>
@@ -405,7 +406,7 @@ def _process_video_with_progress(video_id: str):
             status_text.markdown(
                 f"""
                 <div style='text-align: center; padding: 0.5rem;'>
-                    <p style='font-size: 1.1rem; color: #555; font-weight: 500;'>
+                    <p style='font-size: 1.1rem; color: #1a1a1a; font-weight: 500;'>
                         {step_name}
                     </p>
                 </div>
@@ -417,7 +418,7 @@ def _process_video_with_progress(video_id: str):
             step_status.markdown(
                 f"""
                 <div style='text-align: center; padding: 0.5rem;'>
-                    <p style='font-size: 0.95rem; color: #888; font-style: italic;'>
+                    <p style='font-size: 0.95rem; color: #444; font-style: italic;'>
                         {message}
                     </p>
                 </div>
@@ -515,10 +516,10 @@ def render_empty_state():
             <div style='font-size: 5rem; margin-bottom: 1rem;'>
                 🎬
             </div>
-            <h2 style='color: #666; font-weight: 400; margin-bottom: 1rem;'>
+            <h2 style='color: #1a1a1a; font-weight: 400; margin-bottom: 1rem;'>
                 No videos yet!
             </h2>
-            <p style='font-size: 1.1rem; color: #888;'>
+            <p style='font-size: 1.1rem; color: #1a1a1a;'>
                 Upload your first video to get started 🚀
             </p>
         </div>

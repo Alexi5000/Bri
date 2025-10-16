@@ -44,24 +44,26 @@ def render_video_player(
     st.markdown("""
         <style>
         .video-player-container {
-            background: white;
-            border-radius: 20px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-            margin-bottom: 1.5rem;
+            background: #2a2a2a;
+            border-radius: 15px;
+            padding: 1rem;
+            border: 1px solid #333333;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+            margin-bottom: 1rem;
+            margin-top: 0;
         }
         
         .player-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
         }
         
         .player-title {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: 600;
-            color: #333;
+            color: #6A1B9A;
             font-family: 'Quicksand', sans-serif;
         }
         

@@ -57,7 +57,7 @@ def render_chat_window(
         
         .message-timestamp {
             font-size: 0.85rem;
-            color: #999;
+            color: #666;
         }
         
         .message-content {
@@ -68,17 +68,23 @@ def render_chat_window(
         }
         
         .user-message .message-content {
-            background: linear-gradient(135deg, #40E0D0 0%, rgba(64, 224, 208, 0.8) 100%);
+            background: linear-gradient(135deg, #26C6DA 0%, #00ACC1 100%);
             color: white;
             margin-left: 2rem;
             border-bottom-right-radius: 5px;
+            font-weight: 500;
         }
         
         .assistant-message .message-content {
-            background: white;
-            border: 2px solid #E6E6FA;
+            background: #2a2a2a;
+            border: 1px solid #333333;
             margin-right: 2rem;
             border-bottom-left-radius: 5px;
+            color: #333333;
+        }
+        
+        .assistant-message .message-content * {
+            color: #333333 !important;
         }
         
         .user-message .message-role {
@@ -96,9 +102,10 @@ def render_chat_window(
         .input-container {
             position: sticky;
             bottom: 0;
-            background: white;
+            background: #1a1a1a;
             padding: 1rem;
             border-radius: 20px;
+            border: 1px solid #333333;
             box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
             margin-top: 1rem;
         }
@@ -230,7 +237,7 @@ def _render_message_input(video_id: str, on_send_message: callable) -> None:
     
     # Add keyboard shortcut hint
     st.markdown("""
-        <div style="text-align: center; margin-top: 0.5rem; font-size: 0.85rem; color: #666666;">
+        <div style="text-align: center; margin-top: 0.5rem; font-size: 0.85rem; color: #444444;">
             Press Enter to send 💌
         </div>
     """, unsafe_allow_html=True)

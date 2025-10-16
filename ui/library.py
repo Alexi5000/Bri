@@ -355,8 +355,8 @@ def render_video_library() -> None:
                 margin: 2rem 0;
             ">
                 <div style="font-size: 5rem; margin-bottom: 1rem;">📹</div>
-                <h2 style="color: #666; margin-bottom: 1rem;">No videos yet!</h2>
-                <p style="color: #999; font-size: 1.1rem;">
+                <h2 style="color: #1a1a1a; margin-bottom: 1rem;">No videos yet!</h2>
+                <p style="color: #1a1a1a; font-size: 1.1rem;">
                     Upload your first video to get started with BRI.<br>
                     I'm excited to help you explore your content! 💜
                 </p>

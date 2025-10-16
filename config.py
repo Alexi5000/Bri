@@ -34,7 +34,7 @@ class Config:
     MCP_SERVER_PORT: int = int(os.getenv("MCP_SERVER_PORT", "8000"))
     
     # Processing Configuration
-    MAX_FRAMES_PER_VIDEO: int = int(os.getenv("MAX_FRAMES_PER_VIDEO", "100"))
+    MAX_FRAMES_PER_VIDEO: int = int(os.getenv("MAX_FRAMES_PER_VIDEO", "20"))  # Reduced for faster CPU processing
     FRAME_EXTRACTION_INTERVAL: float = float(os.getenv("FRAME_EXTRACTION_INTERVAL", "2.0"))
     CACHE_TTL_HOURS: int = int(os.getenv("CACHE_TTL_HOURS", "24"))
     

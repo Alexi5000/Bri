@@ -142,7 +142,7 @@ def render_sidebar():
         # Footer
         st.markdown("---")
         st.markdown(
-            "<div style='text-align: center; color: #999; font-size: 0.8em;'>"
+            "<div style='text-align: center; color: #666; font-size: 0.8em;'>"
             "Made with 💜 by BRI<br>"
             "Open Source Video Assistant"
             "</div>",
@@ -197,11 +197,15 @@ def render_chat_placeholder():
         
         # Page header
         st.markdown("# 💬 Chat with BRI")
-        st.markdown(f"**Video:** {video_info['filename']}")
-        st.markdown("---")
+        # Video title with minimal spacing
+        st.markdown(f"""
+        <div style="margin-bottom: 0.5rem; padding: 0.5rem 0;">
+            <span style="font-weight: 600; color: #6A1B9A;">📹 {video_info['filename']}</span>
+        </div>
+        """, unsafe_allow_html=True)
         
         # Create two columns: video player (left) and chat (right)
-        col1, col2 = st.columns([1, 1])
+        col1, col2 = st.columns([1, 1], gap="medium")
         
         with col1:
             # Get conversation history for this video
@@ -268,11 +272,11 @@ def render_chat_with_agent(video_id: str, video_info: dict):
                 st.markdown(f"""
                 <div style="margin-bottom: 1rem;">
                     <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                        <span style="font-size: 1.2rem;">👤</span>
-                        <span style="font-weight: 600; color: #40E0D0;">You</span>
-                        <span style="font-size: 0.85rem; color: #999;">{format_message_timestamp(timestamp)}</span>
+                        <span style="font-size: 1.1rem;">👤</span>
+                        <span style="font-weight: 600; color: #26C6DA;">You</span>
+                        <span style="font-size: 0.8rem; color: #666;">just now</span>
                     </div>
-                    <div style="padding: 1rem 1.25rem; border-radius: 20px; background: linear-gradient(135deg, #40E0D0 0%, rgba(64, 224, 208, 0.8) 100%); color: white; margin-left: 2rem; border-bottom-right-radius: 5px;">
+                    <div style="padding: 1rem 1.25rem; border-radius: 18px; background: linear-gradient(135deg, #26C6DA 0%, #00ACC1 100%); color: white; margin-left: 1.5rem; border-bottom-right-radius: 4px; font-weight: 500; box-shadow: 0 2px 8px rgba(38, 198, 218, 0.2);">
                         {content}
                     </div>
                 </div>
@@ -281,11 +285,11 @@ def render_chat_with_agent(video_id: str, video_info: dict):
                 st.markdown(f"""
                 <div style="margin-bottom: 1rem;">
                     <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                        <span style="font-size: 1.2rem;">💖</span>
-                        <span style="font-weight: 600; color: #FF69B4;">BRI</span>
-                        <span style="font-size: 0.85rem; color: #999;">{format_message_timestamp(timestamp)}</span>
+                        <span style="font-size: 1.1rem;">💖</span>
+                        <span style="font-weight: 600; color: #BA68C8;">BRI</span>
+                        <span style="font-size: 0.8rem; color: #666;">just now</span>
                     </div>
-                    <div style="padding: 1rem 1.25rem; border-radius: 20px; background: white; border: 2px solid #E6E6FA; margin-right: 2rem; border-bottom-left-radius: 5px;">
+                    <div style="padding: 1rem 1.25rem; border-radius: 18px; background: #2a2a2a; border: 1px solid #333333; margin-right: 1.5rem; border-bottom-left-radius: 4px; color: #ffffff;">
                         {content}
                     </div>
                 </div>
@@ -330,7 +334,7 @@ def render_chat_with_agent(video_id: str, video_info: dict):
     
     # Keyboard shortcut hint
     st.markdown("""
-        <div style="text-align: center; margin-top: 0.5rem; font-size: 0.85rem; color: #666666;">
+        <div style="text-align: center; margin-top: 0.5rem; font-size: 0.85rem; color: #444444;">
             Press Enter to send 💌
         </div>
     """, unsafe_allow_html=True)
@@ -383,9 +387,9 @@ def display_agent_response(response):
         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
             <span style="font-size: 1.2rem;">💖</span>
             <span style="font-weight: 600; color: #FF69B4;">BRI</span>
-            <span style="font-size: 0.85rem; color: #999;">just now</span>
+            <span style="font-size: 0.85rem; color: #666;">just now</span>
         </div>
-        <div style="padding: 1rem 1.25rem; border-radius: 20px; background: white; border: 2px solid #E6E6FA; margin-right: 2rem; border-bottom-left-radius: 5px;">
+        <div style="padding: 1rem 1.25rem; border-radius: 20px; background: #2a2a2a; border: 1px solid #333333; margin-right: 2rem; border-bottom-left-radius: 5px; color: #ffffff;">
             {response.message}
         </div>
     </div>
@@ -406,8 +410,8 @@ def display_agent_response(response):
     # Display follow-up suggestions
     if response.suggestions:
         st.markdown("""
-        <div style="margin-top: 1rem; padding: 1rem; background: #F5F5F5; border-radius: 15px; border-left: 4px solid #FFB6C1;">
-            <div style="font-weight: 600; margin-bottom: 0.5rem; color: #333;">
+        <div style="margin-top: 1rem; padding: 1rem; background: #2a2a2a; border-radius: 15px; border: 1px solid #333333;">
+            <div style="font-weight: 600; margin-bottom: 0.5rem; color: #FF69B4;">
                 💡 You might also want to ask:
             </div>
         </div>
