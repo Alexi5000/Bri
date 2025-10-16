@@ -68,6 +68,9 @@ class ContextBuilder:
     ) -> VideoContext:
         """Compile all available data for a video.
         
+        ENHANCED: Now checks database for ALL available data types and builds
+        rich context even with partial data. Prioritizes: captions > transcripts > objects > frames
+        
         Args:
             video_id: Video identifier
             include_conversation: Whether to include conversation history
@@ -84,28 +87,32 @@ class ContextBuilder:
             print(f"Found {len(context.captions)} captions")
         """
         try:
-            logger.debug(f"Building context for video {video_id}")
+            logger.debug(f"Building comprehensive context for video {video_id}")
             
-            # Retrieve metadata
+            # Retrieve ALL data types from database
+            # Priority order: captions > transcripts > objects > frames
+            
+            # 1. Retrieve metadata (always try first for video info)
             metadata = self._get_video_metadata(video_id)
             
-            # Retrieve frames
-            frames = self._get_frames(video_id)
-            
-            # Retrieve captions
+            # 2. Retrieve captions (HIGHEST PRIORITY - most informative)
             captions = self._get_captions(video_id)
             
-            # Retrieve transcript
+            # 3. Retrieve transcript (HIGH PRIORITY - audio content)
             transcript = self._get_transcript(video_id)
             
-            # Retrieve object detections
+            # 4. Retrieve object detections (MEDIUM PRIORITY - specific objects)
             objects = self._get_object_detections(video_id)
             
-            # Retrieve conversation history if requested
+            # 5. Retrieve frames (FALLBACK - raw visual data)
+            frames = self._get_frames(video_id)
+            
+            # 6. Retrieve conversation history if requested
             conversation_history = []
             if include_conversation:
                 conversation_history = self._get_conversation_history(video_id)
             
+            # Build context with all available data
             context = VideoContext(
                 video_id=video_id,
                 metadata=metadata,
@@ -116,11 +123,23 @@ class ContextBuilder:
                 conversation_history=conversation_history
             )
             
-            logger.info(
-                f"Built context for video {video_id}: "
-                f"{len(frames)} frames, {len(captions)} captions, "
-                f"{len(objects)} detection results"
-            )
+            # Log comprehensive data availability
+            data_summary = []
+            if metadata:
+                data_summary.append(f"metadata (duration: {metadata.duration:.1f}s)")
+            if captions:
+                data_summary.append(f"{len(captions)} captions")
+            if transcript and transcript.segments:
+                data_summary.append(f"{len(transcript.segments)} transcript segments")
+            if objects:
+                data_summary.append(f"{len(objects)} object detections")
+            if frames:
+                data_summary.append(f"{len(frames)} frames")
+            
+            if data_summary:
+                logger.info(f"Built context for video {video_id}: {', '.join(data_summary)}")
+            else:
+                logger.warning(f"No processed data found for video {video_id}")
             
             return context
             
@@ -128,6 +147,100 @@ class ContextBuilder:
             logger.error(f"Failed to build context for video {video_id}: {e}")
             raise ContextError(f"Failed to build video context: {e}")
 
+    def build_rich_context_description(
+        self,
+        video_id: str,
+        max_items: int = 10
+    ) -> str:
+        """Build a rich text description of video context even with partial data.
+        
+        Prioritizes: captions > transcripts > objects > frames
+        Provides fallback descriptions when higher-priority data is unavailable.
+        
+        Args:
+            video_id: Video identifier
+            max_items: Maximum number of items to include per data type
+            
+        Returns:
+            Rich text description of available video context
+        """
+        try:
+            context = self.build_video_context(video_id, include_conversation=False)
+            description_parts = []
+            
+            # Add metadata summary
+            if context.metadata:
+                description_parts.append(
+                    f"Video duration: {context.metadata.duration:.1f}s "
+                    f"({context.metadata.width}x{context.metadata.height})"
+                )
+            
+            # Priority 1: Captions (most informative)
+            if context.captions:
+                description_parts.append(f"\nVisual Analysis ({len(context.captions)} scenes):")
+                for caption in context.captions[:max_items]:
+                    description_parts.append(
+                        f"  [{self._format_timestamp(caption.frame_timestamp)}] {caption.text}"
+                    )
+                if len(context.captions) > max_items:
+                    description_parts.append(f"  ... and {len(context.captions) - max_items} more scenes")
+            
+            # Priority 2: Transcripts (audio content)
+            if context.transcript and context.transcript.segments:
+                description_parts.append(f"\nAudio Transcript ({len(context.transcript.segments)} segments):")
+                for segment in context.transcript.segments[:max_items]:
+                    description_parts.append(
+                        f"  [{self._format_timestamp(segment.start)}] {segment.text}"
+                    )
+                if len(context.transcript.segments) > max_items:
+                    description_parts.append(f"  ... and {len(context.transcript.segments) - max_items} more segments")
+            
+            # Priority 3: Objects (specific detections)
+            if context.objects:
+                description_parts.append(f"\nDetected Objects ({len(context.objects)} frames analyzed):")
+                object_summary = {}
+                for detection in context.objects:
+                    for obj in detection.objects:
+                        obj_name = obj.class_name
+                        if obj_name not in object_summary:
+                            object_summary[obj_name] = []
+                        object_summary[obj_name].append(detection.frame_timestamp)
+                
+                for obj_name, timestamps in list(object_summary.items())[:max_items]:
+                    ts_str = ", ".join([self._format_timestamp(ts) for ts in timestamps[:3]])
+                    if len(timestamps) > 3:
+                        ts_str += f" (+{len(timestamps) - 3} more)"
+                    description_parts.append(f"  {obj_name}: {ts_str}")
+            
+            # Priority 4: Frames (fallback - describe by timestamp)
+            if context.frames and not context.captions:
+                description_parts.append(f"\nExtracted Frames ({len(context.frames)} frames):")
+                description_parts.append("  Frames available at:")
+                timestamps = [self._format_timestamp(f.timestamp) for f in context.frames[:max_items]]
+                description_parts.append(f"  {', '.join(timestamps)}")
+                if len(context.frames) > max_items:
+                    description_parts.append(f"  ... and {len(context.frames) - max_items} more frames")
+            
+            if not description_parts:
+                return "No processed data available for this video yet."
+            
+            return "\n".join(description_parts)
+            
+        except Exception as e:
+            logger.error(f"Failed to build rich context description: {e}")
+            return "Unable to retrieve video context."
+    
+    def _format_timestamp(self, seconds: float) -> str:
+        """Format timestamp as MM:SS or HH:MM:SS."""
+        hours = int(seconds // 3600)
+        minutes = int((seconds % 3600) // 60)
+        secs = int(seconds % 60)
+        
+        if hours > 0:
+            return f"{hours}:{minutes:02d}:{secs:02d}"
+        else:
+            return f"{minutes}:{secs:02d}"
+    
     def search_captions(
         self,
         video_id: str,
@@ -136,8 +249,10 @@ class ContextBuilder:
     ) -> List[Caption]:
         """Find relevant captions using text similarity.
         
-        Uses simple keyword matching for text similarity.
-        For production, consider using embeddings and vector similarity.
+        ENHANCED: Improved keyword matching with:
+        - Stemming/lemmatization for better word matching
+        - Multiple relevance scoring factors
+        - Ranked results by relevance score
         
         Args:
             video_id: Video identifier
@@ -165,27 +280,48 @@ class ContextBuilder:
                 logger.warning(f"No captions found for video {video_id}")
                 return []
             
-            # Normalize query for matching
+            # Normalize and process query
             query_lower = query.lower()
-            query_words = set(query_lower.split())
+            query_words = self._tokenize_and_stem(query_lower)
             
-            # Score captions based on keyword overlap
+            # Score captions based on multiple relevance factors
             scored_captions = []
             for caption in all_captions:
                 caption_lower = caption.text.lower()
-                caption_words = set(caption_lower.split())
+                caption_words = self._tokenize_and_stem(caption_lower)
                 
-                # Calculate simple relevance score
-                # 1. Exact phrase match (highest priority)
+                # Calculate relevance score with multiple factors
+                score = 0.0
+                
+                # Factor 1: Exact phrase match (highest priority - 100 points)
                 if query_lower in caption_lower:
-                    score = 100.0
-                # 2. Word overlap
-                else:
-                    overlap = len(query_words.intersection(caption_words))
-                    score = (overlap / len(query_words)) * 50.0 if query_words else 0.0
+                    score += 100.0
                 
-                # Boost score by caption confidence
-                score *= caption.confidence
+                # Factor 2: Stemmed word overlap (50 points max)
+                if query_words:
+                    overlap = len(query_words.intersection(caption_words))
+                    word_overlap_score = (overlap / len(query_words)) * 50.0
+                    score += word_overlap_score
+                
+                # Factor 3: Partial word matches (25 points max)
+                partial_matches = 0
+                for q_word in query_lower.split():
+                    if len(q_word) > 3:  # Only check words longer than 3 chars
+                        for c_word in caption_lower.split():
+                            if q_word in c_word or c_word in q_word:
+                                partial_matches += 1
+                                break
+                if query_lower.split():
+                    partial_score = (partial_matches / len(query_lower.split())) * 25.0
+                    score += partial_score
+                
+                # Factor 4: Synonym/related word matching (10 points max)
+                synonym_score = self._calculate_synonym_score(query_lower, caption_lower)
+                score += synonym_score
+                
+                # Boost score by caption confidence (multiply by 0.5 to 1.0)
+                confidence_multiplier = 0.5 + (caption.confidence * 0.5)
+                score *= confidence_multiplier
                 
                 scored_captions.append((score, caption))
             
@@ -193,26 +329,115 @@ class ContextBuilder:
             scored_captions.sort(key=lambda x: x[0], reverse=True)
             results = [caption for score, caption in scored_captions[:top_k] if score > 0]
             
-            logger.info(f"Found {len(results)} relevant captions for query: {query}")
+            logger.info(
+                f"Found {len(results)} relevant captions for query: {query} "
+                f"(top score: {scored_captions[0][0]:.1f})" if scored_captions else ""
+            )
             return results
             
         except Exception as e:
             logger.error(f"Failed to search captions: {e}")
             raise ContextError(f"Failed to search captions: {e}")
     
+    def _tokenize_and_stem(self, text: str) -> set:
+        """Tokenize and apply simple stemming to text.
+        
+        Uses basic suffix removal for stemming (simplified Porter stemmer).
+        
+        Args:
+            text: Input text
+            
+        Returns:
+            Set of stemmed tokens
+        """
+        # Remove punctuation and split
+        import string
+        text = text.translate(str.maketrans('', '', string.punctuation))
+        words = text.lower().split()
+        
+        # Apply simple stemming (remove common suffixes)
+        stemmed = set()
+        for word in words:
+            # Skip very short words
+            if len(word) <= 2:
+                stemmed.add(word)
+                continue
+            
+            # Remove common suffixes
+            if word.endswith('ing'):
+                stemmed.add(word[:-3])
+            elif word.endswith('ed'):
+                stemmed.add(word[:-2])
+            elif word.endswith('s') and not word.endswith('ss'):
+                stemmed.add(word[:-1])
+            elif word.endswith('ly'):
+                stemmed.add(word[:-2])
+            else:
+                stemmed.add(word)
+        
+        return stemmed
+    
+    def _calculate_synonym_score(self, query: str, caption: str) -> float:
+        """Calculate score based on synonym/related word matching.
+        
+        Uses a simple synonym dictionary for common visual terms.
+        
+        Args:
+            query: Query text
+            caption: Caption text
+            
+        Returns:
+            Synonym match score (0-10)
+        """
+        # Simple synonym dictionary for common visual terms
+        synonyms = {
+            'person': ['man', 'woman', 'people', 'human', 'individual'],
+            'car': ['vehicle', 'automobile', 'truck', 'van'],
+            'dog': ['puppy', 'canine', 'pet'],
+            'cat': ['kitten', 'feline', 'pet'],
+            'walk': ['walking', 'stroll', 'move', 'moving'],
+            'run': ['running', 'jog', 'jogging', 'sprint'],
+            'sit': ['sitting', 'seated', 'rest'],
+            'stand': ['standing', 'upright'],
+            'talk': ['talking', 'speak', 'speaking', 'conversation'],
+            'eat': ['eating', 'consume', 'meal'],
+            'drink': ['drinking', 'beverage'],
+            'hold': ['holding', 'carry', 'carrying', 'grip'],
+            'wear': ['wearing', 'dressed', 'clothing'],
+            'look': ['looking', 'gaze', 'watch', 'watching'],
+        }
+        
+        score = 0.0
+        query_words = query.lower().split()
+        caption_lower = caption.lower()
+        
+        for word in query_words:
+            if word in synonyms:
+                # Check if any synonym appears in caption
+                for synonym in synonyms[word]:
+                    if synonym in caption_lower:
+                        score += 2.0  # 2 points per synonym match
+                        break
+        
+        return min(score, 10.0)  # Cap at 10 points
+    
     def search_transcripts(
         self,
         video_id: str,
-        query: str
+        query: str,
+        top_k: int = 10
     ) -> List[TranscriptSegment]:
         """Search transcript for keywords.
+        
+        ENHANCED: Improved keyword matching with relevance scoring and ranking.
         
         Args:
             video_id: Video identifier
             query: Search query text (keywords)
+            top_k: Maximum number of results to return
             
         Returns:
-            List of TranscriptSegment objects containing the query
+            List of TranscriptSegment objects ranked by relevance
             
         Raises:
             ContextError: If search fails
@@ -232,16 +457,56 @@ class ContextBuilder:
                 logger.warning(f"No transcript found for video {video_id}")
                 return []
             
-            # Normalize query for matching
+            # Normalize and process query
             query_lower = query.lower()
+            query_words = self._tokenize_and_stem(query_lower)
             
-            # Find segments containing the query
-            matching_segments = []
+            # Score segments based on relevance
+            scored_segments = []
             for segment in transcript.segments:
-                if query_lower in segment.text.lower():
-                    matching_segments.append(segment)
+                segment_lower = segment.text.lower()
+                segment_words = self._tokenize_and_stem(segment_lower)
+                
+                score = 0.0
+                
+                # Factor 1: Exact phrase match (100 points)
+                if query_lower in segment_lower:
+                    score += 100.0
+                
+                # Factor 2: Stemmed word overlap (50 points max)
+                if query_words:
+                    overlap = len(query_words.intersection(segment_words))
+                    word_overlap_score = (overlap / len(query_words)) * 50.0
+                    score += word_overlap_score
+                
+                # Factor 3: Partial word matches (25 points max)
+                partial_matches = 0
+                for q_word in query_lower.split():
+                    if len(q_word) > 3:
+                        for s_word in segment_lower.split():
+                            if q_word in s_word or s_word in q_word:
+                                partial_matches += 1
+                                break
+                if query_lower.split():
+                    partial_score = (partial_matches / len(query_lower.split())) * 25.0
+                    score += partial_score
+                
+                # Boost by confidence if available
+                if hasattr(segment, 'confidence'):
+                    confidence_multiplier = 0.5 + (segment.confidence * 0.5)
+                    score *= confidence_multiplier
+                
+                if score > 0:
+                    scored_segments.append((score, segment))
             
-            logger.info(f"Found {len(matching_segments)} transcript segments for query: {query}")
+            # Sort by score (descending) and return top_k
+            scored_segments.sort(key=lambda x: x[0], reverse=True)
+            matching_segments = [segment for score, segment in scored_segments[:top_k]]
+            
+            logger.info(
+                f"Found {len(matching_segments)} transcript segments for query: {query} "
+                f"(top score: {scored_segments[0][0]:.1f})" if scored_segments else ""
+            )
             return matching_segments
             
         except Exception as e:

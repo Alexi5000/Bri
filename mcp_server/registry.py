@@ -165,7 +165,7 @@ class ImageCaptioningTool(Tool):
         try:
             # If no frame paths provided, get all frames for video
             if "frame_paths" not in parameters or not parameters["frame_paths"]:
-                frames = self._get_video_frames(video_id)
+                frames = await self._get_video_frames(video_id)
                 frame_paths = [f["image_path"] for f in frames]
                 timestamps = [f["timestamp"] for f in frames]
             else:
@@ -183,7 +183,7 @@ class ImageCaptioningTool(Tool):
             logger.error(f"Image captioning failed: {str(e)}")
             raise
     
-    def _get_video_frames(self, video_id: str) -> List[Dict[str, Any]]:
+    async def _get_video_frames(self, video_id: str) -> List[Dict[str, Any]]:
         """Get all frames for a video from database."""
         db = get_database()
         results = db.execute_query(
@@ -197,8 +197,7 @@ class ImageCaptioningTool(Tool):
             # Try to extract frames first
             logger.info(f"No frames found for video {video_id}, extracting...")
             extractor_tool = FrameExtractionTool()
-            import asyncio
-            result = asyncio.run(extractor_tool.execute(video_id, {}))
+            result = await extractor_tool.execute(video_id, {})
             return result["frames"]
         
         import json
@@ -328,7 +327,7 @@ class ObjectDetectionTool(Tool):
         try:
             # If no frame paths provided, get all frames for video
             if "frame_paths" not in parameters or not parameters["frame_paths"]:
-                frames = self._get_video_frames(video_id)
+                frames = await self._get_video_frames(video_id)
                 frame_paths = [f["image_path"] for f in frames]
                 timestamps = [f["timestamp"] for f in frames]
             else:
@@ -363,7 +362,7 @@ class ObjectDetectionTool(Tool):
             logger.error(f"Object detection failed: {str(e)}")
             raise
     
-    def _get_video_frames(self, video_id: str) -> List[Dict[str, Any]]:
+    async def _get_video_frames(self, video_id: str) -> List[Dict[str, Any]]:
         """Get all frames for a video from database."""
         db = get_database()
         results = db.execute_query(
@@ -377,8 +376,7 @@ class ObjectDetectionTool(Tool):
             # Try to extract frames first
             logger.info(f"No frames found for video {video_id}, extracting...")
             extractor_tool = FrameExtractionTool()
-            import asyncio
-            result = asyncio.run(extractor_tool.execute(video_id, {}))
+            result = await extractor_tool.execute(video_id, {})
             return result["frames"]
         
         import json

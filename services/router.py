@@ -1,8 +1,11 @@
 """Tool Router for query analysis and tool selection."""
 
 import re
+import logging
 from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -58,6 +61,12 @@ class ToolRouter:
         """
         Determine which tools to use and in what order based on query content.
         
+        ENHANCED: Implements smart query routing:
+        - Visual questions → Use captions + objects
+        - Audio questions → Use transcripts
+        - Temporal questions → Use all data with timestamp filtering
+        - General questions → Use comprehensive context
+        
         Args:
             query: User's query string
             context: Optional conversation context
@@ -69,28 +78,62 @@ class ToolRouter:
         tools_needed = []
         parameters = {}
         
-        # Check if query requires captions
-        if self.requires_captions(query):
+        # Classify query type for smart routing
+        query_type = self._classify_query_type(query_lower)
+        parameters['query_type'] = query_type
+        
+        # Extract timestamp if present (affects routing)
+        timestamp = self.extract_timestamp(query)
+        if timestamp is not None:
+            parameters['timestamp'] = timestamp
+            parameters['temporal_query'] = True
+        
+        # Smart routing based on query type
+        if query_type == 'visual':
+            # Visual questions → Use captions + objects
             tools_needed.append('captions')
-        
-        # Check if query requires transcripts
-        if self.requires_transcripts(query):
-            tools_needed.append('transcripts')
-        
-        # Check if query requires object detection
-        if self.requires_objects(query):
             tools_needed.append('objects')
+            logger.debug("Visual query detected: using captions + objects")
+        
+        elif query_type == 'audio':
+            # Audio questions → Use transcripts
+            tools_needed.append('transcripts')
+            logger.debug("Audio query detected: using transcripts")
+        
+        elif query_type == 'temporal':
+            # Temporal questions → Use all data with timestamp filtering
+            tools_needed.extend(['captions', 'transcripts', 'objects'])
+            logger.debug("Temporal query detected: using all data with timestamp filtering")
+        
+        elif query_type == 'object_search':
+            # Object search → Use objects + captions for context
+            tools_needed.append('objects')
+            tools_needed.append('captions')
             # Try to extract object name from query
             object_name = self._extract_object_name(query_lower)
             if object_name:
                 parameters['object_name'] = object_name
+            logger.debug(f"Object search query detected: looking for '{object_name}'")
         
-        # Extract timestamp if present
-        timestamp = self.extract_timestamp(query)
-        if timestamp is not None:
-            parameters['timestamp'] = timestamp
-            # If timestamp is specified, prioritize temporal context
-            parameters['temporal_query'] = True
+        elif query_type == 'general':
+            # General questions → Use comprehensive context
+            tools_needed.extend(['captions', 'transcripts', 'objects'])
+            logger.debug("General query detected: using comprehensive context")
+        
+        else:
+            # Fallback: use original logic
+            if self.requires_captions(query):
+                tools_needed.append('captions')
+            if self.requires_transcripts(query):
+                tools_needed.append('transcripts')
+            if self.requires_objects(query):
+                tools_needed.append('objects')
+                object_name = self._extract_object_name(query_lower)
+                if object_name:
+                    parameters['object_name'] = object_name
+        
+        # Remove duplicates while preserving order
+        tools_needed = list(dict.fromkeys(tools_needed))
         
         # Determine execution order
         execution_order = self._optimize_execution_order(
@@ -103,6 +146,45 @@ class ToolRouter:
             execution_order=execution_order,
             parameters=parameters
         )
+    
+    def _classify_query_type(self, query_lower: str) -> str:
+        """
+        Classify query type for smart routing.
+        
+        Args:
+            query_lower: Lowercased query string
+            
+        Returns:
+            Query type: 'visual', 'audio', 'temporal', 'object_search', 'general'
+        """
+        # Temporal queries (highest priority - most specific)
+        if any(pattern in query_lower for pattern in [
+            'at ', ':', 'timestamp', 'minute', 'second', 'beginning', 'start', 'end'
+        ]):
+            # Check if it's a temporal query (not just "see at")
+            if self.extract_timestamp(query_lower) is not None:
+                return 'temporal'
+        
+        # Audio queries
+        if any(kw in query_lower for kw in self.TRANSCRIPT_KEYWORDS):
+            return 'audio'
+        
+        # Object search queries
+        if any(kw in query_lower for kw in ['find', 'locate', 'search', 'show me all', 'how many']):
+            # Check if looking for specific objects
+            if self._extract_object_name(query_lower):
+                return 'object_search'
+        
+        # Visual queries
+        if any(kw in query_lower for kw in self.CAPTION_KEYWORDS):
+            return 'visual'
+        
+        # General queries (summary, overview, etc.)
+        if any(kw in query_lower for kw in ['summary', 'summarize', 'overview', 'about', 'what is', 'tell me']):
+            return 'general'
+        
+        # Default to general
+        return 'general'
     
     def requires_captions(self, query: str) -> bool:
         """

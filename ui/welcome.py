@@ -360,22 +360,35 @@ def _handle_upload(uploaded_file):
 
 def _process_video_with_progress(video_id: str):
     """
-    Process video with progress indicators and friendly messages.
+    Process video progressively with stage-based progress indicators.
+    
+    Uses progressive processing (3 stages) so user can start chatting quickly.
     
     Args:
         video_id: Video identifier to process
         
     Requirements: 1.3, 3.6, 3.7
     """
-    from services.video_processor import get_video_processor
-    from services.error_handler import ErrorHandler
-    import asyncio
+    from storage.database import get_video_by_id
+    import httpx
+    from config import Config
     
     try:
-        processor = get_video_processor()
+        # Get video info
+        video = get_video_by_id(video_id)
+        if not video:
+            st.error("Video not found!")
+            return
+        
+        video_path = video['file_path']
         
         # Check if MCP server is available
-        if not processor.check_mcp_server_health():
+        mcp_url = Config.get_mcp_server_url()
+        try:
+            response = httpx.get(f"{mcp_url}/health", timeout=5.0)
+            if response.status_code != 200:
+                raise Exception("MCP server not healthy")
+        except Exception:
             st.warning(
                 "⚠️ The processing server isn't running right now. "
                 "Your video is saved, but I'll need the server to analyze it. "
@@ -385,124 +398,59 @@ def _process_video_with_progress(video_id: str):
                 st.code("python mcp_server/main.py", language="bash")
             return
         
-        # Create progress tracking containers
-        progress_bar = st.progress(0)
-        status_text = st.empty()
-        step_status = st.empty()
-        
-        # Track processing state
-        current_step = {"name": "", "progress": 0, "message": ""}
-        
-        def update_progress(step_name: str, progress: float, message: str):
-            """Callback to update UI with progress"""
-            current_step["name"] = step_name
-            current_step["progress"] = progress
-            current_step["message"] = message
-            
-            # Update progress bar
-            progress_bar.progress(int(progress))
-            
-            # Update status text
-            status_text.markdown(
-                f"""
-                <div style='text-align: center; padding: 0.5rem;'>
-                    <p style='font-size: 1.1rem; color: #1a1a1a; font-weight: 500;'>
-                        {step_name}
-                    </p>
-                </div>
-                """,
-                unsafe_allow_html=True
+        # Start progressive processing in background
+        try:
+            response = httpx.post(
+                f"{mcp_url}/videos/{video_id}/process-progressive",
+                json={"video_path": video_path},
+                timeout=10.0
             )
             
-            # Update step message
-            step_status.markdown(
-                f"""
-                <div style='text-align: center; padding: 0.5rem;'>
-                    <p style='font-size: 0.95rem; color: #444; font-style: italic;'>
-                        {message}
-                    </p>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-        
-        # Process video with progress updates
-        with st.spinner("Starting video processing..."):
-            # Run async processing in sync context
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            try:
-                result = loop.run_until_complete(
-                    processor.process_video(video_id, update_progress)
-                )
-            finally:
-                loop.close()
-        
-        # Clear progress indicators
-        progress_bar.empty()
-        status_text.empty()
-        step_status.empty()
-        
-        # Show completion message
-        if result.get("status") == "complete":
-            st.success(
-                "🎉 **All set!** I've analyzed your video and I'm ready to answer your questions!"
-            )
+            if response.status_code != 200:
+                raise Exception(f"Failed to start processing: {response.text}")
             
-            # Show processing summary
-            with st.expander("📊 Processing Summary"):
-                results = result.get("results", {})
-                
-                st.markdown("**Completed Tasks:**")
-                for tool_name, tool_result in results.items():
-                    cached = "💾 (cached)" if tool_result.get("cached") else "✨ (new)"
-                    st.markdown(f"- ✅ {tool_name.replace('_', ' ').title()} {cached}")
-                
-                execution_time = result.get("execution_time", 0)
-                st.markdown(f"\n**Total Time:** {execution_time:.2f} seconds")
-        
-        elif result.get("status") == "partial":
-            st.warning(
-                "⚠️ **Almost there!** I processed most of your video, but some features "
-                "may be limited. I can still help with what I found!"
-            )
+            result = response.json()
+            logger.info(f"Progressive processing started: {result}")
             
-            # Show what worked and what didn't
-            with st.expander("📊 Processing Details"):
-                results = result.get("results", {})
-                errors = result.get("errors", {})
-                
-                if results:
-                    st.markdown("**✅ Successful:**")
-                    for tool_name in results.keys():
-                        st.markdown(f"- {tool_name.replace('_', ' ').title()}")
-                
-                if errors:
-                    st.markdown("\n**❌ Issues:**")
-                    for tool_name, error in errors.items():
-                        st.markdown(f"- {tool_name.replace('_', ' ').title()}: {error}")
+        except Exception as e:
+            logger.error(f"Failed to start progressive processing: {e}")
+            st.error(f"😅 Couldn't start processing: {str(e)}")
+            return
         
-        else:
-            st.error(
-                "😅 Hmm, something went wrong during processing. "
-                "Your video is saved, but I couldn't analyze it yet."
+        # Show immediate success message
+        st.success(
+            "✨ **Processing started!** I'm analyzing your video in the background."
+        )
+        
+        # Show stage information
+        st.info(
+            """
+            **📊 Processing Stages:**
+            
+            1. **Stage 1 (10s):** Extracting frames → You can start chatting!
+            2. **Stage 2 (60s):** Analyzing content → Richer responses!
+            3. **Stage 3 (120s):** Full intelligence → Complete understanding!
+            
+            💬 **You can start chatting as soon as Stage 1 completes!**
+            """
+        )
+        
+        # Show progress tracking option
+        with st.expander("📈 Track Processing Progress"):
+            st.markdown(
+                """
+                Processing is happening in the background. You can:
+                - **Start chatting** as soon as frames are extracted (Stage 1)
+                - **Check progress** by refreshing this page
+                - **View the video** in your library
+                
+                I'll let you know when each stage completes! 🎉
+                """
             )
     
     except Exception as e:
         logger.error(f"Video processing failed: {e}")
-        
-        # Show friendly error message
-        error_msg = ErrorHandler.format_error_for_user(
-            e,
-            {'processing': True, 'video_id': video_id}
-        )
-        st.error(f"😅 {error_msg}")
-        
-        # Offer retry option
-        st.info(
-            "💡 Your video is still saved! You can try processing it again later "
-            "from the video library."
-        )
+        st.error(f"😅 Couldn't process video: {str(e)}")
 
 
 def render_empty_state():

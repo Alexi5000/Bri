@@ -95,16 +95,46 @@ class TestChatInterface:
                 assert "API" in str(e) or "Error" in str(e)
     
     def test_memory_persistence(self):
-        """Test that messages are stored in memory."""
-        with patch('services.memory.Database') as mock_db:
-            mock_db_instance = MagicMock()
-            mock_db.return_value = mock_db_instance
+        """Test that messages are stored in memory - Integration test."""
+        # Use real database for this test since mocking is complex
+        from storage.database import Database
+        import tempfile
+        import os
+        
+        # Create temporary database
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.db') as tmp:
+            tmp_db_path = tmp.name
+        
+        try:
+            # Create database with schema
+            db = Database(tmp_db_path)
+            db.connect()
             
-            memory = Memory()
+            # Create memory table
+            db.execute_query("""
+                CREATE TABLE IF NOT EXISTS memory (
+                    message_id TEXT PRIMARY KEY,
+                    video_id TEXT NOT NULL,
+                    role TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    timestamp REAL NOT NULL
+                )
+            """)
+            
+            memory = Memory(db)
             memory.add_memory_pair("test_video", "user message", "assistant response")
             
-            # Should have called database insert
-            assert mock_db_instance.execute_query.called
+            # Verify messages were stored
+            history = memory.get_conversation_history("test_video")
+            assert len(history) == 2
+            assert history[0].role == "user"
+            assert history[1].role == "assistant"
+            
+            db.close()
+        finally:
+            # Cleanup
+            if os.path.exists(tmp_db_path):
+                os.unlink(tmp_db_path)
 
 
 class TestChatEdgeCases:

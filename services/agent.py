@@ -52,6 +52,14 @@ Your capabilities:
 - **REMEMBER previous conversations** - You have access to conversation history and should reference it
 - Maintain conversation context to handle follow-up questions naturally
 - Provide helpful suggestions for further exploration
+- **Work with partial data** - You can answer questions even while video is still processing
+
+Handling partial data:
+- If you only have frames: Describe what you can see visually, mention timestamps
+- If you have captions: Provide richer visual descriptions and scene understanding
+- If you have transcripts: Include what was said and audio context
+- If you have objects: Mention detected items and their locations
+- Be honest about what data you have and what's still processing
 
 Communication style:
 - Use conversational language, not robotic responses
@@ -120,8 +128,11 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
         try:
             logger.info(f"Processing message for video {video_id}: {message[:50]}...")
             
+            # Check if video has existing context (already processed)
+            has_video_context = self._check_video_context_exists(video_id)
+            
             # Determine if tools are needed
-            tool_type = self._should_use_tool(message)
+            tool_type = self._should_use_tool(message, has_video_context)
             
             if tool_type:
                 # Process with tools
@@ -190,12 +201,93 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
                 suggestions=["Try asking about something else in the video"]
             )
     
-    def _should_use_tool(self, message: str) -> Optional[str]:
+    def _check_video_context_exists(self, video_id: str) -> bool:
+        """
+        Check if video has existing processed context.
+        
+        Args:
+            video_id: Video identifier
+            
+        Returns:
+            True if video has been processed, False otherwise
+        """
+        try:
+            video_context = self.context_builder.build_video_context(video_id, include_conversation=False)
+            # Check for any video data: frames, captions, transcripts, or objects
+            return bool(video_context.frames or video_context.captions or video_context.transcript or video_context.objects)
+        except Exception:
+            return False
+    
+    def _get_processing_stage_info(self, video_id: str) -> Dict[str, Any]:
+        """
+        Get current processing stage and available data for a video.
+        
+        Returns information about what data is available and what's still processing.
+        
+        Args:
+            video_id: Video identifier
+            
+        Returns:
+            Dictionary with stage info:
+            {
+                'stage': 'extracting' | 'captioning' | 'transcribing' | 'complete',
+                'has_frames': bool,
+                'has_captions': bool,
+                'has_transcripts': bool,
+                'has_objects': bool,
+                'message': str  # User-friendly message about current stage
+            }
+        """
+        try:
+            # Get video context to check what's available
+            video_context = self.context_builder.build_video_context(video_id, include_conversation=False)
+            
+            has_frames = bool(video_context.frames)
+            has_captions = bool(video_context.captions)
+            has_transcripts = bool(video_context.transcript and video_context.transcript.segments)
+            has_objects = bool(video_context.objects)
+            
+            # Determine stage based on available data
+            if has_transcripts and has_objects:
+                stage = 'complete'
+                message = None
+            elif has_captions:
+                stage = 'transcribing'
+                message = "🎤 Still transcribing audio and detecting objects... I can answer visual questions now!"
+            elif has_frames:
+                stage = 'captioning'
+                message = "🔍 Still analyzing video content... I can describe what I see in the frames!"
+            else:
+                stage = 'extracting'
+                message = "⏳ Still extracting frames from your video... Give me just a moment!"
+            
+            return {
+                'stage': stage,
+                'has_frames': has_frames,
+                'has_captions': has_captions,
+                'has_transcripts': has_transcripts,
+                'has_objects': has_objects,
+                'message': message
+            }
+            
+        except Exception as e:
+            logger.error(f"Failed to get processing stage info: {e}")
+            return {
+                'stage': 'unknown',
+                'has_frames': False,
+                'has_captions': False,
+                'has_transcripts': False,
+                'has_objects': False,
+                'message': "⏳ Processing your video... This may take a moment!"
+            }
+    
+    def _should_use_tool(self, message: str, has_video_context: bool) -> Optional[str]:
         """
         Determine if a tool is needed for the query.
         
         Args:
             message: User's message
+            has_video_context: Whether video has existing processed context
             
         Returns:
             Tool type if needed ('video_analysis'), None for general conversation
@@ -219,6 +311,24 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
         if is_general:
             return None
         
+        # If video has context, ANY question about the video should use it
+        # This ensures we leverage existing analysis for all queries
+        if has_video_context:
+            return 'video_analysis'
+        
+        # Check for queries that require video content analysis
+        # These should trigger tool usage even if video hasn't been processed yet
+        content_analysis_patterns = [
+            'recommend', 'worth', 'good', 'quality', 'rating',
+            'summary', 'summarize', 'overview', 'about',
+            'purpose', 'message', 'theme', 'genre', 'category',
+            'audience', 'educational', 'entertainment'
+        ]
+        
+        for pattern in content_analysis_patterns:
+            if pattern in message_lower:
+                return 'video_analysis'
+        
         # Check if query requires video analysis
         tool_plan = self.router.analyze_query(message)
         if tool_plan.tools_needed:
@@ -233,7 +343,10 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
         image_base64: Optional[str]
     ) -> tuple[str, List[str], List[float], List[Dict[str, Any]]]:
         """
-        Execute tool-based query processing.
+        Execute tool-based query processing with stage-aware responses.
+        
+        ENHANCED: Now checks processing stage and provides appropriate responses
+        based on available data (frames-only, captions, or full intelligence).
         
         Args:
             message: User's query
@@ -243,12 +356,16 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
         Returns:
             Tuple of (response_text, frame_paths, timestamps, frame_contexts)
         """
+        # Check processing stage and available data
+        stage_info = self._get_processing_stage_info(video_id)
+        logger.info(f"Processing stage for video {video_id}: {stage_info['stage']}")
+        
         # Analyze query to determine tools needed
         tool_plan = self.router.analyze_query(message)
         
         logger.info(f"Tool plan: {tool_plan.tools_needed}")
         
-        # Gather context from tools
+        # Gather context from tools (will use whatever data is available)
         context_data = await self._gather_tool_context(
             video_id,
             tool_plan
@@ -266,6 +383,10 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
         
         # Generate response using Groq
         response_text = await self._generate_response(prompt)
+        
+        # Add processing notice if video is still being processed
+        if stage_info['message']:
+            response_text = f"{response_text}\n\n---\n\n💡 **Note:** {stage_info['message']}"
         
         # Extract and organize relevant moments with media
         frames, timestamps, frame_contexts = self._extract_relevant_moments(
@@ -298,6 +419,9 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
         """
         Gather context from video processing tools via MCP server.
         
+        ENHANCED: Now checks database FIRST for ALL available data types before
+        calling MCP tools. This ensures we use existing processed data.
+        
         Args:
             video_id: Video identifier
             tool_plan: Tool execution plan
@@ -314,6 +438,89 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
             'errors': []  # Track tool errors for graceful degradation
         }
         
+        # STEP 1: Check database for ALL available data types FIRST
+        # This is the key enhancement - we prioritize existing data
+        logger.info(f"Checking database for existing video context for {video_id}")
+        try:
+            video_context = self.context_builder.build_video_context(video_id, include_conversation=False)
+            
+            # Extract captions (HIGHEST PRIORITY)
+            if video_context.captions:
+                logger.info(f"Found {len(video_context.captions)} captions in database")
+                for caption in video_context.captions:
+                    context_data['captions'].append({
+                        'timestamp': caption.frame_timestamp,
+                        'text': caption.text,
+                        'confidence': caption.confidence,
+                        'frame_path': caption.frame_path if hasattr(caption, 'frame_path') else None
+                    })
+                    if caption.frame_timestamp not in context_data['timestamps']:
+                        context_data['timestamps'].append(caption.frame_timestamp)
+            
+            # Extract transcripts (HIGH PRIORITY)
+            if video_context.transcript and video_context.transcript.segments:
+                logger.info(f"Found {len(video_context.transcript.segments)} transcript segments in database")
+                for segment in video_context.transcript.segments:
+                    context_data['transcripts'].append({
+                        'start': segment.start,
+                        'end': segment.end,
+                        'text': segment.text,
+                        'confidence': segment.confidence if hasattr(segment, 'confidence') else 1.0
+                    })
+                    if segment.start not in context_data['timestamps']:
+                        context_data['timestamps'].append(segment.start)
+            
+            # Extract objects (MEDIUM PRIORITY)
+            if video_context.objects:
+                logger.info(f"Found {len(video_context.objects)} object detections in database")
+                for detection in video_context.objects:
+                    context_data['objects'].append({
+                        'timestamp': detection.frame_timestamp,
+                        'objects': [
+                            {
+                                'class_name': obj.class_name,
+                                'confidence': obj.confidence,
+                                'bbox': obj.bbox if hasattr(obj, 'bbox') else None
+                            }
+                            for obj in detection.objects
+                        ],
+                        'frame_path': detection.frame_path if hasattr(detection, 'frame_path') else None
+                    })
+                    if detection.frame_timestamp not in context_data['timestamps']:
+                        context_data['timestamps'].append(detection.frame_timestamp)
+            
+            # Extract frames (FALLBACK)
+            if video_context.frames:
+                logger.info(f"Found {len(video_context.frames)} frames in database")
+                for frame in video_context.frames:
+                    if frame.image_path and frame.image_path not in context_data['frames']:
+                        context_data['frames'].append(frame.image_path)
+                    if frame.timestamp not in context_data['timestamps']:
+                        context_data['timestamps'].append(frame.timestamp)
+            
+            # If we have substantial data from database, we may not need to call MCP tools
+            has_captions = len(context_data['captions']) > 0
+            has_transcripts = len(context_data['transcripts']) > 0
+            has_objects = len(context_data['objects']) > 0
+            
+            if has_captions or has_transcripts or has_objects:
+                logger.info(
+                    f"Using existing database context: "
+                    f"{len(context_data['captions'])} captions, "
+                    f"{len(context_data['transcripts'])} transcripts, "
+                    f"{len(context_data['objects'])} objects"
+                )
+                # Sort timestamps for chronological order
+                context_data['timestamps'].sort()
+                return context_data
+            else:
+                logger.info("No processed data in database, will call MCP tools")
+        
+        except Exception as e:
+            logger.warning(f"Failed to retrieve context from database: {e}")
+            # Continue to MCP tools as fallback
+        
+        # STEP 2: If no data in database, call MCP tools (original behavior)
         failed_tools = []
         successful_tools = []
         
@@ -382,6 +589,10 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
                 ErrorHandler.format_error_for_user(e, context={'processing': True})
             )
         
+        # Sort timestamps for chronological order
+        if context_data['timestamps']:
+            context_data['timestamps'].sort()
+        
         return context_data
     
     def _map_tool_name(self, tool_name: str) -> str:
@@ -431,45 +642,153 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
         context_data: Dict[str, Any],
         conversation_context: str
     ) -> str:
-        """Build prompt with tool context for Groq."""
+        """Build prompt with tool context for Groq.
+        
+        ENHANCED: Uses structured format with prioritized data:
+        Visual > Audio > Objects > Frames
+        Includes only relevant data for the specific query to reduce prompt size.
+        Summarizes long contexts to stay within token limits.
+        """
         prompt_parts = []
         
-        # Add conversation history if available
+        # Add conversation history if available (summarize if too long)
         if conversation_context:
-            prompt_parts.append("Previous conversation:")
+            # Limit conversation context to ~500 chars to save tokens
+            if len(conversation_context) > 500:
+                conversation_context = conversation_context[-500:]
+                prompt_parts.append("Previous conversation (recent):")
+            else:
+                prompt_parts.append("Previous conversation:")
             prompt_parts.append(conversation_context)
             prompt_parts.append("")
         
-        # Add video context
-        prompt_parts.append("Video analysis context:")
+        # Add video context in structured format
+        prompt_parts.append("Video Context:")
         
+        # Determine query type to include only relevant data
+        message_lower = message.lower()
+        is_visual_query = any(kw in message_lower for kw in ['see', 'look', 'show', 'describe', 'scene', 'visual', 'appear'])
+        is_audio_query = any(kw in message_lower for kw in ['say', 'said', 'speak', 'talk', 'mention', 'audio', 'hear'])
+        is_object_query = any(kw in message_lower for kw in ['find', 'locate', 'search', 'detect', 'person', 'car', 'dog', 'cat'])
+        
+        # Check if query has timestamp - if so, filter context to relevant time window
+        timestamp_param = None
+        if 'timestamp' in context_data.get('parameters', {}):
+            timestamp_param = context_data['parameters']['timestamp']
+        
+        # Priority 1: Captions (most informative for visual queries)
         if context_data.get('captions'):
-            prompt_parts.append("\nVisual descriptions:")
-            for i, caption in enumerate(context_data['captions'][:5], 1):
-                timestamp = caption.get('timestamp', 0)
-                text = caption.get('text', '')
-                prompt_parts.append(f"  [{timestamp:.1f}s] {text}")
+            captions = context_data['captions']
+            
+            # Filter by timestamp if specified
+            if timestamp_param is not None:
+                window = 10.0  # 10 second window
+                captions = [
+                    c for c in captions
+                    if abs(c.get('timestamp', 0) - timestamp_param) <= window
+                ]
+            
+            # Include more captions for visual queries, fewer for others
+            max_captions = 10 if is_visual_query else 5
+            
+            if captions:
+                prompt_parts.append(f"\nVisual: ({len(captions)} scenes analyzed)")
+                for caption in captions[:max_captions]:
+                    timestamp = caption.get('timestamp', 0)
+                    text = caption.get('text', '')
+                    # Truncate very long captions
+                    if len(text) > 100:
+                        text = text[:97] + "..."
+                    prompt_parts.append(f"  [{timestamp:.1f}s] {text}")
+                
+                if len(captions) > max_captions:
+                    prompt_parts.append(f"  ... and {len(captions) - max_captions} more scenes")
         
+        # Priority 2: Transcripts (most informative for audio queries)
         if context_data.get('transcripts'):
-            prompt_parts.append("\nAudio transcript:")
-            for segment in context_data['transcripts'][:5]:
-                start = segment.get('start', 0)
-                text = segment.get('text', '')
-                prompt_parts.append(f"  [{start:.1f}s] {text}")
+            transcripts = context_data['transcripts']
+            
+            # Filter by timestamp if specified
+            if timestamp_param is not None:
+                window = 10.0
+                transcripts = [
+                    t for t in transcripts
+                    if abs(t.get('start', 0) - timestamp_param) <= window
+                ]
+            
+            # Include more transcript for audio queries, fewer for others
+            max_segments = 10 if is_audio_query else 5
+            
+            if transcripts:
+                prompt_parts.append(f"\nAudio: ({len(transcripts)} segments)")
+                for segment in transcripts[:max_segments]:
+                    start = segment.get('start', 0)
+                    text = segment.get('text', '')
+                    # Truncate very long segments
+                    if len(text) > 150:
+                        text = text[:147] + "..."
+                    prompt_parts.append(f"  [{start:.1f}s] {text}")
+                
+                if len(transcripts) > max_segments:
+                    prompt_parts.append(f"  ... and {len(transcripts) - max_segments} more segments")
         
+        # Priority 3: Objects (most informative for object queries)
         if context_data.get('objects'):
-            prompt_parts.append("\nDetected objects:")
-            for detection in context_data['objects'][:5]:
-                timestamp = detection.get('timestamp', 0)
-                objects = detection.get('objects', [])
-                if objects:
-                    obj_names = [obj.get('class_name', '') for obj in objects]
-                    prompt_parts.append(f"  [{timestamp:.1f}s] {', '.join(obj_names)}")
+            objects = context_data['objects']
+            
+            # Filter by timestamp if specified
+            if timestamp_param is not None:
+                window = 10.0
+                objects = [
+                    o for o in objects
+                    if abs(o.get('timestamp', 0) - timestamp_param) <= window
+                ]
+            
+            # Include more objects for object queries, fewer for others
+            max_detections = 10 if is_object_query else 5
+            
+            if objects:
+                prompt_parts.append(f"\nObjects: ({len(objects)} frames analyzed)")
+                
+                # Summarize objects by type
+                object_summary = {}
+                for detection in objects:
+                    timestamp = detection.get('timestamp', 0)
+                    objs = detection.get('objects', [])
+                    for obj in objs:
+                        obj_name = obj.get('class_name', '')
+                        if obj_name not in object_summary:
+                            object_summary[obj_name] = []
+                        object_summary[obj_name].append(timestamp)
+                
+                # Show object summary
+                for obj_name, timestamps in list(object_summary.items())[:max_detections]:
+                    ts_list = [f"{ts:.1f}s" for ts in timestamps[:3]]
+                    if len(timestamps) > 3:
+                        ts_list.append(f"+{len(timestamps) - 3} more")
+                    prompt_parts.append(f"  {obj_name}: {', '.join(ts_list)}")
         
+        # Fallback: If no captions, mention frames are available
+        if not context_data.get('captions') and context_data.get('frames'):
+            prompt_parts.append(f"\nFrames: {len(context_data['frames'])} frames extracted")
+            prompt_parts.append("  (Visual analysis not yet complete)")
+        
+        # Add user question
         prompt_parts.append(f"\nUser question: {message}")
-        prompt_parts.append("\nProvide a helpful, conversational response based on the video context above.")
         
-        return "\n".join(prompt_parts)
+        # Add instruction based on available data
+        if context_data.get('captions') or context_data.get('transcripts') or context_data.get('objects'):
+            prompt_parts.append("\nProvide a helpful, conversational response based on the video context above.")
+            prompt_parts.append("Reference specific timestamps when relevant.")
+        else:
+            prompt_parts.append("\nThe video has been uploaded but detailed analysis is still in progress.")
+            prompt_parts.append("Acknowledge what you know and offer to analyze specific aspects.")
+        
+        # Log prompt size for monitoring
+        prompt = "\n".join(prompt_parts)
+        logger.debug(f"Built prompt with {len(prompt)} characters, ~{len(prompt.split())} words")
+        
+        return prompt
     
     async def _respond_general(self, message: str, video_id: str) -> str:
         """
@@ -485,6 +804,13 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
         # Get conversation history for context
         conversation_context = self.memory.get_recent_context(video_id, max_messages=4)
         
+        # Check if video has been processed (has existing context)
+        video_context = None
+        try:
+            video_context = self.context_builder.build_video_context(video_id, include_conversation=False)
+        except Exception as e:
+            logger.debug(f"No video context available: {e}")
+        
         # Build prompt
         prompt_parts = []
         
@@ -493,8 +819,45 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
             prompt_parts.append(conversation_context)
             prompt_parts.append("")
         
+        # Add video context summary if available
+        has_any_context = video_context and (video_context.frames or video_context.captions or video_context.transcript or video_context.objects)
+        
+        if has_any_context:
+            prompt_parts.append("Video context available:")
+            
+            if video_context.metadata:
+                prompt_parts.append(f"  Duration: {video_context.metadata.duration:.1f}s")
+            
+            if video_context.frames:
+                prompt_parts.append(f"  Video frames: {len(video_context.frames)} frames extracted")
+            
+            if video_context.captions:
+                prompt_parts.append(f"  Visual analysis: {len(video_context.captions)} scenes analyzed")
+                # Include a few sample captions
+                for caption in video_context.captions[:3]:
+                    prompt_parts.append(f"    [{caption.frame_timestamp:.1f}s] {caption.text}")
+            
+            if video_context.transcript and video_context.transcript.segments:
+                prompt_parts.append(f"  Audio transcript: {len(video_context.transcript.segments)} segments")
+                # Include a few sample segments
+                for segment in video_context.transcript.segments[:3]:
+                    prompt_parts.append(f"    [{segment.start:.1f}s] {segment.text}")
+            
+            if video_context.objects:
+                prompt_parts.append(f"  Object detection: {len(video_context.objects)} frames analyzed")
+            
+            prompt_parts.append("")
+        
         prompt_parts.append(f"User: {message}")
-        prompt_parts.append("\nRespond in a friendly, helpful manner.")
+        
+        if has_any_context:
+            if video_context.captions or video_context.transcript or video_context.objects:
+                prompt_parts.append("\nRespond based on the video context provided above. Be helpful and conversational.")
+            else:
+                # Has frames but no detailed analysis yet
+                prompt_parts.append("\nThe video has been uploaded and frames extracted, but detailed analysis (captions/transcripts) is still in progress. Acknowledge what you know and offer to analyze specific aspects.")
+        else:
+            prompt_parts.append("\nThe video hasn't been analyzed yet. Respond in a friendly manner and suggest they ask questions that will trigger video analysis.")
         
         prompt = "\n".join(prompt_parts)
         

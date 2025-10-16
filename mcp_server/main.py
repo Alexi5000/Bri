@@ -71,6 +71,15 @@ async def startup_event():
     tool_registry.register_all_tools()
     
     logger.info(f"Registered {len(tool_registry.list_tools())} tools")
+    
+    # Start processing queue workers
+    try:
+        from services.processing_queue import start_queue_workers
+        await start_queue_workers()
+        logger.info("Processing queue workers started")
+    except Exception as e:
+        logger.error(f"Failed to start queue workers: {e}")
+    
     logger.info(f"Server running on {Config.get_mcp_server_url()}")
 
 
@@ -78,6 +87,15 @@ async def startup_event():
 async def shutdown_event():
     """Cleanup on server shutdown."""
     logger.info("Shutting down BRI MCP Server...")
+    
+    # Shutdown processing queue gracefully
+    try:
+        from services.processing_queue import shutdown_queue
+        await shutdown_queue()
+        logger.info("Processing queue shutdown complete")
+    except Exception as e:
+        logger.error(f"Error during queue shutdown: {e}")
+    
     cache_manager.close()
 
 
@@ -195,6 +213,11 @@ async def execute_tool(tool_name: str, request: ToolExecutionRequest):
         
         # Cache the result
         cache_manager.set(cache_key, result)
+        
+        # Store result in database for later retrieval
+        logger.info(f"Storing {tool_name} results in database for video {request.video_id}...")
+        _store_tool_result_in_db(request.video_id, tool_name, result)
+        logger.info(f"✓ Database storage confirmed for {tool_name}")
         
         execution_time = time.time() - start_time
         logger.info(
@@ -371,10 +394,16 @@ async def _execute_tool_with_cache(tool, tool_name: str, video_id: str, cache_ke
     """
     try:
         result = await tool.execute(video_id, {})
+        
         # Cache the result
         cache_manager.set(cache_key, result)
+        logger.debug(f"Cached {tool_name} results for video {video_id}")
+        
         # Store result in database for later retrieval
+        logger.info(f"Storing {tool_name} results in database for video {video_id}...")
         _store_tool_result_in_db(video_id, tool_name, result)
+        logger.info(f"✓ Database storage confirmed for {tool_name}")
+        
         return result
     except Exception as e:
         logger.error(f"Tool '{tool_name}' execution failed: {str(e)}")
@@ -382,56 +411,28 @@ async def _execute_tool_with_cache(tool, tool_name: str, video_id: str, cache_ke
 
 
 def _store_tool_result_in_db(video_id: str, tool_name: str, result: dict):
-    """Store tool result in database for later retrieval by the agent."""
+    """Store tool result in database for later retrieval by the agent.
+    
+    Uses VideoProcessingService for centralized storage with:
+    - Transaction support
+    - Validation after INSERT
+    - Retry logic with exponential backoff
+    - Comprehensive logging
+    """
     try:
-        from storage.database import Database
-        import json
+        from services.video_processing_service import get_video_processing_service
         
-        db = Database()
-        db.connect()
+        service = get_video_processing_service()
         
-        # Store based on tool type
-        if tool_name == 'caption_frames' and result:
-            # Store each caption
-            for caption in result.get('captions', []):
-                db.execute_query(
-                    """INSERT INTO video_context (video_id, context_type, timestamp, data)
-                       VALUES (?, ?, ?, ?)""",
-                    (video_id, 'caption', caption.get('timestamp', 0), json.dumps(caption))
-                )
+        # Store results with transaction support and validation
+        counts = service.store_tool_results(video_id, tool_name, result)
         
-        elif tool_name == 'transcribe_audio' and result:
-            # Store transcript segments
-            for segment in result.get('segments', []):
-                db.execute_query(
-                    """INSERT INTO video_context (video_id, context_type, timestamp, data)
-                       VALUES (?, ?, ?, ?)""",
-                    (video_id, 'transcript', segment.get('start', 0), json.dumps(segment))
-                )
-        
-        elif tool_name == 'detect_objects' and result:
-            # Store object detections
-            for detection in result.get('detections', []):
-                db.execute_query(
-                    """INSERT INTO video_context (video_id, context_type, timestamp, data)
-                       VALUES (?, ?, ?, ?)""",
-                    (video_id, 'object', detection.get('timestamp', 0), json.dumps(detection))
-                )
-        
-        elif tool_name == 'extract_frames' and result:
-            # Store frame information
-            for frame in result.get('frames', []):
-                db.execute_query(
-                    """INSERT INTO video_context (video_id, context_type, timestamp, data)
-                       VALUES (?, ?, ?, ?)""",
-                    (video_id, 'frame', frame.get('timestamp', 0), json.dumps(frame))
-                )
-        
-        db.close()
-        logger.info(f"Stored {tool_name} results in database for video {video_id}")
+        # Log detailed metrics
+        for data_type, count in counts.items():
+            logger.info(f"✓ Stored {count} {data_type} for video {video_id}")
         
     except Exception as e:
-        logger.error(f"Failed to store tool result in database: {e}")
+        logger.error(f"Failed to store tool result in database: {e}", exc_info=True)
 
 
 @app.get("/cache/stats")
@@ -501,6 +502,277 @@ async def clear_all_cache():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to clear cache: {str(e)}"
         )
+
+
+@app.get("/videos/{video_id}/status")
+async def get_video_data_status(video_id: str):
+    """
+    Get data completeness status for a video.
+    
+    Shows detailed information about what data has been processed and stored:
+    - Frames extracted
+    - Captions generated
+    - Transcripts created
+    - Objects detected
+    
+    Args:
+        video_id: Video identifier
+        
+    Returns:
+        Detailed status report with counts for each data type
+        
+    Example Response:
+        {
+            "video_id": "vid_123",
+            "complete": true,
+            "frames": {"count": 10, "present": true},
+            "captions": {"count": 10, "present": true},
+            "transcripts": {"count": 5, "present": true},
+            "objects": {"count": 10, "present": true},
+            "missing": []
+        }
+    """
+    try:
+        from services.video_processing_service import get_video_processing_service
+        
+        service = get_video_processing_service()
+        status_report = service.verify_video_data_completeness(video_id)
+        
+        logger.info(
+            f"Video {video_id} status: complete={status_report['complete']}, "
+            f"missing={status_report['missing']}"
+        )
+        
+        return status_report
+        
+    except Exception as e:
+        logger.error(f"Failed to get video status: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get video status: {str(e)}"
+        )
+
+
+class ProgressiveProcessRequest(BaseModel):
+    """Request model for progressive video processing."""
+    video_path: str
+
+
+@app.post("/videos/{video_id}/process-progressive")
+async def process_video_progressive(
+    video_id: str,
+    request: ProgressiveProcessRequest,
+    priority: str = "normal"  # "high", "normal", "low"
+):
+    """
+    Process a video progressively through 3 stages using job queue.
+    
+    Stages:
+    1. EXTRACTING (Fast - 10s): Extract frames → User can start chatting
+    2. CAPTIONING (Medium - 60s): Generate captions → Richer responses
+    3. TRANSCRIBING (Slow - 120s): Full transcription + objects → Complete intelligence
+    
+    This endpoint returns immediately and processing continues in background queue.
+    Use GET /videos/{video_id}/progress to check status.
+    
+    Args:
+        video_id: Video identifier
+        request: Request with video_path
+        priority: Job priority ("high", "normal", "low")
+        
+    Returns:
+        Immediate response with processing queued confirmation
+    """
+    try:
+        from services.processing_queue import get_processing_queue, JobPriority
+        
+        queue = get_processing_queue()
+        
+        # Map priority string to enum
+        priority_map = {
+            "high": JobPriority.HIGH,
+            "normal": JobPriority.NORMAL,
+            "low": JobPriority.LOW
+        }
+        job_priority = priority_map.get(priority.lower(), JobPriority.NORMAL)
+        
+        # Add job to queue
+        job = await queue.add_job(
+            video_id=video_id,
+            video_path=request.video_path,
+            priority=job_priority
+        )
+        
+        logger.info(
+            f"Added video {video_id} to processing queue "
+            f"(priority: {priority}, status: {job.status})"
+        )
+        
+        # Get queue status
+        queue_status = queue.get_status()
+        
+        return {
+            "status": "queued" if job.status == 'queued' else "processing",
+            "video_id": video_id,
+            "message": f"Video added to processing queue with {priority} priority",
+            "queue_position": len([j for j in queue.queue if j.priority <= job.priority]),
+            "queue_size": queue_status['queued_jobs'],
+            "active_jobs": queue_status['active_jobs'],
+            "stages": [
+                "Stage 1: Extracting frames (10s)",
+                "Stage 2: Generating captions (60s)",
+                "Stage 3: Transcription + objects (120s)"
+            ]
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to queue progressive processing: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to queue processing: {str(e)}"
+        )
+
+
+@app.get("/videos/{video_id}/progress")
+async def get_processing_progress(video_id: str):
+    """
+    Get current processing progress for a video.
+    
+    Args:
+        video_id: Video identifier
+        
+    Returns:
+        Current processing progress or None if not processing
+        
+    Example Response:
+        {
+            "video_id": "vid_123",
+            "stage": "captioning",
+            "progress_percent": 45.0,
+            "message": "Analyzing video content... 🔍",
+            "frames_extracted": 10,
+            "captions_generated": 5,
+            "transcript_segments": 0,
+            "objects_detected": 0
+        }
+    """
+    try:
+        from services.progressive_processor import get_progressive_processor
+        
+        processor = get_progressive_processor()
+        progress = processor.get_progress(video_id)
+        
+        if progress is None:
+            return {
+                "video_id": video_id,
+                "processing": False,
+                "message": "No active processing for this video"
+            }
+        
+        return {
+            "video_id": progress.video_id,
+            "processing": True,
+            "stage": progress.stage.value,
+            "progress_percent": progress.progress_percent,
+            "message": progress.message,
+            "frames_extracted": progress.frames_extracted,
+            "captions_generated": progress.captions_generated,
+            "transcript_segments": progress.transcript_segments,
+            "objects_detected": progress.objects_detected
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get processing progress: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get progress: {str(e)}"
+        )
+
+
+@app.get("/queue/status")
+async def get_queue_status():
+    """
+    Get processing queue status.
+    
+    Returns:
+        Queue statistics including active jobs, queued jobs, and completed jobs
+    """
+    try:
+        from services.processing_queue import get_processing_queue
+        
+        queue = get_processing_queue()
+        status = queue.get_status()
+        
+        return {
+            "status": "running",
+            "active_jobs": status['active_jobs'],
+            "queued_jobs": status['queued_jobs'],
+            "completed_jobs": status['completed_jobs'],
+            "workers": status['workers'],
+            "shutdown_requested": status['shutdown_requested']
+        }
+        
+    except Exception as e:
+        logger.error(f"Failed to get queue status: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get queue status: {str(e)}"
+        )
+
+
+@app.get("/queue/job/{video_id}")
+async def get_job_status(video_id: str):
+    """
+    Get status of a specific processing job.
+    
+    Args:
+        video_id: Video identifier
+        
+    Returns:
+        Job status or 404 if not found
+    """
+    try:
+        from services.processing_queue import get_processing_queue
+        
+        queue = get_processing_queue()
+        job_status = queue.get_job_status(video_id)
+        
+        if job_status is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No job found for video {video_id}"
+            )
+        
+        return job_status
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get job status: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get job status: {str(e)}"
+        )
+
+
+async def _run_progressive_processing(video_id: str, video_path: str):
+    """
+    Run progressive processing in background.
+    
+    Args:
+        video_id: Video identifier
+        video_path: Path to video file
+    """
+    try:
+        from services.progressive_processor import get_progressive_processor
+        
+        processor = get_progressive_processor()
+        await processor.process_video_progressive(video_id, video_path)
+        
+        logger.info(f"Progressive processing completed for video {video_id}")
+        
+    except Exception as e:
+        logger.error(f"Progressive processing failed for video {video_id}: {e}")
 
 
 @app.exception_handler(Exception)
