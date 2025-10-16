@@ -239,19 +239,28 @@ def render_chat_placeholder():
 
 
 def render_chat_with_agent(video_id: str, video_info: dict):
-    """Render chat window with full agent integration.
+    """Render chat window with full agent integration - Bulletproof version.
     
     Args:
         video_id: Current video ID
         video_info: Video information dictionary
     """
     import asyncio
+    import time
     from services.memory import Memory
     from services.agent import GroqAgent
     from models.responses import AssistantMessageResponse
     
-    # Initialize components
-    memory = Memory()
+    # Rate limiting - prevent spam
+    if 'last_message_time' not in st.session_state:
+        st.session_state.last_message_time = 0
+    
+    # Initialize components with error handling
+    try:
+        memory = Memory()
+    except Exception as e:
+        st.error(f"Failed to initialize memory: {e}")
+        return
     
     # Get conversation history
     conversation_history = memory.get_conversation_history(video_id, limit=20)
@@ -295,11 +304,10 @@ def render_chat_with_agent(video_id: str, video_info: dict):
                 </div>
                 """, unsafe_allow_html=True)
     
-    # Check if there's a pending response to display
-    if 'pending_response' in st.session_state and st.session_state.pending_response:
-        response = st.session_state.pending_response
-        display_agent_response(response)
-        # Clear pending response
+    # Note: We don't display pending_response here because it's already in conversation_history
+    # The agent stores messages in memory before returning, so they appear in the history above
+    # Just clear any pending response flag
+    if 'pending_response' in st.session_state:
         st.session_state.pending_response = None
     
     # Message input area
@@ -313,24 +321,33 @@ def render_chat_with_agent(video_id: str, video_info: dict):
         process_user_message(video_id, user_input)
         st.rerun()
     
-    # Create input form
+    # Create input form with validation
     with st.form(key=f"chat_form_{video_id}", clear_on_submit=True):
         user_input = st.text_input(
             "Message",
             placeholder="Ask me anything about this video... 💭",
             label_visibility="collapsed",
-            key=f"chat_input_{video_id}"
+            key=f"chat_input_{video_id}",
+            max_chars=5000
         )
         
         col1, col2 = st.columns([5, 1])
         with col2:
-            submit_button = st.form_submit_button("Send", use_container_width=True)
+            submit_button = st.form_submit_button("Send", use_container_width=True, type="primary")
         
-        if submit_button and user_input.strip():
-            # Show loading state
-            with st.spinner("🤔 Thinking..."):
-                process_user_message(video_id, user_input.strip())
-            st.rerun()
+        if submit_button:
+            # Sanitize and validate input
+            sanitized_input = user_input.strip()
+            
+            if not sanitized_input:
+                st.warning("⚠️ Please enter a message")
+            elif len(sanitized_input) < 2:
+                st.warning("⚠️ Message too short")
+            else:
+                # Show loading state with progress
+                with st.spinner("🤔 Thinking..."):
+                    process_user_message(video_id, sanitized_input)
+                st.rerun()
     
     # Keyboard shortcut hint
     st.markdown("""
@@ -341,35 +358,73 @@ def render_chat_with_agent(video_id: str, video_info: dict):
 
 
 def process_user_message(video_id: str, message: str):
-    """Process user message with the agent.
+    """Process user message with the agent - Bulletproof version.
     
     Args:
         video_id: Current video ID
         message: User's message
     """
     import asyncio
+    import time
     from services.agent import GroqAgent
+    from services.error_handler import ErrorHandler
+    
+    # Rate limiting - prevent spam (max 1 message per 2 seconds)
+    current_time = time.time()
+    if 'last_message_time' in st.session_state:
+        time_since_last = current_time - st.session_state.last_message_time
+        if time_since_last < 2.0:
+            st.warning(f"⏱️ Please wait {2.0 - time_since_last:.1f} seconds before sending another message")
+            return
+    
+    st.session_state.last_message_time = current_time
+    
+    # Validation
+    if not message or not message.strip():
+        st.warning("Please enter a message")
+        return
+    
+    if len(message) > 5000:
+        st.warning("Message too long. Please keep it under 5000 characters.")
+        return
+    
+    if not video_id:
+        st.error("No video selected")
+        return
     
     try:
-        # Initialize agent
+        # Initialize agent with timeout
         agent = GroqAgent()
         
         # Process message (run async function in sync context)
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        response = loop.run_until_complete(agent.chat(message, video_id))
-        loop.close()
         
-        # Store response for display
-        st.session_state.pending_response = response
+        try:
+            # Add timeout to prevent hanging
+            response = loop.run_until_complete(
+                asyncio.wait_for(agent.chat(message, video_id), timeout=60.0)
+            )
+        except asyncio.TimeoutError:
+            st.error("⏱️ Request timed out. Please try again with a simpler question.")
+            return
+        finally:
+            loop.close()
+        
+        # Validate response
+        if response and hasattr(response, 'message'):
+            st.session_state.pending_response = response
+        else:
+            st.error("Received invalid response from agent")
         
     except Exception as e:
         import logging
         logger = logging.getLogger(__name__)
         logger.error(f"Failed to process message: {e}", exc_info=True)
         
-        # Show error message
-        st.error(f"Oops! Something went wrong: {str(e)}")
+        # Show friendly error message
+        error_msg = ErrorHandler.format_error_for_user(e, {'query': message})
+        st.error(f"😅 {error_msg}")
 
 
 def display_agent_response(response):

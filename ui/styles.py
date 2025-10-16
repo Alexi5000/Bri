@@ -823,6 +823,54 @@ def apply_custom_styles():
     a:hover {{
         color: {COLORS['accent_pink']} !important;
     }}
+    
+    /* ========================================
+       VIDEO PLAYER CONTROLS - Dark Theme
+       ======================================== */
+    
+    /* ALL buttons in columns - Nuclear option */
+    [data-testid="column"] button,
+    [data-testid="column"] .stButton > button,
+    [data-testid="column"] [data-testid="baseButton-secondary"],
+    .video-player-container button,
+    .video-player-container .stButton > button {{
+        background-color: {COLORS['bg_tertiary']} !important;
+        background: {COLORS['bg_tertiary']} !important;
+        color: {COLORS['text_primary']} !important;
+        border: 1px solid {COLORS['border']} !important;
+        box-shadow: none !important;
+    }}
+    
+    [data-testid="column"] button:hover,
+    [data-testid="column"] .stButton > button:hover,
+    .video-player-container button:hover {{
+        background-color: {COLORS['hover']} !important;
+        background: {COLORS['hover']} !important;
+        border-color: {COLORS['accent_pink']} !important;
+    }}
+    
+    /* Force button containers in columns to be transparent */
+    [data-testid="column"] .stButton,
+    [data-testid="column"] .row-widget {{
+        background-color: transparent !important;
+        background: transparent !important;
+    }}
+    
+    /* Main content area buttons */
+    .main button,
+    .main .stButton > button {{
+        background-color: {COLORS['bg_tertiary']} !important;
+        background: {COLORS['bg_tertiary']} !important;
+        color: {COLORS['text_primary']} !important;
+        border: 1px solid {COLORS['border']} !important;
+    }}
+    
+    .main button:hover,
+    .main .stButton > button:hover {{
+        background-color: {COLORS['hover']} !important;
+        background: {COLORS['hover']} !important;
+        border-color: {COLORS['accent_pink']} !important;
+    }}
     </style>
     """
     
