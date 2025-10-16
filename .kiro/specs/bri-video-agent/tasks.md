@@ -289,48 +289,36 @@
 
   - [x] 30.4 Write unit tests for AudioTranscriber
 
-
     - Test full video transcription
     - Test segment transcription
     - _Requirements: 3.3_
 
   - [x] 30.5 Write unit tests for ObjectDetector
 
-
-
-
-
-
-
-
-
-
-
-
-
-
     - Test object detection in frames
     - Test object search functionality
     - _Requirements: 3.4_
 
-  - [-] 30.6 Write unit tests for ToolRouter
-
-
-
-
+  - [x] 30.6 Write unit tests for ToolRouter
 
     - Test query analysis and tool selection
     - Test timestamp extraction
     - _Requirements: 7.1, 7.2_
 
-  - [ ]\* 30.7 Write integration tests for end-to-end video processing
+  - [x] 30.7 Write integration tests for end-to-end video processing
+
 
     - Test upload → process → query → response flow
     - Test multi-tool queries
     - Test conversation continuity
     - _Requirements: 3.7, 4.1, 5.3_
 
-  - [ ]\* 30.8 Write integration tests for error handling
+  - [-] 30.8 Write integration tests for error handling
+
+
+
+
     - Test graceful degradation when tools fail
+
     - Test error message generation
     - _Requirements: 10.1, 10.2, 10.3_
