@@ -307,16 +307,12 @@
 
   - [x] 30.7 Write integration tests for end-to-end video processing
 
-
     - Test upload → process → query → response flow
     - Test multi-tool queries
     - Test conversation continuity
     - _Requirements: 3.7, 4.1, 5.3_
 
-  - [-] 30.8 Write integration tests for error handling
-
-
-
+  - [x] 30.8 Write integration tests for error handling
 
     - Test graceful degradation when tools fail
 
