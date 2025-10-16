@@ -63,11 +63,12 @@ CREATE TABLE IF NOT EXISTS data_lineage (
     tool_version TEXT,
     model_version TEXT,
     parameters TEXT,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     user_id TEXT,
     FOREIGN KEY (video_id) REFERENCES videos(video_id) ON DELETE CASCADE,
     FOREIGN KEY (context_id) REFERENCES video_context(context_id) ON DELETE SET NULL,
-    CHECK (operation IN ('create', 'update', 'delete', 'reprocess'))
+    CHECK (operation IN ('create', 'update', 'delete', 'reprocess')),
+    CHECK (lineage_id != '')  -- Lineage ID cannot be empty
 );
 
 -- Indexes for performance optimization
