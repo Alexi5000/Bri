@@ -35,50 +35,84 @@ def get_config_value(key: str, default: str = "") -> str:
     return os.getenv(key, default)
 
 
-class Config:
+class ConfigMeta(type):
+    """Metaclass for lazy configuration loading."""
+    _cache = {}
+    
+    def __getattribute__(cls, name):
+        if name.startswith('_') or name in ('validate', 'ensure_directories', 'get_mcp_server_url', 'display_config'):
+            return super().__getattribute__(name)
+        
+        # Check cache first
+        if name in cls._cache:
+            return cls._cache[name]
+        
+        # Load value lazily
+        value = cls._load_config_value(name)
+        cls._cache[name] = value
+        return value
+    
+    def _load_config_value(cls, name):
+        """Load configuration value based on attribute name."""
+        config_map = {
+            # Groq API Configuration
+            'GROQ_API_KEY': ('GROQ_API_KEY', ''),
+            'GROQ_MODEL': ('GROQ_MODEL', 'llama-3.1-70b-versatile'),
+            'GROQ_TEMPERATURE': ('GROQ_TEMPERATURE', '0.7', float),
+            'GROQ_MAX_TOKENS': ('GROQ_MAX_TOKENS', '1024', int),
+            
+            # Redis Configuration
+            'REDIS_URL': ('REDIS_URL', 'redis://localhost:6379'),
+            'REDIS_ENABLED': ('REDIS_ENABLED', 'false', lambda x: x.lower() == 'true'),
+            
+            # Database Configuration
+            'DATABASE_PATH': ('DATABASE_PATH', 'data/bri.db'),
+            
+            # File Storage Configuration
+            'VIDEO_STORAGE_PATH': ('VIDEO_STORAGE_PATH', 'data/videos'),
+            'FRAME_STORAGE_PATH': ('FRAME_STORAGE_PATH', 'data/frames'),
+            'CACHE_STORAGE_PATH': ('CACHE_STORAGE_PATH', 'data/cache'),
+            
+            # MCP Server Configuration
+            'MCP_SERVER_HOST': ('MCP_SERVER_HOST', 'localhost'),
+            'MCP_SERVER_PORT': ('MCP_SERVER_PORT', '8000', int),
+            
+            # Processing Configuration
+            'MAX_FRAMES_PER_VIDEO': ('MAX_FRAMES_PER_VIDEO', '20', int),
+            'FRAME_EXTRACTION_INTERVAL': ('FRAME_EXTRACTION_INTERVAL', '2.0', float),
+            'CACHE_TTL_HOURS': ('CACHE_TTL_HOURS', '24', int),
+            
+            # Memory Configuration
+            'MAX_CONVERSATION_HISTORY': ('MAX_CONVERSATION_HISTORY', '10', int),
+            
+            # Performance Configuration
+            'TOOL_EXECUTION_TIMEOUT': ('TOOL_EXECUTION_TIMEOUT', '120', int),
+            'REQUEST_TIMEOUT': ('REQUEST_TIMEOUT', '30', int),
+            'LAZY_LOAD_BATCH_SIZE': ('LAZY_LOAD_BATCH_SIZE', '3', int),
+            
+            # Application Configuration
+            'DEBUG': ('DEBUG', 'false', lambda x: x.lower() == 'true'),
+            'LOG_LEVEL': ('LOG_LEVEL', 'INFO'),
+            'LOG_DIR': ('LOG_DIR', 'logs'),
+            'LOG_ROTATION_ENABLED': ('LOG_ROTATION_ENABLED', 'true', lambda x: x.lower() == 'true'),
+            'LOG_JSON_FORMAT': ('LOG_JSON_FORMAT', 'false', lambda x: x.lower() == 'true'),
+        }
+        
+        if name not in config_map:
+            raise AttributeError(f"Config has no attribute '{name}'")
+        
+        config_info = config_map[name]
+        key = config_info[0]
+        default = config_info[1]
+        converter = config_info[2] if len(config_info) > 2 else str
+        
+        value = get_config_value(key, default)
+        return converter(value) if converter != str else value
+
+
+class Config(metaclass=ConfigMeta):
     """Application configuration loaded from environment variables or Streamlit secrets."""
-    
-    # Groq API Configuration
-    GROQ_API_KEY: str = get_config_value("GROQ_API_KEY", "")
-    GROQ_MODEL: str = get_config_value("GROQ_MODEL", "llama-3.1-70b-versatile")
-    GROQ_TEMPERATURE: float = float(get_config_value("GROQ_TEMPERATURE", "0.7"))
-    GROQ_MAX_TOKENS: int = int(get_config_value("GROQ_MAX_TOKENS", "1024"))
-    
-    # Redis Configuration
-    REDIS_URL: str = get_config_value("REDIS_URL", "redis://localhost:6379")
-    REDIS_ENABLED: bool = get_config_value("REDIS_ENABLED", "false").lower() == "true"  # Disabled by default for Streamlit Cloud
-    
-    # Database Configuration
-    DATABASE_PATH: str = get_config_value("DATABASE_PATH", "data/bri.db")
-    
-    # File Storage Configuration
-    VIDEO_STORAGE_PATH: str = get_config_value("VIDEO_STORAGE_PATH", "data/videos")
-    FRAME_STORAGE_PATH: str = get_config_value("FRAME_STORAGE_PATH", "data/frames")
-    CACHE_STORAGE_PATH: str = get_config_value("CACHE_STORAGE_PATH", "data/cache")
-    
-    # MCP Server Configuration (not used in Streamlit Cloud)
-    MCP_SERVER_HOST: str = get_config_value("MCP_SERVER_HOST", "localhost")
-    MCP_SERVER_PORT: int = int(get_config_value("MCP_SERVER_PORT", "8000"))
-    
-    # Processing Configuration
-    MAX_FRAMES_PER_VIDEO: int = int(get_config_value("MAX_FRAMES_PER_VIDEO", "20"))  # Reduced for faster CPU processing
-    FRAME_EXTRACTION_INTERVAL: float = float(get_config_value("FRAME_EXTRACTION_INTERVAL", "2.0"))
-    CACHE_TTL_HOURS: int = int(get_config_value("CACHE_TTL_HOURS", "24"))
-    
-    # Memory Configuration
-    MAX_CONVERSATION_HISTORY: int = int(get_config_value("MAX_CONVERSATION_HISTORY", "10"))
-    
-    # Performance Configuration
-    TOOL_EXECUTION_TIMEOUT: int = int(get_config_value("TOOL_EXECUTION_TIMEOUT", "120"))  # seconds
-    REQUEST_TIMEOUT: int = int(get_config_value("REQUEST_TIMEOUT", "30"))  # seconds
-    LAZY_LOAD_BATCH_SIZE: int = int(get_config_value("LAZY_LOAD_BATCH_SIZE", "3"))  # images per batch
-    
-    # Application Configuration
-    DEBUG: bool = get_config_value("DEBUG", "false").lower() == "true"
-    LOG_LEVEL: str = get_config_value("LOG_LEVEL", "INFO")
-    LOG_DIR: str = get_config_value("LOG_DIR", "logs")
-    LOG_ROTATION_ENABLED: bool = get_config_value("LOG_ROTATION_ENABLED", "true").lower() == "true"
-    LOG_JSON_FORMAT: bool = get_config_value("LOG_JSON_FORMAT", "false").lower() == "true"
+    pass
     
     @classmethod
     def validate(cls) -> None:
@@ -193,9 +227,4 @@ class Config:
         print("\n" + "="*60 + "\n")
 
 
-# Validate configuration on import
-try:
-    Config.validate()
-except ValueError as e:
-    print(f"Warning: {e}")
-    print("Some features may not work without proper configuration.")
+# Don't validate on import - let app.py handle validation after Streamlit is initialized
