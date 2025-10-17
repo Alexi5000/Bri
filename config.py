@@ -7,51 +7,81 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+# Try to load Streamlit secrets if available (for Streamlit Cloud deployment)
+try:
+    import streamlit as st
+    if hasattr(st, 'secrets'):
+        # Streamlit Cloud deployment - use secrets
+        _use_streamlit_secrets = True
+    else:
+        _use_streamlit_secrets = False
+except ImportError:
+    _use_streamlit_secrets = False
+
+
+def get_config_value(key: str, default: str = "") -> str:
+    """Get configuration value from Streamlit secrets or environment variables.
+    
+    Args:
+        key: Configuration key
+        default: Default value if not found
+        
+    Returns:
+        Configuration value
+    """
+    if _use_streamlit_secrets:
+        try:
+            import streamlit as st
+            return st.secrets.get(key, os.getenv(key, default))
+        except Exception:
+            return os.getenv(key, default)
+    return os.getenv(key, default)
+
 
 class Config:
-    """Application configuration loaded from environment variables."""
+    """Application configuration loaded from environment variables or Streamlit secrets."""
     
     # Groq API Configuration
-    GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
-    GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.1-70b-versatile")
-    GROQ_TEMPERATURE: float = float(os.getenv("GROQ_TEMPERATURE", "0.7"))
-    GROQ_MAX_TOKENS: int = int(os.getenv("GROQ_MAX_TOKENS", "1024"))
+    GROQ_API_KEY: str = get_config_value("GROQ_API_KEY", "")
+    GROQ_MODEL: str = get_config_value("GROQ_MODEL", "llama-3.1-70b-versatile")
+    GROQ_TEMPERATURE: float = float(get_config_value("GROQ_TEMPERATURE", "0.7"))
+    GROQ_MAX_TOKENS: int = int(get_config_value("GROQ_MAX_TOKENS", "1024"))
     
     # Redis Configuration
-    REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379")
-    REDIS_ENABLED: bool = os.getenv("REDIS_ENABLED", "true").lower() == "true"
+    REDIS_URL: str = get_config_value("REDIS_URL", "redis://localhost:6379")
+    REDIS_ENABLED: bool = get_config_value("REDIS_ENABLED", "false").lower() == "true"  # Disabled by default for Streamlit Cloud
     
     # Database Configuration
-    DATABASE_PATH: str = os.getenv("DATABASE_PATH", "data/bri.db")
+    DATABASE_PATH: str = get_config_value("DATABASE_PATH", "data/bri.db")
     
     # File Storage Configuration
-    VIDEO_STORAGE_PATH: str = os.getenv("VIDEO_STORAGE_PATH", "data/videos")
-    FRAME_STORAGE_PATH: str = os.getenv("FRAME_STORAGE_PATH", "data/frames")
-    CACHE_STORAGE_PATH: str = os.getenv("CACHE_STORAGE_PATH", "data/cache")
+    VIDEO_STORAGE_PATH: str = get_config_value("VIDEO_STORAGE_PATH", "data/videos")
+    FRAME_STORAGE_PATH: str = get_config_value("FRAME_STORAGE_PATH", "data/frames")
+    CACHE_STORAGE_PATH: str = get_config_value("CACHE_STORAGE_PATH", "data/cache")
     
-    # MCP Server Configuration
-    MCP_SERVER_HOST: str = os.getenv("MCP_SERVER_HOST", "localhost")
-    MCP_SERVER_PORT: int = int(os.getenv("MCP_SERVER_PORT", "8000"))
+    # MCP Server Configuration (not used in Streamlit Cloud)
+    MCP_SERVER_HOST: str = get_config_value("MCP_SERVER_HOST", "localhost")
+    MCP_SERVER_PORT: int = int(get_config_value("MCP_SERVER_PORT", "8000"))
     
     # Processing Configuration
-    MAX_FRAMES_PER_VIDEO: int = int(os.getenv("MAX_FRAMES_PER_VIDEO", "20"))  # Reduced for faster CPU processing
-    FRAME_EXTRACTION_INTERVAL: float = float(os.getenv("FRAME_EXTRACTION_INTERVAL", "2.0"))
-    CACHE_TTL_HOURS: int = int(os.getenv("CACHE_TTL_HOURS", "24"))
+    MAX_FRAMES_PER_VIDEO: int = int(get_config_value("MAX_FRAMES_PER_VIDEO", "20"))  # Reduced for faster CPU processing
+    FRAME_EXTRACTION_INTERVAL: float = float(get_config_value("FRAME_EXTRACTION_INTERVAL", "2.0"))
+    CACHE_TTL_HOURS: int = int(get_config_value("CACHE_TTL_HOURS", "24"))
     
     # Memory Configuration
-    MAX_CONVERSATION_HISTORY: int = int(os.getenv("MAX_CONVERSATION_HISTORY", "10"))
+    MAX_CONVERSATION_HISTORY: int = int(get_config_value("MAX_CONVERSATION_HISTORY", "10"))
     
     # Performance Configuration
-    TOOL_EXECUTION_TIMEOUT: int = int(os.getenv("TOOL_EXECUTION_TIMEOUT", "120"))  # seconds
-    REQUEST_TIMEOUT: int = int(os.getenv("REQUEST_TIMEOUT", "30"))  # seconds
-    LAZY_LOAD_BATCH_SIZE: int = int(os.getenv("LAZY_LOAD_BATCH_SIZE", "3"))  # images per batch
+    TOOL_EXECUTION_TIMEOUT: int = int(get_config_value("TOOL_EXECUTION_TIMEOUT", "120"))  # seconds
+    REQUEST_TIMEOUT: int = int(get_config_value("REQUEST_TIMEOUT", "30"))  # seconds
+    LAZY_LOAD_BATCH_SIZE: int = int(get_config_value("LAZY_LOAD_BATCH_SIZE", "3"))  # images per batch
     
     # Application Configuration
-    DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
-    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
-    LOG_DIR: str = os.getenv("LOG_DIR", "logs")
-    LOG_ROTATION_ENABLED: bool = os.getenv("LOG_ROTATION_ENABLED", "true").lower() == "true"
-    LOG_JSON_FORMAT: bool = os.getenv("LOG_JSON_FORMAT", "false").lower() == "true"
+    DEBUG: bool = get_config_value("DEBUG", "false").lower() == "true"
+    LOG_LEVEL: str = get_config_value("LOG_LEVEL", "INFO")
+    LOG_DIR: str = get_config_value("LOG_DIR", "logs")
+    LOG_ROTATION_ENABLED: bool = get_config_value("LOG_ROTATION_ENABLED", "true").lower() == "true"
+    LOG_JSON_FORMAT: bool = get_config_value("LOG_JSON_FORMAT", "false").lower() == "true"
     
     @classmethod
     def validate(cls) -> None:

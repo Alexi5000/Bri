@@ -1,0 +1,13 @@
+# System packages required for Streamlit Cloud deployment
+# These will be installed via apt-get
+
+# FFmpeg for video processing
+ffmpeg
+
+# OpenCV dependencies
+libgl1-mesa-glx
+libglib2.0-0
+libsm6
+libxext6
+libxrender-dev
+libgomp1
