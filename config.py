@@ -26,13 +26,24 @@ def get_config_value(key: str, default: str = "") -> str:
     # Try Streamlit secrets first (for Streamlit Cloud)
     try:
         import streamlit as st
-        if hasattr(st, 'secrets') and key in st.secrets:
-            return str(st.secrets[key])
-    except Exception:
-        pass
+        if hasattr(st, 'secrets'):
+            # Debug: Check if secrets are available
+            if key in st.secrets:
+                value = str(st.secrets[key])
+                # Don't log the actual key value for security
+                if key == "GROQ_API_KEY" and value:
+                    print(f"✅ Found {key} in Streamlit secrets (length: {len(value)})")
+                return value
+            else:
+                print(f"⚠️ {key} not found in Streamlit secrets. Available keys: {list(st.secrets.keys())}")
+    except Exception as e:
+        print(f"⚠️ Could not access Streamlit secrets: {e}")
     
     # Fall back to environment variables
-    return os.getenv(key, default)
+    env_value = os.getenv(key, default)
+    if env_value and env_value != default:
+        print(f"✅ Found {key} in environment variables")
+    return env_value
 
 
 class ConfigMeta(type):
@@ -122,7 +133,15 @@ class Config(metaclass=ConfigMeta):
         
         # Required configurations
         if not cls.GROQ_API_KEY:
-            errors.append("GROQ_API_KEY is required. Please set it in .env file.")
+            # Check if running on Streamlit Cloud
+            try:
+                import streamlit as st
+                if hasattr(st, 'secrets'):
+                    errors.append("GROQ_API_KEY is required. Please set it in Streamlit Cloud Secrets (Settings → Secrets).")
+                else:
+                    errors.append("GROQ_API_KEY is required. Please set it in .env file.")
+            except:
+                errors.append("GROQ_API_KEY is required. Please set it in .env file or Streamlit Cloud Secrets.")
         
         # Validate numeric ranges
         if cls.GROQ_TEMPERATURE < 0 or cls.GROQ_TEMPERATURE > 2:
