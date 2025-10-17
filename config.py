@@ -7,20 +7,14 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-# Try to load Streamlit secrets if available (for Streamlit Cloud deployment)
-try:
-    import streamlit as st
-    if hasattr(st, 'secrets'):
-        # Streamlit Cloud deployment - use secrets
-        _use_streamlit_secrets = True
-    else:
-        _use_streamlit_secrets = False
-except ImportError:
-    _use_streamlit_secrets = False
-
 
 def get_config_value(key: str, default: str = "") -> str:
     """Get configuration value from Streamlit secrets or environment variables.
+    
+    Priority:
+    1. Streamlit secrets (if available)
+    2. Environment variables
+    3. Default value
     
     Args:
         key: Configuration key
@@ -29,12 +23,15 @@ def get_config_value(key: str, default: str = "") -> str:
     Returns:
         Configuration value
     """
-    if _use_streamlit_secrets:
-        try:
-            import streamlit as st
-            return st.secrets.get(key, os.getenv(key, default))
-        except Exception:
-            return os.getenv(key, default)
+    # Try Streamlit secrets first (for Streamlit Cloud)
+    try:
+        import streamlit as st
+        if hasattr(st, 'secrets') and key in st.secrets:
+            return str(st.secrets[key])
+    except Exception:
+        pass
+    
+    # Fall back to environment variables
     return os.getenv(key, default)
 
 
