@@ -40,13 +40,38 @@ BRI is designed to be:
 
 ## Quick Start
 
-### Prerequisites
+### 🐳 Docker Deployment (Recommended for Testing)
+
+The fastest way to get BRI up and running:
+
+1. **Set your API key** in `.env`:
+   ```bash
+   nano .env
+   # Update: GROQ_API_KEY=your_actual_key
+   ```
+
+2. **Deploy with one command**:
+   ```bash
+   ./deploy_test.sh
+   ```
+
+3. **Access the app**: http://localhost:8501
+
+📖 **Full guide**: [DEPLOY_TO_TEST.md](DEPLOY_TO_TEST.md) | ⚡ **Quick reference**: [QUICK_START.md](QUICK_START.md)
+
+---
+
+### 💻 Local Development Setup
+
+For development and customization:
+
+#### Prerequisites
 
 - Python 3.9 or higher
 - Groq API key ([Get one here](https://console.groq.com))
 - Redis (optional, for caching)
 
-### Installation
+#### Installation
 
 1. Clone the repository:
 ```bash
