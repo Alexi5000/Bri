@@ -1,0 +1,618 @@
+{
+  "1.2": [
+    {
+      "test": "Database file exists",
+      "status": "PASS",
+      "details": "Size: 112.00 KB",
+      "timestamp": "2025-12-25T18:02:29.783055"
+    },
+    {
+      "test": "Table data_lineage exists",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:29.784538"
+    },
+    {
+      "test": "Table memory exists",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:29.784554"
+    },
+    {
+      "test": "Table schema_version exists",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:29.784582"
+    },
+    {
+      "test": "Table video_context exists",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:29.784587"
+    },
+    {
+      "test": "Table videos exists",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:29.784590"
+    },
+    {
+      "test": "Foreign keys enabled",
+      "status": "FAIL",
+      "details": "Status: 0",
+      "timestamp": "2025-12-25T18:02:29.785245"
+    },
+    {
+      "test": "CHECK constraints defined for videos",
+      "status": "PASS",
+      "details": "4 constraints",
+      "timestamp": "2025-12-25T18:02:29.785257"
+    },
+    {
+      "test": "CHECK constraints defined for memory",
+      "status": "PASS",
+      "details": "3 constraints",
+      "timestamp": "2025-12-25T18:02:29.785263"
+    },
+    {
+      "test": "CHECK constraints defined for video_context",
+      "status": "PASS",
+      "details": "4 constraints",
+      "timestamp": "2025-12-25T18:02:29.785268"
+    },
+    {
+      "test": "CHECK constraints defined for data_lineage",
+      "status": "PASS",
+      "details": "2 constraints",
+      "timestamp": "2025-12-25T18:02:29.785272"
+    },
+    {
+      "test": "Successful transaction (commit)",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:29.792671"
+    },
+    {
+      "test": "Transaction commit verification",
+      "status": "PASS",
+      "details": "Data persisted",
+      "timestamp": "2025-12-25T18:02:29.793020"
+    },
+    {
+      "test": "Failed transaction (rollback)",
+      "status": "PASS",
+      "details": "Rollback worked correctly",
+      "timestamp": "2025-12-25T18:02:29.793796"
+    },
+    {
+      "test": "Foreign key constraint enforcement",
+      "status": "PASS",
+      "details": "FK violation prevented",
+      "timestamp": "2025-12-25T18:02:29.793999"
+    },
+    {
+      "test": "Index idx_memory_video_id on videos",
+      "status": "FAIL",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:29.794181"
+    },
+    {
+      "test": "Index idx_memory_video_id on memory",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:29.794265"
+    },
+    {
+      "test": "Index idx_memory_timestamp on memory",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:29.794349"
+    },
+    {
+      "test": "Index idx_video_context_video_id on video_context",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:29.794435"
+    },
+    {
+      "test": "Index idx_video_context_type on video_context",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:29.794526"
+    },
+    {
+      "test": "Index idx_video_context_timestamp on video_context",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:29.794629"
+    },
+    {
+      "test": "Index idx_videos_processing_status on videos",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:29.794768"
+    },
+    {
+      "test": "Index idx_videos_deleted_at on videos",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:29.794892"
+    }
+  ],
+  "1.3": [
+    {
+      "test": "Tool file frame_extractor.py exists",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:29.800050"
+    },
+    {
+      "test": "Tool file image_captioner.py exists",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:29.800122"
+    },
+    {
+      "test": "Tool file audio_transcriber.py exists",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:29.800182"
+    },
+    {
+      "test": "Tool file object_detector.py exists",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:29.800229"
+    },
+    {
+      "test": "Import frame_extractor",
+      "status": "FAIL",
+      "details": "No module named 'cv2'",
+      "timestamp": "2025-12-25T18:02:29.801475"
+    },
+    {
+      "test": "Import image_captioner",
+      "status": "FAIL",
+      "details": "No module named 'cv2'",
+      "timestamp": "2025-12-25T18:02:29.802489"
+    },
+    {
+      "test": "Import audio_transcriber",
+      "status": "FAIL",
+      "details": "No module named 'cv2'",
+      "timestamp": "2025-12-25T18:02:29.803398"
+    },
+    {
+      "test": "Import object_detector",
+      "status": "FAIL",
+      "details": "No module named 'cv2'",
+      "timestamp": "2025-12-25T18:02:29.804336"
+    },
+    {
+      "test": "Dependency opencv-python",
+      "status": "FAIL",
+      "details": "Not installed",
+      "timestamp": "2025-12-25T18:02:29.804404"
+    },
+    {
+      "test": "Dependency transformers",
+      "status": "FAIL",
+      "details": "Not installed",
+      "timestamp": "2025-12-25T18:02:29.804461"
+    },
+    {
+      "test": "Dependency torch",
+      "status": "FAIL",
+      "details": "Not installed",
+      "timestamp": "2025-12-25T18:02:29.804536"
+    },
+    {
+      "test": "Dependency openai-whisper",
+      "status": "FAIL",
+      "details": "Not installed",
+      "timestamp": "2025-12-25T18:02:29.804623"
+    },
+    {
+      "test": "Dependency ultralytics",
+      "status": "FAIL",
+      "details": "Not installed",
+      "timestamp": "2025-12-25T18:02:29.804681"
+    },
+    {
+      "test": "Dependency PIL",
+      "status": "FAIL",
+      "details": "Not installed",
+      "timestamp": "2025-12-25T18:02:29.804733"
+    }
+  ],
+  "1.4": [
+    {
+      "test": "MCP file mcp_server/main.py",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:29.808330"
+    },
+    {
+      "test": "MCP file mcp_server/middleware.py",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:29.808386"
+    },
+    {
+      "test": "MCP file mcp_server/circuit_breaker.py",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:29.808433"
+    },
+    {
+      "test": "MCP file mcp_server/rate_limiter.py",
+      "status": "FAIL",
+      "details": "File not found",
+      "timestamp": "2025-12-25T18:02:29.808486"
+    },
+    {
+      "test": "FastAPI/Uvicorn dependency",
+      "status": "FAIL",
+      "details": "No module named 'fastapi'",
+      "timestamp": "2025-12-25T18:02:29.808579"
+    },
+    {
+      "test": "Component circuit_breaker",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:29.808600"
+    },
+    {
+      "test": "Component rate_limiter",
+      "status": "FAIL",
+      "details": "File not found",
+      "timestamp": "2025-12-25T18:02:29.808646"
+    },
+    {
+      "test": "Component middleware",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:29.808664"
+    }
+  ],
+  "1.5": [
+    {
+      "test": "Service file services/agent.py",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:29.808743"
+    },
+    {
+      "test": "Service file services/context.py",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:29.808792"
+    },
+    {
+      "test": "Service file services/memory.py",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:29.808839"
+    },
+    {
+      "test": "Service file services/router.py",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:29.808885"
+    },
+    {
+      "test": "Groq library",
+      "status": "FAIL",
+      "details": "Not installed",
+      "timestamp": "2025-12-25T18:02:29.808959"
+    },
+    {
+      "test": "Import services.agent",
+      "status": "FAIL",
+      "details": "No module named 'httpx'",
+      "timestamp": "2025-12-25T18:02:29.810758"
+    },
+    {
+      "test": "Class ContextBuilder",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:30.010718"
+    },
+    {
+      "test": "Class Memory",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:30.011522"
+    },
+    {
+      "test": "Class ToolRouter",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:30.012716"
+    }
+  ],
+  "1.6": [
+    {
+      "test": "UI file ui/welcome.py",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:30.012888"
+    },
+    {
+      "test": "UI file ui/library.py",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:30.012956"
+    },
+    {
+      "test": "UI file ui/chat.py",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:30.013019"
+    },
+    {
+      "test": "UI file ui/player.py",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:30.013078"
+    },
+    {
+      "test": "UI file ui/history.py",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:30.013141"
+    },
+    {
+      "test": "UI file ui/styles.py",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:30.013199"
+    },
+    {
+      "test": "Streamlit library",
+      "status": "FAIL",
+      "details": "Not installed",
+      "timestamp": "2025-12-25T18:02:30.013301"
+    },
+    {
+      "test": "Import ui/welcome",
+      "status": "FAIL",
+      "details": "No module named 'ui/welcome'",
+      "timestamp": "2025-12-25T18:02:30.013369"
+    },
+    {
+      "test": "Import ui/library",
+      "status": "FAIL",
+      "details": "No module named 'ui/library'",
+      "timestamp": "2025-12-25T18:02:30.013426"
+    },
+    {
+      "test": "Import ui/chat",
+      "status": "FAIL",
+      "details": "No module named 'ui/chat'",
+      "timestamp": "2025-12-25T18:02:30.013493"
+    },
+    {
+      "test": "Import ui/player",
+      "status": "FAIL",
+      "details": "No module named 'ui/player'",
+      "timestamp": "2025-12-25T18:02:30.013542"
+    },
+    {
+      "test": "Import ui/history",
+      "status": "FAIL",
+      "details": "No module named 'ui/history'",
+      "timestamp": "2025-12-25T18:02:30.013620"
+    },
+    {
+      "test": "Import ui.styles",
+      "status": "FAIL",
+      "details": "No module named 'streamlit'",
+      "timestamp": "2025-12-25T18:02:30.015000"
+    }
+  ],
+  "1.7": [
+    {
+      "test": "GROQ_API_KEY",
+      "status": "WARN",
+      "details": "Not set in environment",
+      "timestamp": "2025-12-25T18:02:30.015027"
+    },
+    {
+      "test": ".env file",
+      "status": "FAIL",
+      "details": ".env file not found",
+      "timestamp": "2025-12-25T18:02:30.015107"
+    },
+    {
+      "test": "Redis library",
+      "status": "FAIL",
+      "details": "Not installed",
+      "timestamp": "2025-12-25T18:02:30.015184"
+    },
+    {
+      "test": "ML library openai-whisper",
+      "status": "FAIL",
+      "details": "Not installed",
+      "timestamp": "2025-12-25T18:02:30.015243"
+    },
+    {
+      "test": "ML library transformers (BLIP)",
+      "status": "FAIL",
+      "details": "Not installed",
+      "timestamp": "2025-12-25T18:02:30.015299"
+    },
+    {
+      "test": "ML library ultralytics (YOLO)",
+      "status": "FAIL",
+      "details": "Not installed",
+      "timestamp": "2025-12-25T18:02:30.015355"
+    },
+    {
+      "test": "ML library torch (PyTorch)",
+      "status": "FAIL",
+      "details": "Not installed",
+      "timestamp": "2025-12-25T18:02:30.015406"
+    },
+    {
+      "test": "Model directory models",
+      "status": "PASS",
+      "details": "6 items",
+      "timestamp": "2025-12-25T18:02:30.015683"
+    },
+    {
+      "test": "Model directory models/whisper",
+      "status": "WARN",
+      "details": "Directory not found (will download on first use)",
+      "timestamp": "2025-12-25T18:02:30.015746"
+    },
+    {
+      "test": "Model directory models/blip",
+      "status": "WARN",
+      "details": "Directory not found (will download on first use)",
+      "timestamp": "2025-12-25T18:02:30.015797"
+    },
+    {
+      "test": "Model directory models/yolo",
+      "status": "WARN",
+      "details": "Directory not found (will download on first use)",
+      "timestamp": "2025-12-25T18:02:30.015851"
+    }
+  ],
+  "1.8": [
+    {
+      "test": "Video uploads directory",
+      "status": "PASS",
+      "details": "0 items",
+      "timestamp": "2025-12-25T18:02:30.016068"
+    },
+    {
+      "test": "Extracted frames directory",
+      "status": "PASS",
+      "details": "0 items",
+      "timestamp": "2025-12-25T18:02:30.016230"
+    },
+    {
+      "test": "Processing cache directory",
+      "status": "PASS",
+      "details": "0 items",
+      "timestamp": "2025-12-25T18:02:30.016439"
+    },
+    {
+      "test": "Database directory",
+      "status": "PASS",
+      "details": "File exists",
+      "timestamp": "2025-12-25T18:02:30.016512"
+    },
+    {
+      "test": "Table videos row count",
+      "status": "PASS",
+      "details": "0 rows",
+      "timestamp": "2025-12-25T18:02:30.017449"
+    },
+    {
+      "test": "Table memory row count",
+      "status": "PASS",
+      "details": "1 rows",
+      "timestamp": "2025-12-25T18:02:30.017633"
+    },
+    {
+      "test": "Table video_context row count",
+      "status": "PASS",
+      "details": "0 rows",
+      "timestamp": "2025-12-25T18:02:30.017798"
+    },
+    {
+      "test": "Table data_lineage row count",
+      "status": "PASS",
+      "details": "0 rows",
+      "timestamp": "2025-12-25T18:02:30.017958"
+    },
+    {
+      "test": "Integration point Database module",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:30.018120"
+    },
+    {
+      "test": "Integration point Frame extractor tool",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:30.018137"
+    },
+    {
+      "test": "Integration point Image captioner tool",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:30.018147"
+    },
+    {
+      "test": "Integration point Audio transcriber tool",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:30.018155"
+    },
+    {
+      "test": "Integration point Object detector tool",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:30.018164"
+    },
+    {
+      "test": "Integration point Video processing service",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:30.018221"
+    },
+    {
+      "test": "Integration point Context builder",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:30.018239"
+    },
+    {
+      "test": "Integration point Memory manager",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:30.018296"
+    },
+    {
+      "test": "Integration point Groq agent",
+      "status": "PASS",
+      "details": "",
+      "timestamp": "2025-12-25T18:02:30.018309"
+    }
+  ],
+  "1.9": [
+    {
+      "test": "Integration gap in Tools",
+      "status": "WARN",
+      "details": "Not all integrations complete",
+      "timestamp": "2025-12-25T18:02:30.018438"
+    },
+    {
+      "test": "Integration gap in MCP Server",
+      "status": "WARN",
+      "details": "Not all integrations complete",
+      "timestamp": "2025-12-25T18:02:30.018444"
+    },
+    {
+      "test": "Integration gap in Agent",
+      "status": "WARN",
+      "details": "Not all integrations complete",
+      "timestamp": "2025-12-25T18:02:30.018447"
+    },
+    {
+      "test": "Integration gap in UI",
+      "status": "WARN",
+      "details": "Not all integrations complete",
+      "timestamp": "2025-12-25T18:02:30.018451"
+    },
+    {
+      "test": "Integration gap in Database",
+      "status": "WARN",
+      "details": "Not all integrations complete",
+      "timestamp": "2025-12-25T18:02:30.018454"
+    }
+  ]
+}
