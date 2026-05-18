@@ -10,7 +10,7 @@ from datetime import datetime
 from typing import Dict, Optional
 import logging
 
-from storage.database import get_all_videos, delete_video as db_delete_video
+from services.application import get_application_service
 from storage.file_store import get_file_store
 
 logger = logging.getLogger(__name__)
@@ -270,7 +270,7 @@ def render_video_card(video: Dict, col) -> None:
                 
                 with conf_col1:
                     if st.button("✅ Yes", key=f"confirm_{video_id}", use_container_width=True):
-                        delete_video(video_id, file_path)
+                        delete_video(video_id)
                         st.session_state.delete_confirm_video_id = None
                         st.rerun()
                 
@@ -283,21 +283,17 @@ def render_video_card(video: Dict, col) -> None:
             st.markdown("<br>", unsafe_allow_html=True)  # noqa: S308
 
 
-def delete_video(video_id: str, file_path: str) -> None:
+def delete_video(video_id: str) -> None:
     """
     Delete a video and its associated data.
     
     Args:
         video_id: Video identifier
-        file_path: Path to video file
     """
     try:
-        # Delete from file system
-        file_store = get_file_store()
-        file_store.delete_video(video_id)
-        
-        # Delete from database
-        db_delete_video(video_id)
+        # Delete through the application middle layer so filesystem and SQLite
+        # lifecycle remain a single product operation.
+        get_application_service().delete_video(video_id)
         
         # Update session state
         st.session_state.uploaded_videos = [
@@ -325,15 +321,16 @@ def render_video_library() -> None:
     
     # Refresh videos from database
     try:
-        videos = get_all_videos()
+        videos = get_application_service().list_videos()
         st.session_state.uploaded_videos = [
             {
-                'video_id': video['video_id'],
-                'filename': video['filename'],
-                'file_path': video['file_path'],
-                'duration': video['duration'],
-                'processing_status': video['processing_status'],
-                'upload_timestamp': video['upload_timestamp']
+                'video_id': video.video_id,
+                'filename': video.filename,
+                'file_path': video.file_path,
+                'duration': video.duration,
+                'processing_status': video.processing_status,
+                'thumbnail_path': video.thumbnail_path,
+                'upload_timestamp': video.upload_timestamp,
             }
             for video in videos
         ]

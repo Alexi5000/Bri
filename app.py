@@ -37,9 +37,18 @@ except Exception as e:
 # Import UI components
 from ui.welcome import render_welcome_screen
 from ui.library import render_video_library  # Task 19
-from ui.player import render_video_player, extract_timestamps_from_conversation, navigate_to_timestamp  # Task 21
 from ui.history import render_conversation_history_panel  # Task 22
+from ui.chat_workflow import render_video_chat_workspace
 from ui.styles import apply_custom_styles
+from ui.shell import (
+    render_dashboard,
+    render_enterprise_styles,
+    render_persistence_panel,
+    render_product_header,
+    render_sidebar_readiness,
+    render_video_workflow,
+)
+from services.application import get_application_service
 
 # Configure page
 st.set_page_config(
@@ -49,42 +58,49 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+@st.cache_resource(show_spinner=False)
+def get_bri_service():
+    """Return the production application-service facade for this Streamlit session."""
+    return get_application_service()
+
+
 def initialize_session_state():
     """Initialize Streamlit session state variables"""
     if 'current_video_id' not in st.session_state:
         st.session_state.current_video_id = None
-    
+
     if 'conversation_history' not in st.session_state:
         st.session_state.conversation_history = {}
-    
+
     if 'uploaded_videos' not in st.session_state:
         # Load videos from database
-        from storage.database import get_all_videos
         try:
-            videos = get_all_videos()
+            videos = get_bri_service().list_videos()
             st.session_state.uploaded_videos = [
                 {
-                    'video_id': video['video_id'],
-                    'filename': video['filename'],
-                    'file_path': video['file_path'],
-                    'duration': video['duration'],
-                    'processing_status': video['processing_status']
+                    'video_id': video.video_id,
+                    'filename': video.filename,
+                    'file_path': video.file_path,
+                    'duration': video.duration,
+                    'processing_status': video.processing_status,
+                    'thumbnail_path': video.thumbnail_path,
+                    'upload_timestamp': video.upload_timestamp,
                 }
                 for video in videos
             ]
         except Exception:
             # If database not initialized yet, start with empty list
             st.session_state.uploaded_videos = []
-    
+
     if 'current_view' not in st.session_state:
         st.session_state.current_view = 'welcome'  # 'welcome', 'library', 'chat'
-    
+
     if 'processing_status' not in st.session_state:
         st.session_state.processing_status = {}
-    
+
     if 'user_message' not in st.session_state:
         st.session_state.user_message = ""
-    
+
     if 'delete_confirm_video_id' not in st.session_state:
         st.session_state.delete_confirm_video_id = None
 
@@ -94,20 +110,20 @@ def render_sidebar():
         st.markdown("### 💜 BRI")
         st.markdown("*Ask. Understand. Remember.*")
         st.markdown("---")
-        
+
         # Navigation
         st.markdown("#### Navigation")
         if st.button("🏠 Home", use_container_width=True):
             st.session_state.current_view = 'welcome'
             st.session_state.current_video_id = None
             st.rerun()
-        
+
         if st.button("📚 Video Library", use_container_width=True):
             st.session_state.current_view = 'library'
             st.rerun()
-        
+
         st.markdown("---")
-        
+
         # Video selection (if videos exist)
         if st.session_state.uploaded_videos:
             st.markdown("#### Your Videos")
@@ -118,14 +134,14 @@ def render_sidebar():
                     st.session_state.current_video_id = video_id
                     st.session_state.current_view = 'chat'
                     st.rerun()
-        
+
         st.markdown("---")
-        
+
         # Conversation history panel (Task 22)
         # Show history panel when a video is selected and in chat view
         if st.session_state.current_video_id and st.session_state.current_view == 'chat':
             from services.memory import Memory
-            
+
             try:
                 memory = Memory()
                 render_conversation_history_panel(
@@ -138,7 +154,12 @@ def render_sidebar():
                 )
             except Exception as e:
                 st.error(f"Failed to load conversation history: {e}")
-        
+
+        try:
+            render_sidebar_readiness(get_bri_service().snapshot(include_tools=False))
+        except Exception as e:
+            st.caption(f"Readiness panel unavailable: {e}")
+
         # Footer
         st.markdown("---")
         st.markdown(
@@ -152,7 +173,7 @@ def render_sidebar():
 
 def load_conversation_context(session, video_id):
     """Load a conversation session into the current context.
-    
+
     Args:
         session: List of MemoryRecord objects to load
         video_id: Current video ID
@@ -172,7 +193,13 @@ def render_main_content():
         render_welcome_placeholder()
 
 def render_welcome_placeholder():
-    """Welcome screen (Task 16 - Implemented)"""
+    """Welcome screen with production command-center context."""
+    service = get_bri_service()
+    snapshot = service.snapshot(include_tools=True)
+    render_product_header(snapshot)
+    render_dashboard(snapshot)
+    render_persistence_panel(service.persistence_readiness())
+    render_video_workflow(snapshot.videos)
     render_welcome_screen()
 
 def render_library_placeholder():
@@ -180,370 +207,34 @@ def render_library_placeholder():
     render_video_library()
 
 def render_chat_placeholder():
-    """Chat interface with video player (Tasks 20, 21, 23)"""
-    if st.session_state.current_video_id:
-        video_id = st.session_state.current_video_id
-        
-        # Get video info from uploaded videos
-        video_info = None
-        for video in st.session_state.uploaded_videos:
-            if video['video_id'] == video_id:
-                video_info = video
-                break
-        
-        if not video_info:
-            st.error("Video not found!")
-            return
-        
-        # Page header
-        st.markdown("# 💬 Chat with BRI")
-        # Video title with minimal spacing
-        st.markdown(f"""
-        <div style="margin-bottom: 0.5rem; padding: 0.5rem 0;">
-            <span style="font-weight: 600; color: #6A1B9A;">📹 {video_info['filename']}</span>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Create two columns: video player (left) and chat (right)
-        col1, col2 = st.columns([1, 1], gap="medium")
-        
-        with col1:
-            # Get conversation history for this video
-            from services.memory import Memory
-            memory = Memory()
-            conversation_history = memory.get_conversation_history(video_id, limit=20)
-            
-            # Extract timestamps from conversation
-            timestamps = extract_timestamps_from_conversation(conversation_history)
-            
-            # Check if user clicked a timestamp in chat
-            clicked_timestamp = st.session_state.get("clicked_timestamp")
-            if clicked_timestamp is not None:
-                navigate_to_timestamp(video_id, clicked_timestamp)
-                # Clear the clicked timestamp
-                st.session_state["clicked_timestamp"] = None
-            
-            # Render video player with timestamps
-            render_video_player(
-                video_path=video_info['file_path'],
-                video_id=video_id,
-                current_timestamp=None,
-                timestamps=timestamps
-            )
-        
-        with col2:
-            # Render chat window with agent integration
-            render_chat_with_agent(video_id, video_info)
-    else:
-        st.warning("Please select a video from the sidebar to start chatting!")
+    """Render the selected-video chat workspace through the production UI module."""
 
-
-def render_chat_with_agent(video_id: str, video_info: dict):
-    """Render chat window with full agent integration - Bulletproof version.
-    
-    Args:
-        video_id: Current video ID
-        video_info: Video information dictionary
-    """
-    import asyncio
-    import time
-    from services.memory import Memory
-    from services.agent import GroqAgent
-    from models.responses import AssistantMessageResponse
-    
-    # Rate limiting - prevent spam
-    if 'last_message_time' not in st.session_state:
-        st.session_state.last_message_time = 0
-    
-    # Initialize components with error handling
-    try:
-        memory = Memory()
-    except Exception as e:
-        st.error(f"Failed to initialize memory: {e}")
-        return
-    
-    # Get conversation history
-    conversation_history = memory.get_conversation_history(video_id, limit=20)
-    
-    # Display conversation history
-    st.markdown("### 💭 Conversation")
-    
-    if not conversation_history:
-        st.info("👋 Hi! I'm BRI. Ask me anything about this video!")
-    else:
-        # Display messages with proper formatting
-        for message in conversation_history:
-            role = message.role
-            content = message.content
-            timestamp = message.timestamp
-            
-            if role == 'user':
-                st.markdown(f"""
-                <div style="margin-bottom: 1rem;">
-                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                        <span style="font-size: 1.1rem;">👤</span>
-                        <span style="font-weight: 600; color: #26C6DA;">You</span>
-                        <span style="font-size: 0.8rem; color: #666;">just now</span>
-                    </div>
-                    <div style="padding: 1rem 1.25rem; border-radius: 18px; background: linear-gradient(135deg, #26C6DA 0%, #00ACC1 100%); color: white; margin-left: 1.5rem; border-bottom-right-radius: 4px; font-weight: 500; box-shadow: 0 2px 8px rgba(38, 198, 218, 0.2);">
-                        {content}
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-            else:
-                st.markdown(f"""
-                <div style="margin-bottom: 1rem;">
-                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                        <span style="font-size: 1.1rem;">💖</span>
-                        <span style="font-weight: 600; color: #BA68C8;">BRI</span>
-                        <span style="font-size: 0.8rem; color: #666;">just now</span>
-                    </div>
-                    <div style="padding: 1rem 1.25rem; border-radius: 18px; background: #2a2a2a; border: 1px solid #333333; margin-right: 1.5rem; border-bottom-left-radius: 4px; color: #ffffff;">
-                        {content}
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-    
-    # Note: We don't display pending_response here because it's already in conversation_history
-    # The agent stores messages in memory before returning, so they appear in the history above
-    # Just clear any pending response flag
-    if 'pending_response' in st.session_state:
-        st.session_state.pending_response = None
-    
-    # Message input area
-    st.markdown("---")
-    
-    # Handle suggestion clicks
-    if 'selected_suggestion' in st.session_state and st.session_state.selected_suggestion:
-        user_input = st.session_state.selected_suggestion
-        st.session_state.selected_suggestion = None
-        # Process the suggestion as a message
-        process_user_message(video_id, user_input)
-        st.rerun()
-    
-    # Create input form with validation
-    with st.form(key=f"chat_form_{video_id}", clear_on_submit=True):
-        user_input = st.text_input(
-            "Message",
-            placeholder="Ask me anything about this video... 💭",
-            label_visibility="collapsed",
-            key=f"chat_input_{video_id}",
-            max_chars=5000
-        )
-        
-        col1, col2 = st.columns([5, 1])
-        with col2:
-            submit_button = st.form_submit_button("Send", use_container_width=True, type="primary")
-        
-        if submit_button:
-            # Sanitize and validate input
-            sanitized_input = user_input.strip()
-            
-            if not sanitized_input:
-                st.warning("⚠️ Please enter a message")
-            elif len(sanitized_input) < 2:
-                st.warning("⚠️ Message too short")
-            else:
-                # Show loading state with progress
-                with st.spinner("🤔 Thinking..."):
-                    process_user_message(video_id, sanitized_input)
-                st.rerun()
-    
-    # Keyboard shortcut hint
-    st.markdown("""
-        <div style="text-align: center; margin-top: 0.5rem; font-size: 0.85rem; color: #444444;">
-            Press Enter to send 💌
-        </div>
-    """, unsafe_allow_html=True)
-
-
-def process_user_message(video_id: str, message: str):
-    """Process user message with the agent - Bulletproof version.
-    
-    Args:
-        video_id: Current video ID
-        message: User's message
-    """
-    import asyncio
-    import time
-    from services.agent import GroqAgent
-    from services.error_handler import ErrorHandler
-    
-    # Rate limiting - prevent spam (max 1 message per 2 seconds)
-    current_time = time.time()
-    if 'last_message_time' in st.session_state:
-        time_since_last = current_time - st.session_state.last_message_time
-        if time_since_last < 2.0:
-            st.warning(f"⏱️ Please wait {2.0 - time_since_last:.1f} seconds before sending another message")
-            return
-    
-    st.session_state.last_message_time = current_time
-    
-    # Validation
-    if not message or not message.strip():
-        st.warning("Please enter a message")
-        return
-    
-    if len(message) > 5000:
-        st.warning("Message too long. Please keep it under 5000 characters.")
-        return
-    
+    video_id = st.session_state.get('current_video_id')
     if not video_id:
-        st.error("No video selected")
+        st.warning("Please select a video from the sidebar to start chatting!")
         return
-    
-    try:
-        # Initialize agent with timeout
-        agent = GroqAgent()
-        
-        # Process message (run async function in sync context)
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        
-        try:
-            # Add timeout to prevent hanging
-            response = loop.run_until_complete(
-                asyncio.wait_for(agent.chat(message, video_id), timeout=60.0)
-            )
-        except asyncio.TimeoutError:
-            st.error("⏱️ Request timed out. Please try again with a simpler question.")
-            return
-        finally:
-            loop.close()
-        
-        # Validate response
-        if response and hasattr(response, 'message'):
-            st.session_state.pending_response = response
-        else:
-            st.error("Received invalid response from agent")
-        
-    except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.error(f"Failed to process message: {e}", exc_info=True)
-        
-        # Show friendly error message
-        error_msg = ErrorHandler.format_error_for_user(e, {'query': message})
-        st.error(f"😅 {error_msg}")
 
+    service = get_bri_service()
+    video = service.get_video(video_id)
+    if not video:
+        st.error("Video not found!")
+        return
 
-def display_agent_response(response):
-    """Display agent response with frames, timestamps, and suggestions.
-    
-    Args:
-        response: AssistantMessageResponse object
-    """
-    from ui.lazy_loader import LazyImageLoader
-    from config import Config
-    
-    # Display main message
-    st.markdown(f"""
-    <div style="margin-bottom: 1rem;">
-        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-            <span style="font-size: 1.2rem;">💖</span>
-            <span style="font-weight: 600; color: #FF69B4;">BRI</span>
-            <span style="font-size: 0.85rem; color: #666;">just now</span>
-        </div>
-        <div style="padding: 1rem 1.25rem; border-radius: 20px; background: #2a2a2a; border: 1px solid #333333; margin-right: 2rem; border-bottom-left-radius: 5px; color: #ffffff;">
-            {response.message}
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Display frames if present with lazy loading
-    if response.frames and response.timestamps:
-        st.markdown("**Relevant moments:**")
-        
-        # Use lazy loader for better performance
-        lazy_loader = LazyImageLoader(batch_size=Config.LAZY_LOAD_BATCH_SIZE)
-        lazy_loader.render_lazy_images(
-            image_paths=response.frames,
-            timestamps=response.timestamps,
-            columns=3
-        )
-    
-    # Display follow-up suggestions
-    if response.suggestions:
-        st.markdown("""
-        <div style="margin-top: 1rem; padding: 1rem; background: #2a2a2a; border-radius: 15px; border: 1px solid #333333;">
-            <div style="font-weight: 600; margin-bottom: 0.5rem; color: #FF69B4;">
-                💡 You might also want to ask:
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Display suggestion buttons
-        for idx, suggestion in enumerate(response.suggestions):
-            if st.button(
-                suggestion,
-                key=f"suggestion_{idx}_{hash(suggestion)}",
-                help="Click to ask this question"
-            ):
-                st.session_state["selected_suggestion"] = suggestion
-                st.rerun()
+    render_video_chat_workspace(service, video)
 
-
-def format_message_timestamp(timestamp) -> str:
-    """Format message timestamp for display.
-    
-    Args:
-        timestamp: Datetime object
-        
-    Returns:
-        Formatted timestamp string
-    """
-    from datetime import datetime
-    
-    if isinstance(timestamp, str):
-        try:
-            timestamp = datetime.fromisoformat(timestamp)
-        except Exception:
-            return "recently"
-    
-    now = datetime.now()
-    diff = now - timestamp
-    
-    if diff.total_seconds() < 60:
-        return "just now"
-    elif diff.total_seconds() < 3600:
-        minutes = int(diff.total_seconds() / 60)
-        return f"{minutes}m ago"
-    elif diff.total_seconds() < 86400:
-        hours = int(diff.total_seconds() / 3600)
-        return f"{hours}h ago"
-    else:
-        return timestamp.strftime("%b %d, %I:%M %p")
-
-
-def format_video_timestamp(seconds: float) -> str:
-    """Format video timestamp in MM:SS or HH:MM:SS format.
-    
-    Args:
-        seconds: Timestamp in seconds
-        
-    Returns:
-        Formatted timestamp string
-    """
-    hours = int(seconds // 3600)
-    minutes = int((seconds % 3600) // 60)
-    secs = int(seconds % 60)
-    
-    if hours > 0:
-        return f"{hours:02d}:{minutes:02d}:{secs:02d}"
-    else:
-        return f"{minutes:02d}:{secs:02d}"
 
 def main():
     """Main application entry point"""
     # Apply custom styles
     apply_custom_styles()
-    
+    render_enterprise_styles()
+
     # Initialize session state
     initialize_session_state()
-    
+
     # Render sidebar
     render_sidebar()
-    
+
     # Render main content
     render_main_content()
 

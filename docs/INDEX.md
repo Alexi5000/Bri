@@ -22,6 +22,10 @@ BRI’s documentation is organized around production use, API integration, opera
 | Topic | Document | Notes |
 |---|---|---|
 | System architecture | [Architecture](ARCHITECTURE.md) | Primary architecture document for runtime components and integration boundaries. |
+| Full-stack build plan | [Full-stack Streamlit Middle Layer Plan](architecture/full_stack_streamlit_middle_layer_plan.md) | Production implementation plan for the Streamlit frontend, application middle layer, MCP adapter, persistence, and ML boundaries. |
+| Clean-code architecture | [Uncle Bob Clean-Code Review](architecture/UNCLE_BOB_CLEAN_CODE_REVIEW.md) | Responsibility boundaries, dependency rule, god-file controls, race-safety posture, and clean-code approval checklist. |
+| Data flow and state | [Data Flow and State Model](architecture/DATA_FLOW_AND_STATE.md) | Mermaid sequence, state, and error-flow diagrams for upload, processing, chat, progress, and maintenance paths. |
+| Database schema | [Database Schema and Durability](architecture/DATABASE_SCHEMA_AND_DURABILITY.md) | SQLite ER diagram, table responsibilities, invariants, indexes, backup posture, and maintenance lifecycle. |
 | Database operations | [Database Management Guide](DATABASE_MANAGEMENT_GUIDE.md) | SQLite lifecycle, records, backups, and operational care. |
 | Backup and recovery | [Backup and Restore Guide](BACKUP_RESTORE_GUIDE.md) | Practical backup and restore procedures. |
 | Data quality | [Data Quality Integration Guide](DATA_QUALITY_INTEGRATION_GUIDE.md) | Guidance for validating context quality and processing outputs. |
@@ -35,7 +39,7 @@ The cleaned root keeps the files that are expected in a production Python applic
 
 | Path | Responsibility |
 |---|---|
-| `README.md` | Public project overview and quick start. |
+| `README.md` | Public project overview, graphics, quick start, architecture summary, and production documentation map. |
 | `app.py` and `config.py` | Streamlit entry point and runtime configuration. |
 | `mcp_server/` | FastAPI MCP service, middleware, registry, and API routing. |
 | `services/`, `tools/`, `storage/`, `models/`, `utils/`, `ui/` | Application domain packages. |
@@ -62,4 +66,4 @@ Historical implementation notes remain available so future maintainers can trace
 
 ## Maintenance guidance
 
-When adding or updating documentation, keep operational instructions in the primary documents, place transient build notes in `docs/archive/`, update this index when new long-lived documents are introduced, and verify commands before publishing them. The default production branch is `master`, and the remote repository has been consolidated so `origin/master` is the single branch of record.
+When adding or updating documentation, keep operational instructions in the primary documents, place transient build notes in `docs/archive/`, update this index when new long-lived documents are introduced, and verify commands before publishing them. Long-lived architecture docs should include Mermaid diagrams when they describe component boundaries, data flow, state machines, or schema relationships. The default production branch is `master`, and the remote repository has been consolidated so `origin/master` is the single branch of record.

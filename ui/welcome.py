@@ -214,81 +214,36 @@ def _handle_upload(uploaded_file):
         
     Requirements: 2.1, 2.2, 2.3, 2.4, 2.6
     """
-    from storage.file_store import get_file_store
-    from storage.database import insert_video
+    from services.application import get_application_service
     from services.error_handler import ErrorHandler
-    import cv2
-    import uuid
     
     try:
-        # Show initial friendly message
+        # Show initial friendly message and route persistence through the production middle layer.
         with st.spinner("Got it! Let me take a look... 🔍"):
-            file_store = get_file_store()
-            
-            # Validate file format and size
-            is_valid, error_msg = file_store.validate_video_file(
-                uploaded_file.name,
-                uploaded_file.size
-            )
-            
-            if not is_valid:
-                # Show playful error message
-                st.error(f"😅 {error_msg}")
+            service = get_application_service()
+            result = service.upload_video(uploaded_file, start_processing=False)
+            if not result.ok or not result.video:
+                st.error(f"😅 {result.message}")
                 st.info("💡 Try uploading a different video that meets the requirements!")
                 return
-            
-            # Generate unique video ID
-            video_id = str(uuid.uuid4())
-            
-            # Save video file
-            try:
-                video_id, file_path = file_store.save_uploaded_video(
-                    uploaded_file,
-                    uploaded_file.name,
-                    video_id
-                )
-            except Exception as e:
-                error_msg = ErrorHandler.handle_video_upload_error(e, uploaded_file.name)
-                st.error(f"😅 {error_msg}")
-                return
-            
-            # Get video metadata using OpenCV
-            try:
-                cap = cv2.VideoCapture(file_path)
-                duration = cap.get(cv2.CAP_PROP_FRAME_COUNT) / cap.get(cv2.CAP_PROP_FPS)
-                cap.release()
-            except Exception as e:
-                # If we can't get duration, use a default
-                duration = 0.0
-                logger.warning(f"Could not extract video duration: {e}")
-            
-            # Create database record
-            try:
-                insert_video(
-                    video_id=video_id,
-                    filename=uploaded_file.name,
-                    file_path=file_path,
-                    duration=duration
-                )
-            except Exception as e:
-                # Clean up file if database insert fails
-                file_store.delete_video(video_id)
-                error_msg = ErrorHandler.format_error_for_user(
-                    e,
-                    {'upload': True, 'filename': uploaded_file.name}
-                )
-                st.error(f"😅 {error_msg}")
-                return
-            
-            # Add to session state
+
+            video = result.video
+            video_id = video.video_id
+            file_path = video.file_path
+            duration = video.duration
+
+            # Add to session state from the typed middle-layer result.
             if 'uploaded_videos' not in st.session_state:
                 st.session_state.uploaded_videos = []
-            
+
             st.session_state.uploaded_videos.append({
-                'video_id': video_id,
-                'filename': uploaded_file.name,
-                'file_path': file_path,
-                'duration': duration
+                'video_id': video.video_id,
+                'filename': video.filename,
+                'file_path': video.file_path,
+                'duration': video.duration,
+                'processing_status': video.processing_status,
+                'thumbnail_path': video.thumbnail_path,
+                'upload_timestamp': video.upload_timestamp,
             })
         
         # Show friendly success message
@@ -336,7 +291,7 @@ def _handle_upload(uploaded_file):
             unsafe_allow_html=True
         )
         
-        # Trigger video processing
+        # Trigger video processing through the production middle layer.
         _process_video_with_progress(video_id)
         
         # Show button to view in library
@@ -369,49 +324,28 @@ def _process_video_with_progress(video_id: str):
         
     Requirements: 1.3, 3.6, 3.7
     """
-    from storage.database import get_video_by_id
-    import httpx
-    from config import Config
+    from services.application import get_application_service
     
     try:
-        # Get video info
-        video = get_video_by_id(video_id)
+        service = get_application_service()
+        video = service.get_video(video_id)
         if not video:
             st.error("Video not found!")
             return
-        
-        video_path = video['file_path']
-        
-        # Check if MCP server is available
-        mcp_url = Config.get_mcp_server_url()
-        try:
-            response = httpx.get(f"{mcp_url}/health", timeout=5.0)
-            if response.status_code != 200:
-                raise Exception("MCP server not healthy")
-        except Exception:
+
+        if not service.mcp_client.health().online:
             st.warning(
                 "⚠️ The processing server isn't running right now. "
-                "Your video is saved, but I'll need the server to analyze it. "
-                "Please start the MCP server and try processing again!"
+                "Your video is saved, but I'll need the FastAPI MCP service to analyze it. "
+                "Please start the service and try processing again!"
             )
-            with st.expander("🔧 How to start the MCP server"):
+            with st.expander("🔧 How to start the FastAPI MCP service"):
                 st.code("python mcp_server/main.py", language="bash")
             return
-        
-        # Start progressive processing in background
+
         try:
-            response = httpx.post(
-                f"{mcp_url}/videos/{video_id}/process-progressive",
-                json={"video_path": video_path},
-                timeout=10.0
-            )
-            
-            if response.status_code != 200:
-                raise Exception(f"Failed to start processing: {response.text}")
-            
-            result = response.json()
-            logger.info(f"Progressive processing started: {result}")
-            
+            result = service.start_processing(video_id)
+            logger.info("Progressive processing started: %s", result)
         except Exception as e:
             logger.error(f"Failed to start progressive processing: {e}")
             st.error(f"😅 Couldn't start processing: {str(e)}")

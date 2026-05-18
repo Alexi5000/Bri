@@ -24,28 +24,34 @@ BRI is organized as a complete application rather than a standalone demo. The re
 
 | Area | Production capability |
 |---|---|
-| **User interface** | Streamlit upload, video library, playback, chat workflow, contextual status messaging, and local operator-friendly controls. |
+| **User interface** | Streamlit upload, video library, playback, chat workflow, command-center readiness panels, progress visualization, contextual status messaging, and local operator-friendly controls. |
+| **Middle layer** | Focused Python application service for upload, delete, chat, health, progress, persistence readiness, typed MCP calls, and workflow orchestration without UI-to-database coupling. |
 | **MCP API** | FastAPI health checks, standardized response envelopes, version-aware endpoints, request validation, rate limiting, cache hooks, and tool execution routes. |
 | **Video tools** | Public catalog for `extract_frames`, `caption_frames`, `transcribe_audio`, and `detect_objects`; heavy ML packages are loaded lazily only when a tool executes. |
-| **Data layer** | SQLite-backed video metadata, context records, conversation history, schema initialization, backup guidance, and storage contract tests. |
-| **Operations** | Docker startup, environment templates, smoke checks, production validation, CI workflow, troubleshooting guidance, and runbook documentation. |
+| **Data layer** | SQLite-backed video metadata, context records, conversation history, lineage audit records, schema initialization, integrity checks, online backups, WAL optimization, and storage contract tests. |
+| **Operations** | Docker startup, environment templates, smoke checks, production validation, CI workflow, troubleshooting guidance, runbook documentation, and repository hygiene gates. |
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    User[User] --> UI[Streamlit UI]
-    UI --> API[FastAPI MCP Service]
+    User[User] --> UI[State-of-the-art Streamlit UI]
+    UI --> Middle[Application Middle Layer]
+    Middle --> MCPClient[Typed MCP Client]
+    Middle --> DB[(SQLite Persistence)]
+    Middle --> Store[(Managed Video Files)]
+    MCPClient --> API[FastAPI MCP Service]
     API --> Registry[Lazy Tool Registry]
-    Registry --> Tools[Video Intelligence Tools]
-    Tools --> DB[(SQLite)]
-    Tools --> Cache[(Optional Redis Cache)]
-    UI --> Agent[Groq Conversation Agent]
+    Registry --> Tools[Optional Multimodal ML Tools]
+    Tools --> DB
+    API --> Processor[Progressive Processor]
+    Processor --> Queue[Processing Queue]
+    Processor --> DB
+    Middle --> Agent[Empathetic Conversation Agent]
     Agent --> DB
-    Agent --> API
 ```
 
-The application keeps lightweight API startup separate from optional model execution. Tool discovery is available in lean CI and API-only environments, while BLIP, Whisper, YOLOv8, ChromaDB, and sentence-transformer dependencies can be installed for full local media processing.
+The application keeps lightweight API startup separate from optional model execution. Streamlit pages route through a focused middle layer instead of directly coordinating raw HTTP calls, SQL writes, and file lifecycle behavior. Tool discovery is available in lean CI and API-only environments, while BLIP, Whisper, YOLOv8, ChromaDB, and sentence-transformer dependencies can be installed for full local media processing.
 
 ## Quick start
 
@@ -106,6 +112,10 @@ The most useful production documents are linked below. Additional historical imp
 | **Documentation index** | [docs/INDEX.md](docs/INDEX.md) |
 | **Quickstart** | [docs/QUICKSTART.md](docs/QUICKSTART.md) |
 | **Architecture** | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
+| **Full-stack implementation plan** | [docs/architecture/full_stack_streamlit_middle_layer_plan.md](docs/architecture/full_stack_streamlit_middle_layer_plan.md) |
+| **Uncle Bob clean-code review** | [docs/architecture/UNCLE_BOB_CLEAN_CODE_REVIEW.md](docs/architecture/UNCLE_BOB_CLEAN_CODE_REVIEW.md) |
+| **Data flow and state model** | [docs/architecture/DATA_FLOW_AND_STATE.md](docs/architecture/DATA_FLOW_AND_STATE.md) |
+| **Database schema and durability** | [docs/architecture/DATABASE_SCHEMA_AND_DURABILITY.md](docs/architecture/DATABASE_SCHEMA_AND_DURABILITY.md) |
 | **API reference** | [docs/API.md](docs/API.md) |
 | **API examples** | [docs/API_EXAMPLES.md](docs/API_EXAMPLES.md) |
 | **Configuration** | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) |
@@ -129,7 +139,7 @@ Runtime settings are read from environment variables and `.env` files. Start fro
 
 ## Enterprise repository layout
 
-BRI’s root is kept intentionally small for production operators. The root contains only the public README, core Python entry points, package metadata, Docker files, committed product graphics, and the main application packages. Historical build reports were moved to `docs/archive/root-history/`, legacy helper scripts were moved to `scripts/deployment/` or `scripts/archive/`, and AI-contributor guidance from the former side branch was preserved at `docs/ai/CLAUDE.md`.
+BRI’s root is kept intentionally small for production operators. The root contains only the public README, core Python entry points, package metadata, Docker files, committed product graphics, and the main application packages. Historical build reports were moved to `docs/archive/root-history/`, legacy helper scripts were moved to `scripts/deployment/` or `scripts/archive/`, and AI-contributor guidance from the former side branch was preserved at `docs/ai/CLAUDE.md`. The active architecture docs now include Mermaid component, dependency, sequence, state-machine, and ER diagrams so maintainers can reason about data movement, persistence ownership, and concurrency boundaries without reverse-engineering the code.
 
 | Path | Purpose |
 |---|---|
