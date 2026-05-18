@@ -80,6 +80,7 @@ streamlit run app.py
 | `python3 scripts/smoke_api.py` | Smoke-tests the FastAPI app in-process without requiring a live server. |
 | `python3 scripts/smoke_api.py --url http://localhost:8000` | Smoke-tests a running deployment. |
 | `python3 scripts/validate_production.py` | Runs repository-level production-readiness checks. |
+| `scripts/deployment/preflight_check.sh` | Runs the legacy deployment preflight helper from its structured scripts location. |
 | `docker compose up --build` | Starts the API, UI, Redis service, and shared application volumes. |
 | `pip install -e .[ai,dev]` | Installs development tools plus optional local AI/media dependencies. |
 
@@ -126,9 +127,21 @@ Runtime settings are read from environment variables and `.env` files. Start fro
 | `FRAME_STORAGE_PATH` | Stores extracted frame images. |
 | `REDIS_ENABLED` | Enables optional Redis-backed cache behavior when configured. |
 
+## Enterprise repository layout
+
+BRI’s root is kept intentionally small for production operators. The root contains only the public README, core Python entry points, package metadata, Docker files, committed product graphics, and the main application packages. Historical build reports were moved to `docs/archive/root-history/`, legacy helper scripts were moved to `scripts/deployment/` or `scripts/archive/`, and AI-contributor guidance from the former side branch was preserved at `docs/ai/CLAUDE.md`.
+
+| Path | Purpose |
+|---|---|
+| `mcp_server/`, `services/`, `tools/`, `storage/`, `models/`, `utils/`, `ui/` | Runtime application packages. |
+| `scripts/` | Smoke tests, validation, initialization, deployment helpers, and archived one-off utilities. |
+| `tests/` | Production, integration, and unit test coverage. |
+| `docs/` | Enterprise documentation, runbooks, API guides, and historical archives. |
+| `assets/` | Preserved README graphics and public product identity assets. |
+
 ## Repository hygiene
 
-Generated media, logs, databases, Python caches, virtual environments, local environment files, and other runtime artifacts are excluded from source control. The committed graphics under `assets/` are intentionally preserved because they define the public identity of the project.
+Generated media, logs, databases, Python caches, virtual environments, local environment files, `.kiro`, `.devcontainer`, `.streamlit`, and other runtime or workspace artifacts are excluded from source control. The remote repository is consolidated to the single production branch, `master`, and the committed graphics under `assets/` are intentionally preserved because they define the public identity of the project.
 
 ## License
 

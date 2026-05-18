@@ -1,230 +1,65 @@
 # BRI Documentation Index
 
-Welcome to the BRI documentation! This index helps you find the right documentation for your needs.
+BRI’s documentation is organized around production use, API integration, operations, and long-term maintainability. The repository root is intentionally kept clean: `README.md` is the public entry point, runtime code lives in top-level Python packages, operational scripts live under `scripts/`, and historical build notes are preserved under `docs/archive/root-history/` for auditability.
 
-## 🚀 Getting Started
+## Primary documentation
 
-Start here if you're new to BRI:
+| Audience | Document | Purpose |
+|---|---|---|
+| Product evaluators and new users | [Project README](../README.md) | Explains the product, architecture, quick start flow, and production validation commands. |
+| First-time operators | [Quickstart](QUICKSTART.md) | Provides the shortest path to running BRI locally. |
+| End users | [User Guide](USER_GUIDE.md) | Describes upload, library, playback, and conversational video workflows. |
+| API integrators | [API Reference](API.md) | Documents the FastAPI MCP service, response envelopes, endpoints, and tool contracts. |
+| API integrators | [API Examples](API_EXAMPLES.md) | Provides practical request examples for automation and integration work. |
+| System administrators | [Configuration](CONFIGURATION.md) | Explains environment variables, secrets, runtime paths, and environment-specific settings. |
+| Platform operators | [Deployment](DEPLOYMENT.md) | Covers production deployment patterns, Docker usage, and environment setup. |
+| Platform operators | [Operations Runbook](OPERATIONS_RUNBOOK.md) | Defines routine operational checks, recovery steps, and maintenance procedures. |
+| Developers and release owners | [Testing](TESTING.md) | Describes deterministic production contract tests and validation workflows. |
+| Support and maintainers | [Troubleshooting](TROUBLESHOOTING.md) | Provides diagnosis guidance for installation, runtime, API, and processing issues. |
 
-1. **[README.md](../README.md)** - Project overview, features, and quick start
-2. **[QUICKSTART.md](../QUICKSTART.md)** - Get up and running in 5 minutes
-3. **[User Guide](USER_GUIDE.md)** - Complete guide to using BRI
+## Architecture and implementation references
 
-## 📖 User Documentation
+| Topic | Document | Notes |
+|---|---|---|
+| System architecture | [Architecture](ARCHITECTURE.md) | Primary architecture document for runtime components and integration boundaries. |
+| Database operations | [Database Management Guide](DATABASE_MANAGEMENT_GUIDE.md) | SQLite lifecycle, records, backups, and operational care. |
+| Backup and recovery | [Backup and Restore Guide](BACKUP_RESTORE_GUIDE.md) | Practical backup and restore procedures. |
+| Data quality | [Data Quality Integration Guide](DATA_QUALITY_INTEGRATION_GUIDE.md) | Guidance for validating context quality and processing outputs. |
+| Performance | [Performance Tuning Guide](PERFORMANCE_TUNING_GUIDE.md) | Runtime tuning and resource considerations. |
+| Error handling | [Error Patterns and Solutions](ERROR_PATTERNS_SOLUTIONS.md) | Known failure modes and remediation patterns. |
+| AI assistant context | [AI Contributor Guide](ai/CLAUDE.md) | Preserved guidance from the former assistant branch, moved out of the root for cleanliness. |
 
-For users who want to use BRI to analyze videos:
+## Repository layout
 
-- **[User Guide](USER_GUIDE.md)** - Complete usage instructions
-  - Uploading videos
-  - Asking questions
-  - Understanding responses
-  - Managing conversations
-  - Tips & best practices
+The cleaned root keeps the files that are expected in a production Python application while moving generated, historical, and workflow-specific materials into dedicated folders. Hidden workspace folders such as `.kiro`, `.devcontainer`, `.streamlit`, and cache directories are excluded from source control.
 
-- **[Troubleshooting Guide](TROUBLESHOOTING.md)** - Solutions to common issues
-  - Installation problems
-  - Configuration errors
-  - Processing issues
-  - Performance optimization
-  - Error message reference
+| Path | Responsibility |
+|---|---|
+| `README.md` | Public project overview and quick start. |
+| `app.py` and `config.py` | Streamlit entry point and runtime configuration. |
+| `mcp_server/` | FastAPI MCP service, middleware, registry, and API routing. |
+| `services/`, `tools/`, `storage/`, `models/`, `utils/`, `ui/` | Application domain packages. |
+| `scripts/` | Validation, smoke testing, database initialization, cleanup generators, and deployment helpers. |
+| `scripts/deployment/` | Legacy shell and Windows deployment helpers moved out of the root. |
+| `scripts/archive/` | Historical one-off verification scripts retained for auditability. |
+| `tests/` | Production, integration, unit, and utility tests. |
+| `docs/` | Enterprise documentation and operational references. |
+| `docs/archive/root-history/` | Historical root-level markdown reports moved out of the root without losing traceability. |
+| `assets/` | Committed product graphics used by the README. |
 
-- **[Configuration Reference](CONFIGURATION.md)** - All configuration options
-  - Required settings
-  - Optional settings
-  - Environment-specific configs
-  - Best practices
+## Production validation commands
 
-## 🔧 Developer Documentation
+| Command | Expected result |
+|---|---|
+| `APP_ENV=test ALLOW_MISSING_GROQ_FOR_TESTS=true python3 -m pytest tests/production -q` | Runs deterministic production tests for API, configuration, storage, and service boundaries. |
+| `APP_ENV=test ALLOW_MISSING_GROQ_FOR_TESTS=true python3 scripts/smoke_api.py` | Verifies in-process API health and tool discovery. |
+| `APP_ENV=test ALLOW_MISSING_GROQ_FOR_TESTS=true python3 scripts/validate_production.py` | Runs repository-level production-readiness checks. |
+| `git diff --check` | Confirms there are no whitespace errors in the working tree. |
 
-For developers who want to integrate with or contribute to BRI:
+## Historical archive policy
 
-- **[MCP Server API](../mcp_server/README.md)** - REST API reference
-  - Available tools
-  - API endpoints
-  - Request/response formats
-  - Error handling
+Historical implementation notes remain available so future maintainers can trace how the app evolved, but they are intentionally separated from the root-level production surface. The archive is not the source of truth for current operations; use the primary documentation table above for production setup, deployment, and validation.
 
-- **[API Examples](API_EXAMPLES.md)** - Practical API usage examples
-  - curl examples
-  - Python client examples
-  - Batch processing
-  - Error handling
-  - Best practices
+## Maintenance guidance
 
-- **[Requirements](.kiro/specs/bri-video-agent/requirements.md)** - Feature requirements
-  - User stories
-  - Acceptance criteria
-  - System requirements
-
-- **[Design Document](.kiro/specs/bri-video-agent/design.md)** - System architecture
-  - Architecture overview
-  - Component design
-  - Data models
-  - Testing strategy
-
-- **[Implementation Tasks](.kiro/specs/bri-video-agent/tasks.md)** - Development roadmap
-  - Completed tasks
-  - Pending tasks
-  - Task dependencies
-
-## 🚢 Deployment Documentation
-
-For deploying BRI to production:
-
-- **[Deployment Guide](../DEPLOYMENT.md)** - Production deployment
-  - Docker deployment
-  - Environment setup
-  - Security considerations
-  - Monitoring and logging
-
-- **[Configuration Reference](CONFIGURATION.md)** - Production configuration
-  - Environment variables
-  - Security settings
-  - Performance tuning
-
-## 📚 Reference Documentation
-
-### By Topic
-
-#### Installation & Setup
-- [README.md](../README.md) - Installation instructions
-- [QUICKSTART.md](../QUICKSTART.md) - Quick setup guide
-- [Configuration Reference](CONFIGURATION.md) - Configuration options
-- [Troubleshooting Guide](TROUBLESHOOTING.md) - Installation issues
-
-#### Using BRI
-- [User Guide](USER_GUIDE.md) - Complete usage guide
-- [Troubleshooting Guide](TROUBLESHOOTING.md) - Usage issues
-
-#### API Integration
-- [MCP Server API](../mcp_server/README.md) - API reference
-- [API Examples](API_EXAMPLES.md) - Code examples
-
-#### Development
-- [Requirements](.kiro/specs/bri-video-agent/requirements.md) - What to build
-- [Design Document](.kiro/specs/bri-video-agent/design.md) - How it's built
-- [Implementation Tasks](.kiro/specs/bri-video-agent/tasks.md) - Development progress
-
-#### Deployment
-- [Deployment Guide](../DEPLOYMENT.md) - Production deployment
-- [Configuration Reference](CONFIGURATION.md) - Production config
-
-### By User Type
-
-#### End Users
-1. [README.md](../README.md) - Overview
-2. [QUICKSTART.md](../QUICKSTART.md) - Get started
-3. [User Guide](USER_GUIDE.md) - How to use
-4. [Troubleshooting Guide](TROUBLESHOOTING.md) - Fix issues
-
-#### Developers
-1. [README.md](../README.md) - Overview
-2. [Design Document](.kiro/specs/bri-video-agent/design.md) - Architecture
-3. [MCP Server API](../mcp_server/README.md) - API reference
-4. [API Examples](API_EXAMPLES.md) - Code examples
-5. [Requirements](.kiro/specs/bri-video-agent/requirements.md) - Requirements
-
-#### System Administrators
-1. [Deployment Guide](../DEPLOYMENT.md) - Deploy to production
-2. [Configuration Reference](CONFIGURATION.md) - Configure system
-3. [Troubleshooting Guide](TROUBLESHOOTING.md) - Diagnose issues
-
-## 🔍 Quick Links
-
-### Common Tasks
-
-- **Install BRI**: [README.md](../README.md#installation)
-- **Configure API Key**: [Configuration Reference](CONFIGURATION.md#groq_api_key)
-- **Upload a Video**: [User Guide](USER_GUIDE.md#uploading-videos)
-- **Ask Questions**: [User Guide](USER_GUIDE.md#asking-questions)
-- **Fix Errors**: [Troubleshooting Guide](TROUBLESHOOTING.md)
-- **Use the API**: [API Examples](API_EXAMPLES.md)
-- **Deploy to Production**: [Deployment Guide](../DEPLOYMENT.md)
-
-### Common Issues
-
-- **Missing API Key**: [Troubleshooting Guide](TROUBLESHOOTING.md#missing-api-key)
-- **Connection Refused**: [Troubleshooting Guide](TROUBLESHOOTING.md#connection-refused-errors)
-- **Slow Processing**: [Troubleshooting Guide](TROUBLESHOOTING.md#processing-hangs-or-takes-too-long)
-- **Out of Memory**: [Troubleshooting Guide](TROUBLESHOOTING.md#high-memory-usage)
-- **Redis Errors**: [Troubleshooting Guide](TROUBLESHOOTING.md#redis-connection-fails)
-
-## 📝 Documentation Standards
-
-### For Contributors
-
-When adding or updating documentation:
-
-1. **Keep it user-focused**: Write for the reader's needs
-2. **Use clear examples**: Show, don't just tell
-3. **Update the index**: Add new docs to this index
-4. **Cross-reference**: Link to related documentation
-5. **Test instructions**: Verify all commands and examples work
-6. **Use consistent formatting**: Follow existing style
-
-### Documentation Structure
-
-```
-docs/
-├── INDEX.md                    # This file
-├── USER_GUIDE.md              # End-user documentation
-├── TROUBLESHOOTING.md         # Problem-solving guide
-├── CONFIGURATION.md           # Configuration reference
-├── API_EXAMPLES.md            # API usage examples
-└── [task-specific docs]       # Implementation documentation
-
-Root level:
-├── README.md                  # Project overview
-├── QUICKSTART.md             # Quick start guide
-├── DEPLOYMENT.md             # Deployment guide
-└── mcp_server/README.md      # API reference
-```
-
-## 🆘 Getting Help
-
-If you can't find what you're looking for:
-
-1. **Search the docs**: Use your browser's search (Ctrl+F / Cmd+F)
-2. **Check the index**: You're here! Look for related topics
-3. **Try troubleshooting**: [Troubleshooting Guide](TROUBLESHOOTING.md)
-4. **Ask the community**: GitHub Discussions
-5. **Report issues**: GitHub Issues
-
-## 📊 Documentation Coverage
-
-### Completed Documentation
-
-- ✅ Project overview and features
-- ✅ Installation and setup
-- ✅ User guide with examples
-- ✅ Complete configuration reference
-- ✅ Comprehensive troubleshooting guide
-- ✅ API reference and examples
-- ✅ Deployment guide
-- ✅ Architecture and design docs
-- ✅ Requirements and specifications
-
-### Future Documentation
-
-- ⏳ Video tutorials
-- ⏳ Architecture diagrams (Mermaid)
-- ⏳ Performance tuning guide
-- ⏳ Security best practices
-- ⏳ Migration guides
-- ⏳ Contributing guidelines (detailed)
-- ⏳ Code style guide
-
-## 🔄 Documentation Updates
-
-This documentation is actively maintained. Last updated: October 15, 2025
-
-To suggest improvements:
-- Open an issue on GitHub
-- Submit a pull request
-- Contact the maintainers
-
----
-
-**Need help?** Start with the [User Guide](USER_GUIDE.md) or [Troubleshooting Guide](TROUBLESHOOTING.md)!
-
-*Made with 💜 by the BRI community*
+When adding or updating documentation, keep operational instructions in the primary documents, place transient build notes in `docs/archive/`, update this index when new long-lived documents are introduced, and verify commands before publishing them. The default production branch is `master`, and the remote repository has been consolidated so `origin/master` is the single branch of record.

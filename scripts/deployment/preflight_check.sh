@@ -193,7 +193,7 @@ if [ $ERRORS -eq 0 ] && [ $WARNINGS -eq 0 ]; then
     echo -e "${GREEN}✓ All checks passed!${NC}"
     echo ""
     echo "You're ready to deploy. Run:"
-    echo -e "${BLUE}  ./deploy_test.sh${NC}"
+    echo -e "${BLUE}  ./scripts/deployment/deploy_test.sh${NC}"
     echo ""
     exit 0
 elif [ $ERRORS -eq 0 ]; then
@@ -202,7 +202,7 @@ elif [ $ERRORS -eq 0 ]; then
     echo "You can proceed, but please review the warnings above."
     echo ""
     echo "To deploy anyway, run:"
-    echo -e "${BLUE}  ./deploy_test.sh${NC}"
+    echo -e "${BLUE}  ./scripts/deployment/deploy_test.sh${NC}"
     echo ""
     exit 0
 else

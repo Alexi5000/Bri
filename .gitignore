@@ -42,3 +42,8 @@ Thumbs.db
 uploads/
 tmp/
 temp/
+
+# Local IDE and generated workspace folders
+.kiro/
+.devcontainer/
+.streamlit/
