@@ -47,7 +47,7 @@ def test_tool_execution_rejects_unknown_tool() -> None:
 
 def test_tool_execution_rejects_path_traversal_payload() -> None:
     response = client.post(
-        "/tools/process_video/execute",
+        "/tools/extract_frames/execute",
         json={"video_id": "../secret", "parameters": {}},
     )
 

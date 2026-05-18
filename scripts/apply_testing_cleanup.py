@@ -177,9 +177,19 @@ def test_tools_endpoint_returns_public_tool_catalog() -> None:
     response = client.get("/tools")
 
     assert response.status_code == 200
-    tools = response.json()
+    payload = response.json()
+    assert payload["success"] is True
+    assert payload["metadata"]["version"] == "1.0"
+
+    tools = payload["data"]["tools"]
     assert isinstance(tools, list)
-    assert {tool["name"] for tool in tools} >= {"process_video", "ask_video", "get_video_summary"}
+    assert payload["data"]["count"] == len(tools)
+    assert {tool["name"] for tool in tools} >= {
+        "extract_frames",
+        "caption_frames",
+        "transcribe_audio",
+        "detect_objects",
+    }
 
 
 def test_tool_execution_rejects_unknown_tool() -> None:
@@ -193,7 +203,7 @@ def test_tool_execution_rejects_unknown_tool() -> None:
 
 def test_tool_execution_rejects_path_traversal_payload() -> None:
     response = client.post(
-        "/tools/process_video/execute",
+        "/tools/extract_frames/execute",
         json={"video_id": "../secret", "parameters": {}},
     )
 
