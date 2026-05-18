@@ -408,3 +408,15 @@ For issues and questions:
 ## License
 
 [Your License Here]
+
+## Production quick path
+
+Use Docker Compose when you need the Streamlit UI, FastAPI service, Redis cache, and shared data volumes to run together.
+
+```bash
+cp .env.example .env
+# Set GROQ_API_KEY and production storage/cache values.
+docker compose up --build
+```
+
+For platform deployments, run `uvicorn mcp_server.main:app --host 0.0.0.0 --port 8000` for the API service and `streamlit run app.py --server.port 8501` for the UI. Mount persistent volumes for `data/` and `logs/`, configure Redis for cache reuse, and keep `.env` outside source control.

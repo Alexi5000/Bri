@@ -1,79 +1,44 @@
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
+*.pyo
+*.pyd
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-pip-wheel-metadata/
-share/python-wheels/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
 *.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+build/
+dist/
 
-# Virtual Environment
+# Virtual environments
+.venv/
 venv/
 env/
-ENV/
-env.bak/
-venv.bak/
 
-# Environment Variables
+# Environment and secrets
 .env
-.env.local
+.env.*
+!.env.example
+.streamlit/secrets.toml
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-.nox/
-
-# Data and Runtime Files
+# Runtime data
 data/
+logs/
 *.db
 *.sqlite
 *.sqlite3
 
-# Model Weights and Cache
-models/weights/
-.cache/
-*.pt
-*.pth
-*.onnx
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
 
-# Logs
-*.log
-logs/
-
-# Streamlit
-.streamlit/secrets.toml
-
-# Redis
-dump.rdb
-
-# Temporary Files
-*.tmp
-*.temp
+# Media scratch files
+uploads/
 tmp/
 temp/

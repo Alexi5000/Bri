@@ -278,6 +278,46 @@ class Database:
         except sqlite3.Error as e:
             logger.warning(f"Failed to create performance indexes: {e}")
     
+
+    def add_video(
+        self,
+        filename: str,
+        file_path: str,
+        duration: float,
+        video_id: str | None = None,
+        thumbnail_path: str | None = None,
+    ) -> str:
+        """Create a video row through an instance-scoped database connection.
+
+        This convenience method mirrors the module-level helpers while making
+        isolated tests and embedded deployments straightforward because callers
+        can provide their own database path.
+        """
+        import uuid
+
+        record_id = video_id or f"video-{uuid.uuid4().hex[:12]}"
+        self.validate_video_data(record_id, filename, file_path, duration)
+        self.execute_update(
+            """
+            INSERT INTO videos (video_id, filename, file_path, duration, thumbnail_path, processing_status)
+            VALUES (?, ?, ?, ?, ?, 'pending')
+            """,
+            (record_id, filename, file_path, duration, thumbnail_path),
+        )
+        return record_id
+
+    def get_video(self, video_id: str) -> Optional[sqlite3.Row]:
+        """Return a video row by identifier from this database instance."""
+        results = self.execute_query("SELECT * FROM videos WHERE video_id = ?", (video_id,))
+        return results[0] if results else None
+
+    def update_video_status(self, video_id: str, status: str) -> None:
+        """Update processing status for a video row in this database instance."""
+        self.execute_update(
+            "UPDATE videos SET processing_status = ? WHERE video_id = ?",
+            (status, video_id),
+        )
+
     def close(self) -> None:
         """Close database connection."""
         if self._connection:
@@ -691,6 +731,46 @@ class Transaction:
         except sqlite3.Error as e:
             logger.warning(f"Failed to create performance indexes: {e}")
     
+
+    def add_video(
+        self,
+        filename: str,
+        file_path: str,
+        duration: float,
+        video_id: str | None = None,
+        thumbnail_path: str | None = None,
+    ) -> str:
+        """Create a video row through an instance-scoped database connection.
+
+        This convenience method mirrors the module-level helpers while making
+        isolated tests and embedded deployments straightforward because callers
+        can provide their own database path.
+        """
+        import uuid
+
+        record_id = video_id or f"video-{uuid.uuid4().hex[:12]}"
+        self.validate_video_data(record_id, filename, file_path, duration)
+        self.execute_update(
+            """
+            INSERT INTO videos (video_id, filename, file_path, duration, thumbnail_path, processing_status)
+            VALUES (?, ?, ?, ?, ?, 'pending')
+            """,
+            (record_id, filename, file_path, duration, thumbnail_path),
+        )
+        return record_id
+
+    def get_video(self, video_id: str) -> Optional[sqlite3.Row]:
+        """Return a video row by identifier from this database instance."""
+        results = self.execute_query("SELECT * FROM videos WHERE video_id = ?", (video_id,))
+        return results[0] if results else None
+
+    def update_video_status(self, video_id: str, status: str) -> None:
+        """Update processing status for a video row in this database instance."""
+        self.execute_update(
+            "UPDATE videos SET processing_status = ? WHERE video_id = ?",
+            (status, video_id),
+        )
+
     def close(self) -> None:
         """Close database connection."""
         if self._connection:

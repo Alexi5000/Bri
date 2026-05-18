@@ -1,17 +1,31 @@
 """Tool registry for dynamic tool discovery and management."""
 
+import importlib
 import logging
 from typing import Dict, List, Optional, Any
 from abc import ABC, abstractmethod
 
-from tools.frame_extractor import FrameExtractor
-from tools.image_captioner import ImageCaptioner
-from tools.audio_transcriber import AudioTranscriber
-from tools.object_detector import ObjectDetector
 from storage.database import get_database
 from config import Config
 
 logger = logging.getLogger(__name__)
+
+
+def _load_tool_class(module_name: str, class_name: str):
+    """Load a concrete tool implementation only when execution requires it.
+
+    Discovery endpoints should remain available in lightweight API deployments and
+    CI environments where optional media/ML dependencies are intentionally absent.
+    This helper delays imports until a tool is executed and raises a clear runtime
+    error if the optional dependency stack is missing.
+    """
+    try:
+        module = importlib.import_module(module_name)
+        return getattr(module, class_name)
+    except Exception as exc:  # pragma: no cover - depends on optional extras
+        raise RuntimeError(
+            f"Optional tool dependency unavailable for {module_name}.{class_name}: {exc}"
+        ) from exc
 
 
 class Tool(ABC):
@@ -45,7 +59,12 @@ class FrameExtractionTool(Tool):
     """Tool for extracting frames from videos."""
     
     def __init__(self):
-        self.extractor = FrameExtractor()
+        self.extractor = None
+
+    def _get_extractor(self):
+        if self.extractor is None:
+            self.extractor = _load_tool_class('tools.frame_extractor', 'FrameExtractor')()
+        return self.extractor
     
     @property
     def name(self) -> str:
@@ -86,7 +105,7 @@ class FrameExtractionTool(Tool):
             # Check if extracting single frame or multiple
             if "timestamp" in parameters and parameters["timestamp"] is not None:
                 # Extract single frame at timestamp
-                frame = self.extractor.extract_frame_at_timestamp(
+                frame = self._get_extractor().extract_frame_at_timestamp(
                     video_path,
                     video_id,
                     parameters["timestamp"]
@@ -100,7 +119,7 @@ class FrameExtractionTool(Tool):
                 interval = parameters.get("interval_seconds", Config.FRAME_EXTRACTION_INTERVAL)
                 max_frames = parameters.get("max_frames", Config.MAX_FRAMES_PER_VIDEO)
                 
-                frames = self.extractor.extract_frames(
+                frames = self._get_extractor().extract_frames(
                     video_path,
                     video_id,
                     interval_seconds=interval,
@@ -131,7 +150,12 @@ class ImageCaptioningTool(Tool):
     """Tool for generating captions for video frames."""
     
     def __init__(self):
-        self.captioner = ImageCaptioner()
+        self.captioner = None
+
+    def _get_captioner(self):
+        if self.captioner is None:
+            self.captioner = _load_tool_class('tools.image_captioner', 'ImageCaptioner')()
+        return self.captioner
     
     @property
     def name(self) -> str:
@@ -173,7 +197,7 @@ class ImageCaptioningTool(Tool):
                 timestamps = parameters["timestamps"]
             
             # Generate captions
-            captions = self.captioner.caption_frames_batch(frame_paths, timestamps)
+            captions = self._get_captioner().caption_frames_batch(frame_paths, timestamps)
             
             return {
                 "captions": [caption.dict() for caption in captions],
@@ -208,7 +232,12 @@ class AudioTranscriptionTool(Tool):
     """Tool for transcribing audio from videos."""
     
     def __init__(self):
-        self.transcriber = AudioTranscriber()
+        self.transcriber = None
+
+    def _get_transcriber(self):
+        if self.transcriber is None:
+            self.transcriber = _load_tool_class('tools.audio_transcriber', 'AudioTranscriber')()
+        return self.transcriber
     
     @property
     def name(self) -> str:
@@ -248,7 +277,7 @@ class AudioTranscriptionTool(Tool):
             # Check if transcribing segment or full video
             if "start_time" in parameters and "end_time" in parameters:
                 # Transcribe segment
-                segment = self.transcriber.transcribe_segment(
+                segment = self._get_transcriber().transcribe_segment(
                     video_path,
                     parameters["start_time"],
                     parameters["end_time"],
@@ -260,7 +289,7 @@ class AudioTranscriptionTool(Tool):
                 }
             else:
                 # Transcribe full video
-                transcript = self.transcriber.transcribe_video(video_path, language)
+                transcript = self._get_transcriber().transcribe_audio(video_path, language)
                 return {
                     "transcript": transcript.dict(),
                     "type": "full"
@@ -285,7 +314,12 @@ class ObjectDetectionTool(Tool):
     """Tool for detecting objects in video frames."""
     
     def __init__(self):
-        self.detector = ObjectDetector()
+        self.detector = None
+
+    def _get_detector(self):
+        if self.detector is None:
+            self.detector = _load_tool_class('tools.object_detector', 'ObjectDetector')()
+        return self.detector
     
     @property
     def name(self) -> str:
@@ -340,7 +374,7 @@ class ObjectDetectionTool(Tool):
             # Detect objects
             if object_class:
                 # Search for specific object
-                detections = self.detector.search_for_object(
+                detections = self._get_detector().search_for_object(
                     frame_paths,
                     timestamps,
                     object_class,
@@ -348,7 +382,7 @@ class ObjectDetectionTool(Tool):
                 )
             else:
                 # Detect all objects
-                detections = self.detector.detect_objects_in_frames(
+                detections = self._get_detector().detect_objects_in_frames(
                     frame_paths,
                     timestamps,
                     confidence_threshold
@@ -430,21 +464,20 @@ class ToolRegistry:
         ]
     
     def register_all_tools(self) -> None:
-        """Register all available video processing tools."""
-        try:
-            # Register frame extraction tool
-            self.register_tool(FrameExtractionTool())
-            
-            # Register image captioning tool
-            self.register_tool(ImageCaptioningTool())
-            
-            # Register audio transcription tool
-            self.register_tool(AudioTranscriptionTool())
-            
-            # Register object detection tool
-            self.register_tool(ObjectDetectionTool())
-            
-            logger.info(f"Successfully registered {len(self.tools)} tools")
-        except Exception as e:
-            logger.error(f"Failed to register tools: {str(e)}")
-            raise
+        """Register all available video processing tools.
+
+        Tool classes are registered as lightweight wrappers. Heavy optional
+        media dependencies are loaded only when the corresponding tool instance
+        is created, keeping health checks and tool discovery usable in lean CI
+        and API-only deployments.
+        """
+        for tool_cls in [
+            FrameExtractionTool,
+            ImageCaptioningTool,
+            AudioTranscriptionTool,
+            ObjectDetectionTool,
+        ]:
+            tool = tool_cls()
+            if tool.name not in self.tools:
+                self.register_tool(tool)
+        logger.info(f"Successfully registered {len(self.tools)} tools")

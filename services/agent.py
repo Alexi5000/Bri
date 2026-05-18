@@ -4,7 +4,10 @@ import httpx
 import time
 from typing import Optional, Dict, Any, List
 
-from groq import Groq
+try:
+    from groq import Groq
+except ModuleNotFoundError:  # pragma: no cover - optional production dependency
+    Groq = None  # type: ignore[assignment]
 from models.responses import AssistantMessageResponse
 from services.memory import Memory
 from services.router import ToolRouter, ToolPlan
@@ -90,6 +93,8 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
         self.groq_api_key = groq_api_key or Config.GROQ_API_KEY
         if not self.groq_api_key:
             raise AgentError("Groq API key is required")
+        if Groq is None:
+            raise AgentError("The groq package is required for live AI responses. Install project dependencies before using GroqAgent.")
         
         # Initialize Groq client
         self.groq_client = Groq(api_key=self.groq_api_key)
@@ -1439,3 +1444,47 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit."""
         self.close()
+
+
+class AgentService:
+    """Lightweight deterministic agent facade for tests and offline API validation.
+
+    GroqAgent remains the production conversational engine. This facade provides a
+    small, dependency-injectable surface that lets CI validate prompt assembly,
+    memory writes, and offline fallback behavior without installing or invoking a
+    hosted LLM client.
+    """
+
+    def __init__(self, groq_client: object | None = None, memory: object | None = None) -> None:
+        self.groq_client = groq_client
+        self.memory = memory
+
+    def build_prompt(self, question: str, context: dict[str, object] | None = None) -> str:
+        context = context or {}
+        context_lines = [f"{key}: {value}" for key, value in sorted(context.items())]
+        context_block = "\n".join(context_lines) if context_lines else "No processed context is available yet."
+        return (
+            "You are BRI, a concise video intelligence assistant.\n"
+            f"Question: {question}\n"
+            f"Available context:\n{context_block}\n"
+            "Answer with clear, grounded observations and acknowledge uncertainty."
+        )
+
+    def answer_question(
+        self,
+        video_id: str,
+        question: str,
+        context: dict[str, object] | None = None,
+    ) -> dict[str, object]:
+        prompt = self.build_prompt(question, context)
+        if self.groq_client is None:
+            summary = (context or {}).get("summary") or "the available video context"
+            answer = (
+                f"For video {video_id}, I can provide an offline analysis based on {summary}. "
+                "Connect GROQ_API_KEY for live model reasoning."
+            )
+        else:  # pragma: no cover - live client behavior is integration tested separately
+            answer = str(self.groq_client.chat(prompt))
+        if self.memory and hasattr(self.memory, "add_conversation"):
+            self.memory.add_conversation(video_id, question, answer)
+        return {"video_id": video_id, "question": question, "answer": answer, "prompt": prompt}

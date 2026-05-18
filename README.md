@@ -1,316 +1,115 @@
 <div align="center">
+  <img src="assets/icon.png" alt="BRI logo" width="112" />
 
-<img src="assets/icon.png" alt="BRI Logo" width="120" />
+# BRI — Empathetic Video Intelligence
 
-# BRI (Brianna)
+### Production-ready conversational video analysis with FastAPI MCP tooling, Streamlit UX, SQLite persistence, and optional multimodal ML pipelines.
 
-### Your Empathetic Video Analysis Agent
-
-**Upload a video. Ask anything. BRI watches, listens, detects objects, and remembers your conversation — like discussing content with a brilliant friend.**
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.9+-3776ab?logo=python)](https://python.org)
+[![Python](https://img.shields.io/badge/Python-3.10+-3776ab?logo=python)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-UI-ff4b4b?logo=streamlit)](https://streamlit.io)
+[![FastAPI](https://img.shields.io/badge/FastAPI-MCP%20API-009688?logo=fastapi)](https://fastapi.tiangolo.com)
 [![Groq](https://img.shields.io/badge/Groq-LLM-f55036)](https://groq.com)
-[![FastAPI](https://img.shields.io/badge/FastAPI-MCP%20Server-009688?logo=fastapi)](https://fastapi.tiangolo.com)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ed?logo=docker)](https://docker.com)
-
-[Features](#features) · [Quick Start](#-quick-start) · [What You Can Ask](#what-you-can-ask) · [Architecture](#architecture) · [API Reference](#api-reference) · [Contributing](#contributing)
-
----
-
-<img src="assets/cover.png" alt="BRI - Video Analysis Agent" width="100%" />
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 </div>
 
----
+<img src="assets/cover.png" alt="BRI video intelligence cover" width="100%" />
 
-## The Problem
+**BRI**, short for **Brianna**, turns uploaded videos into a searchable and conversational knowledge layer. The application extracts frames, captions visual scenes, transcribes audio, detects objects, stores structured context, and answers natural-language questions with timestamp-aware evidence.
 
-Video content is exploding, but understanding what's inside a video is still painful. You have to watch the whole thing, scrub through timelines, take manual notes, and forget context between sessions. There's no way to just *ask* a video a question and get an intelligent answer.
+## Production scope
 
-## The Solution
+BRI is built as a complete Python application for deployable video intelligence workflows. It includes a Streamlit user interface, a FastAPI MCP-style service, SQLite storage, Docker Compose orchestration, hardened configuration, contract tests, validation scripts, and optional heavy ML integrations for teams that want local multimodal processing.
 
-BRI is an **open-source, empathetic multimodal agent** for video processing. Upload any video, and BRI extracts frames (BLIP), transcribes audio (Whisper), detects objects (YOLOv8), and wraps it all in a conversational interface powered by Groq's Llama 3.1 70B. She remembers your conversation history per video, suggests follow-up questions, and lets you click timestamps to jump to specific moments.
-
-> *"What did they say about the deadline at around 2:30?"*
->
-> BRI finds the exact transcript segment, shows the relevant frame, and remembers the context for your next question.
-
----
-
-## Features
-
-- **Video Upload and Management** — Drag-and-drop upload with library view and thumbnail previews
-- **Conversational Interface** — Chat naturally about your video content with full context awareness
-- **Multimodal Analysis** — Frame captioning (BLIP), audio transcription (Whisper), object detection (YOLOv8)
-- **Smart Memory** — Maintains conversation history per video for seamless follow-ups
-- **Intelligent Routing** — Automatically determines which processing tools to use based on your question
-- **Timestamp Navigation** — Click timestamps in responses to jump to specific moments
-- **Proactive Suggestions** — Get relevant follow-up questions after each response
-- **Redis Caching** — Intelligent caching for fast repeated queries
-- **MCP Server** — Full REST API via FastAPI for programmatic access
-- **Docker Ready** — One-command deployment with Docker Compose
-- **Privacy-Focused** — Local storage by default, your videos stay on your machine
-
----
-
-## What You Can Ask
-
-| Query Type | Example |
+| Layer | Production capability |
 |---|---|
-| **Content Questions** | "What's happening in this video?" |
-| **Timestamp Queries** | "What did they say at 2:30?" |
-| **Object Search** | "Show me all the cats in this video" |
-| **Transcript Search** | "Find when they mentioned 'deadline'" |
-| **Follow-ups** | "Tell me more about that" (BRI remembers context) |
-| **Scene Analysis** | "Describe the scene at the beginning" |
-| **Summary** | "Give me a summary of this video" |
-
----
-
-## Design Philosophy
-
-BRI is designed to feel like a conversation with a knowledgeable friend, not a cold analysis tool.
-
-- **Empathetic** — Warm, supportive tone throughout every interaction
-- **Accessible** — No technical knowledge required to use
-- **Conversational** — Natural language in, natural language out
-- **Privacy-Focused** — Local storage by default
-- **Graceful** — Friendly error messages and intelligent fallback strategies
-
----
-
-## Quick Start
-
-### Docker Deployment (Recommended)
-
-```bash
-# 1. Set your API key
-cp .env.example .env
-nano .env  # Add your GROQ_API_KEY
-
-# 2. Deploy with one command
-./deploy_test.sh
-
-# 3. Open http://localhost:8501
-```
-
-### Local Development
-
-```bash
-# 1. Clone and install
-git clone https://github.com/Alexi5000/Bri.git
-cd Bri
-pip install -r requirements.txt
-
-# 2. Configure
-cp .env.example .env
-# Edit .env and add your GROQ_API_KEY
-
-# 3. Initialize database
-python scripts/init_db.py
-
-# 4. Start MCP server (Terminal 1)
-python mcp_server/main.py
-
-# 5. Start Streamlit UI (Terminal 2)
-streamlit run app.py
-
-# 6. Open http://localhost:8501
-```
-
-### Prerequisites
-
-- Python 3.9+
-- Groq API key ([Get one here](https://console.groq.com))
-- Redis (optional, for caching)
-
----
+| **User experience** | Streamlit upload, video library, chat workflow, contextual responses, and operational feedback. |
+| **API service** | FastAPI health checks, versioned response envelopes, validated request models, rate limiting, caching hooks, and tool execution endpoints. |
+| **Video intelligence** | Public tool catalog for `extract_frames`, `caption_frames`, `transcribe_audio`, and `detect_objects`, with optional BLIP, Whisper, and YOLOv8 execution paths. |
+| **Persistence** | SQLite-backed video records, context storage, migrations, backup and restore scripts, and database contract tests. |
+| **Operations** | Docker startup, smoke checks, production validation, runbooks, configuration guidance, and deterministic CI-safe test boundaries. |
 
 ## Architecture
 
-BRI uses a modular, layered architecture with clear separation of concerns:
-
-```
-┌─────────────────────────────────────────┐
-│         Streamlit UI Layer              │
-│  (Chat, Library, Player, History)       │
-└─────────────┬───────────────────────────┘
-              │
-┌─────────────▼───────────────────────────┐
-│         Agent Layer                      │
-│  (Groq Agent, Router, Memory, Context)  │
-└─────────────┬───────────────────────────┘
-              │
-┌─────────────▼───────────────────────────┐
-│         MCP Server Layer                 │
-│  (FastAPI, Tool Registry, Redis Cache)  │
-└─────────────┬───────────────────────────┘
-              │
-┌─────────────▼───────────────────────────┐
-│      Video Processing Tools              │
-│  (OpenCV, BLIP, Whisper, YOLO)          │
-└─────────────┬───────────────────────────┘
-              │
-┌─────────────▼───────────────────────────┐
-│         Storage Layer                    │
-│  (SQLite Database, File System)         │
-└──────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    User[User] --> UI[Streamlit UI]
+    UI --> API[FastAPI MCP Service]
+    API --> Registry[Lazy Tool Registry]
+    Registry --> Tools[Video Tools]
+    Tools --> DB[(SQLite)]
+    Tools --> Cache[(Redis Optional)]
+    UI --> Agent[Groq Conversation Agent]
+    Agent --> DB
+    Agent --> API
 ```
 
----
+## Quick start
 
-## Tech Stack
+The fastest production-like path is Docker Compose. Copy the environment template, add a Groq key if you want live conversational responses, and start the stack.
 
-| Layer | Technology | Purpose |
-|---|---|---|
-| **Frontend** | Streamlit + Custom CSS | Warm, approachable chat UI |
-| **LLM** | Groq (Llama 3.1 70B) | Fast, high-quality inference |
-| **Frame Analysis** | BLIP (Hugging Face) | Image captioning |
-| **Audio** | OpenAI Whisper | Speech-to-text transcription |
-| **Object Detection** | YOLOv8 (Ultralytics) | Real-time object detection |
-| **Video Processing** | OpenCV | Frame extraction |
-| **API Server** | FastAPI | MCP server with REST endpoints |
-| **Caching** | Redis | Optional performance boost |
-| **Database** | SQLite | Metadata, memory, and conversation history |
-| **Deployment** | Docker + Docker Compose | One-command deployment |
-
----
-
-## Project Structure
-
-```
-Bri/
-├── app.py                 # Streamlit application entry point
-├── config.py              # Configuration management
-├── models/                # Data models and schemas
-│   ├── memory.py          # Conversation memory models
-│   ├── responses.py       # Response formatting
-│   ├── tools.py           # Tool definitions
-│   └── video.py           # Video metadata models
-├── services/              # Core business logic
-├── tools/                 # Video processing tools
-├── mcp_server/            # FastAPI MCP server
-│   ├── main.py            # Server entry point
-│   ├── cache.py           # Redis caching layer
-│   ├── registry.py        # Tool registry
-│   └── validation.py      # Request validation
-├── ui/                    # Streamlit UI components
-├── storage/               # Database and file storage
-├── scripts/               # Utility and setup scripts
-├── tests/                 # Test suite
-├── docs/                  # Documentation
-├── Dockerfile.ui          # UI container
-├── Dockerfile.mcp         # MCP server container
-└── .env.example           # Environment template
+```bash
+git clone https://github.com/Alexi5000/Bri.git
+cd Bri
+cp .env.example .env
+# Optional: add GROQ_API_KEY to .env for live AI responses.
+docker compose up --build
 ```
 
----
+Open the Streamlit application at `http://localhost:8501` and the FastAPI service at `http://localhost:8000`.
 
-## API Reference
+For local Python development, create an isolated environment and install the editable package. The base install is intentionally CI-friendly; install `.[ai]` only when you want the optional BLIP, Whisper, YOLOv8, ChromaDB, and sentence-transformer stack.
 
-BRI exposes a REST API through the MCP server at `http://localhost:8000`:
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .[dev]
+python scripts/init_db.py
+uvicorn mcp_server.main:app --reload --port 8000
+streamlit run app.py
+```
 
-| Endpoint | Method | Description |
-|---|---|---|
-| `/` | GET | Server information |
-| `/health` | GET | Health check |
-| `/tools` | GET | List available tools |
-| `/tools/{tool_name}/execute` | POST | Execute a processing tool |
-| `/videos/{video_id}/process` | POST | Batch process video |
-| `/cache/stats` | GET | Cache statistics |
+## Core commands
 
-Full API documentation: [MCP Server README](./mcp_server/README.md)
-
----
-
-## Configuration
-
-All configuration is managed through `.env`. See `.env.example` for the full list.
-
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `GROQ_API_KEY` | Yes | — | Groq API key |
-| `GROQ_MODEL` | No | `llama-3.1-70b-versatile` | LLM model |
-| `REDIS_ENABLED` | No | `true` | Enable Redis caching |
-| `MAX_FRAMES_PER_VIDEO` | No | `100` | Max frames to extract |
-| `FRAME_EXTRACTION_INTERVAL` | No | `2.0` | Seconds between frames |
-| `MAX_CONVERSATION_HISTORY` | No | `10` | Messages to keep in context |
-| `MCP_SERVER_PORT` | No | `8000` | MCP server port |
-
----
-
-## Documentation
-
-| Document | Description |
+| Command | Purpose |
 |---|---|
-| [User Guide](./docs/USER_GUIDE.md) | Complete guide to using BRI |
-| [Quick Start](./QUICK_START.md) | Get started in 5 minutes |
-| [Configuration Reference](./docs/CONFIGURATION.md) | All settings explained |
-| [MCP Server API](./mcp_server/README.md) | API endpoints and tool docs |
-| [API Examples](./docs/API_EXAMPLES.md) | Practical code examples |
-| [Troubleshooting](./docs/TROUBLESHOOTING.md) | Common issues and solutions |
-| [Deployment Guide](./DEPLOYMENT_README.md) | Production deployment |
-| [Architecture](./ARCHITECTURE_SUMMARY.md) | System design overview |
+| `python3 -m pytest tests/production -q` | Runs the production contract suite for configuration, API, storage, and service boundaries. |
+| `python3 scripts/validate_production.py` | Executes the repository’s production-readiness validation checks. |
+| `python3 scripts/smoke_api.py --url http://localhost:8000` | Smoke-tests a running FastAPI service. |
+| `docker compose up --build` | Starts the UI, API, Redis, and shared application volumes. |
+| `pip install -e .[ai,dev]` | Installs development tooling plus optional local ML dependencies for full media processing. |
 
----
+## API surface
 
-## Troubleshooting
+BRI’s FastAPI service returns standardized production envelopes for tool discovery and execution. The public catalog remains visible even when optional ML dependencies are not installed; heavy packages are loaded lazily only when a corresponding tool is executed.
 
-| Issue | Quick Fix |
+| Endpoint | Description |
 |---|---|
-| Missing API key | Copy `.env.example` to `.env` and add your Groq API key |
-| Connection refused | Ensure both MCP server and Streamlit are running |
-| Redis errors | Set `REDIS_ENABLED=false` in `.env` (Redis is optional) |
-| Slow processing | Reduce `MAX_FRAMES_PER_VIDEO` in `.env` |
-| Out of memory | Reduce `MAX_FRAMES_PER_VIDEO` and `LAZY_LOAD_BATCH_SIZE` |
+| `GET /health` | Returns service health, dependency status, version, and operational metadata. |
+| `GET /tools` and `GET /v1/tools` | Lists registered MCP-style video tools and JSON schemas. |
+| `POST /tools/{tool_name}/execute` | Executes a validated video tool request. |
+| `POST /videos/{video_id}/process` | Runs a processing plan for one video. |
+| `POST /videos/{video_id}/process-progressive` | Starts staged processing with progress tracking. |
+| `GET /videos/{video_id}/status` | Inspects stored video context and processing status. |
 
-Full troubleshooting guide: [docs/TROUBLESHOOTING.md](./docs/TROUBLESHOOTING.md)
+## Documentation map
 
----
+| Guide | Link |
+|---|---|
+| **Architecture** | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
+| **API reference** | [docs/API.md](docs/API.md) |
+| **API examples** | [docs/API_EXAMPLES.md](docs/API_EXAMPLES.md) |
+| **Setup and configuration** | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) |
+| **Deployment** | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) |
+| **Testing** | [docs/TESTING.md](docs/TESTING.md) |
+| **Operations runbook** | [docs/OPERATIONS_RUNBOOK.md](docs/OPERATIONS_RUNBOOK.md) |
+| **Troubleshooting** | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) |
 
-## Roadmap
+## Repository hygiene
 
-- [ ] Multi-video comparison ("Compare these two videos")
-- [ ] Real-time video stream analysis
-- [ ] Custom model fine-tuning for domain-specific content
-- [ ] Collaborative video annotation
-- [ ] Export analysis reports (PDF, Markdown)
-- [ ] Plugin system for custom processing tools
-- [ ] Multi-language transcription support
-
----
-
-## Contributing
-
-We welcome contributions! See the full guide below:
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Make your changes and write tests
-4. Run tests: `pytest`
-5. Commit: `git commit -m "feat: add your feature"`
-6. Push and open a Pull Request
-
----
-
-## Acknowledgments
-
-BRI is built with amazing open-source technologies: [Groq](https://groq.com), [OpenCV](https://opencv.org), [Hugging Face BLIP](https://huggingface.co), [OpenAI Whisper](https://github.com/openai/whisper), [Ultralytics YOLOv8](https://ultralytics.com), [Streamlit](https://streamlit.io), and [FastAPI](https://fastapi.tiangolo.com).
-
----
+Generated media, logs, databases, Python caches, virtual environments, and secret-bearing environment files are excluded from source control. The committed graphics under `assets/` are intentionally preserved because they define the public identity of the project.
 
 ## License
 
-MIT — see [LICENSE](./LICENSE) for details.
-
----
-
-<div align="center">
-
-**Built by [Alex Cinovoj](https://github.com/Alexi5000) · [TechTide AI](https://github.com/Alexi5000)**
-
-*Ask. Understand. Remember.*
-
-</div>
+BRI is released under the [MIT License](LICENSE).

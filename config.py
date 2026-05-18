@@ -1,249 +1,203 @@
-"""Configuration management for BRI video agent."""
+"""Production configuration management for BRI.
+
+Configuration is resolved lazily from Streamlit secrets first and environment
+variables second. The module intentionally avoids printing secret metadata during
+normal imports so tests, CLI scripts, and API processes remain deterministic.
+"""
+
+from __future__ import annotations
 
 import os
 from pathlib import Path
-from dotenv import load_dotenv
+from typing import Any, Callable, ClassVar
 
-# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+except ModuleNotFoundError:  # pragma: no cover - minimal validation environments
+    def load_dotenv(*_args: object, **_kwargs: object) -> bool:
+        return False
+
 load_dotenv()
 
 
+Converter = Callable[[str], Any]
+
+
+def _to_bool(value: str) -> bool:
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _split_csv(value: str) -> list[str]:
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
+def _strip_inline_comment(value: str) -> str:
+    """Strip shell-style inline comments from .env values used as numbers."""
+    return value.split("#", 1)[0].strip()
+
+
 def get_config_value(key: str, default: str = "") -> str:
-    """Get configuration value from Streamlit secrets or environment variables.
-    
-    Priority:
-    1. Streamlit secrets (if available)
-    2. Environment variables
-    3. Default value
-    
-    Args:
-        key: Configuration key
-        default: Default value if not found
-        
-    Returns:
-        Configuration value
+    """Resolve a configuration value from Streamlit secrets or environment.
+
+    Streamlit secrets are optional because API workers, tests, and CLI scripts do
+    not run inside a Streamlit runtime. Missing secrets are silent by design.
     """
-    # Try Streamlit secrets first (for Streamlit Cloud)
     try:
-        import streamlit as st
-        if hasattr(st, 'secrets'):
-            # Debug: Check if secrets are available
-            if key in st.secrets:
-                value = str(st.secrets[key])
-                # Don't log the actual key value for security
-                if key == "GROQ_API_KEY" and value:
-                    print(f"✅ Found {key} in Streamlit secrets (length: {len(value)})")
-                return value
-            else:
-                print(f"⚠️ {key} not found in Streamlit secrets. Available keys: {list(st.secrets.keys())}")
-    except Exception as e:
-        print(f"⚠️ Could not access Streamlit secrets: {e}")
-    
-    # Fall back to environment variables
-    env_value = os.getenv(key, default)
-    if env_value and env_value != default:
-        print(f"✅ Found {key} in environment variables")
-    return env_value
+        import streamlit as st  # type: ignore
+
+        if hasattr(st, "secrets") and key in st.secrets:
+            return str(st.secrets[key])
+    except Exception:
+        pass
+
+    return os.getenv(key, default)
 
 
 class ConfigMeta(type):
-    """Metaclass for lazy configuration loading."""
-    _cache = {}
-    
-    def __getattribute__(cls, name):
-        if name.startswith('_') or name in ('validate', 'ensure_directories', 'get_mcp_server_url', 'display_config'):
-            return super().__getattribute__(name)
-        
-        # Check cache first
-        if name in cls._cache:
-            return cls._cache[name]
-        
-        # Load value lazily
-        value = cls._load_config_value(name)
-        cls._cache[name] = value
-        return value
-    
-    def _load_config_value(cls, name):
-        """Load configuration value based on attribute name."""
-        config_map = {
-            # Groq API Configuration
-            'GROQ_API_KEY': ('GROQ_API_KEY', ''),
-            'GROQ_MODEL': ('GROQ_MODEL', 'llama-3.1-70b-versatile'),
-            'GROQ_TEMPERATURE': ('GROQ_TEMPERATURE', '0.7', float),
-            'GROQ_MAX_TOKENS': ('GROQ_MAX_TOKENS', '1024', int),
-            
-            # Redis Configuration
-            'REDIS_URL': ('REDIS_URL', 'redis://localhost:6379'),
-            'REDIS_ENABLED': ('REDIS_ENABLED', 'false', lambda x: x.lower() == 'true'),
-            
-            # Database Configuration
-            'DATABASE_PATH': ('DATABASE_PATH', 'data/bri.db'),
-            
-            # File Storage Configuration
-            'VIDEO_STORAGE_PATH': ('VIDEO_STORAGE_PATH', 'data/videos'),
-            'FRAME_STORAGE_PATH': ('FRAME_STORAGE_PATH', 'data/frames'),
-            'CACHE_STORAGE_PATH': ('CACHE_STORAGE_PATH', 'data/cache'),
-            
-            # MCP Server Configuration
-            'MCP_SERVER_HOST': ('MCP_SERVER_HOST', 'localhost'),
-            'MCP_SERVER_PORT': ('MCP_SERVER_PORT', '8000', int),
-            
-            # Processing Configuration
-            'MAX_FRAMES_PER_VIDEO': ('MAX_FRAMES_PER_VIDEO', '20', int),
-            'FRAME_EXTRACTION_INTERVAL': ('FRAME_EXTRACTION_INTERVAL', '2.0', float),
-            'CACHE_TTL_HOURS': ('CACHE_TTL_HOURS', '24', int),
-            
-            # Memory Configuration
-            'MAX_CONVERSATION_HISTORY': ('MAX_CONVERSATION_HISTORY', '10', int),
-            
-            # Performance Configuration
-            'TOOL_EXECUTION_TIMEOUT': ('TOOL_EXECUTION_TIMEOUT', '120', int),
-            'REQUEST_TIMEOUT': ('REQUEST_TIMEOUT', '30', int),
-            'LAZY_LOAD_BATCH_SIZE': ('LAZY_LOAD_BATCH_SIZE', '3', int),
-            
-            # Application Configuration
-            'DEBUG': ('DEBUG', 'false', lambda x: x.lower() == 'true'),
-            'LOG_LEVEL': ('LOG_LEVEL', 'INFO'),
-            'LOG_DIR': ('LOG_DIR', 'logs'),
-            'LOG_ROTATION_ENABLED': ('LOG_ROTATION_ENABLED', 'true', lambda x: x.lower() == 'true'),
-            'LOG_JSON_FORMAT': ('LOG_JSON_FORMAT', 'false', lambda x: x.lower() == 'true'),
+    """Metaclass for lazy, cached configuration loading."""
+
+    _cache: ClassVar[dict[str, Any]] = {}
+
+    def __getattribute__(cls, name: str) -> Any:
+        always_direct = {
+            "validate",
+            "ensure_directories",
+            "get_mcp_server_url",
+            "display_config",
+            "reset_cache",
+            "as_dict",
+            "is_production",
         }
-        
+        if name.startswith("_") or name in always_direct:
+            return super().__getattribute__(name)
+        cache = super().__getattribute__("_cache")
+        if name in cache:
+            return cache[name]
+        value = cls._load_config_value(name)
+        cache[name] = value
+        return value
+
+    def _load_config_value(cls, name: str) -> Any:
+        config_map: dict[str, tuple[str, str, Converter]] = {
+            "APP_NAME": ("APP_NAME", "BRI", str),
+            "APP_ENV": ("APP_ENV", "development", str),
+            "APP_VERSION": ("APP_VERSION", "1.0.0", str),
+            "GROQ_API_KEY": ("GROQ_API_KEY", "", str),
+            "GROQ_MODEL": ("GROQ_MODEL", "llama-3.1-70b-versatile", str),
+            "GROQ_TEMPERATURE": ("GROQ_TEMPERATURE", "0.7", lambda value: float(_strip_inline_comment(value))),
+            "GROQ_MAX_TOKENS": ("GROQ_MAX_TOKENS", "1024", lambda value: int(_strip_inline_comment(value))),
+            "REDIS_URL": ("REDIS_URL", "redis://localhost:6379", str),
+            "REDIS_ENABLED": ("REDIS_ENABLED", "false", _to_bool),
+            "DATABASE_PATH": ("DATABASE_PATH", "data/bri.db", str),
+            "VIDEO_STORAGE_PATH": ("VIDEO_STORAGE_PATH", "data/videos", str),
+            "FRAME_STORAGE_PATH": ("FRAME_STORAGE_PATH", "data/frames", str),
+            "CACHE_STORAGE_PATH": ("CACHE_STORAGE_PATH", "data/cache", str),
+            "MCP_SERVER_HOST": ("MCP_SERVER_HOST", "localhost", str),
+            "MCP_SERVER_PORT": ("MCP_SERVER_PORT", "8000", lambda value: int(_strip_inline_comment(value))),
+            "MCP_SERVER_URL": ("MCP_SERVER_URL", "", str),
+            "ALLOWED_ORIGINS": ("ALLOWED_ORIGINS", "http://localhost:8501,http://127.0.0.1:8501", _split_csv),
+            "MAX_UPLOAD_MB": ("MAX_UPLOAD_MB", "500", lambda value: int(_strip_inline_comment(value))),
+            "MAX_FRAMES_PER_VIDEO": ("MAX_FRAMES_PER_VIDEO", "20", lambda value: int(_strip_inline_comment(value))),
+            "FRAME_EXTRACTION_INTERVAL": ("FRAME_EXTRACTION_INTERVAL", "2.0", lambda value: float(_strip_inline_comment(value))),
+            "CACHE_TTL_HOURS": ("CACHE_TTL_HOURS", "24", lambda value: int(_strip_inline_comment(value))),
+            "MAX_CONVERSATION_HISTORY": ("MAX_CONVERSATION_HISTORY", "10", lambda value: int(_strip_inline_comment(value))),
+            "TOOL_EXECUTION_TIMEOUT": ("TOOL_EXECUTION_TIMEOUT", "120", lambda value: int(_strip_inline_comment(value))),
+            "REQUEST_TIMEOUT": ("REQUEST_TIMEOUT", "30", lambda value: int(_strip_inline_comment(value))),
+            "LAZY_LOAD_BATCH_SIZE": ("LAZY_LOAD_BATCH_SIZE", "3", lambda value: int(_strip_inline_comment(value))),
+            "DEBUG": ("DEBUG", "false", _to_bool),
+            "LOG_LEVEL": ("LOG_LEVEL", "INFO", str),
+            "LOG_DIR": ("LOG_DIR", "logs", str),
+            "LOG_ROTATION_ENABLED": ("LOG_ROTATION_ENABLED", "true", _to_bool),
+            "LOG_JSON_FORMAT": ("LOG_JSON_FORMAT", "false", _to_bool),
+            "ALLOW_MISSING_GROQ_FOR_TESTS": ("ALLOW_MISSING_GROQ_FOR_TESTS", "false", _to_bool),
+        }
         if name not in config_map:
-            raise AttributeError(f"Config has no attribute '{name}'")
-        
-        config_info = config_map[name]
-        key = config_info[0]
-        default = config_info[1]
-        converter = config_info[2] if len(config_info) > 2 else str
-        
-        value = get_config_value(key, default)
-        return converter(value) if converter != str else value
+            raise AttributeError(f"Config has no attribute {name!r}")
+        key, default, converter = config_map[name]
+        return converter(get_config_value(key, default))
 
 
 class Config(metaclass=ConfigMeta):
-    """Application configuration loaded from environment variables or Streamlit secrets."""
-    pass
-    
+    """Application configuration loaded from environment or Streamlit secrets."""
+
     @classmethod
-    def validate(cls) -> None:
-        """Validate required configuration values."""
-        errors = []
-        warnings = []
-        
-        # Required configurations
-        if not cls.GROQ_API_KEY:
-            # Check if running on Streamlit Cloud
-            try:
-                import streamlit as st
-                if hasattr(st, 'secrets'):
-                    errors.append("GROQ_API_KEY is required. Please set it in Streamlit Cloud Secrets (Settings → Secrets).")
-                else:
-                    errors.append("GROQ_API_KEY is required. Please set it in .env file.")
-            except:
-                errors.append("GROQ_API_KEY is required. Please set it in .env file or Streamlit Cloud Secrets.")
-        
-        # Validate numeric ranges
-        if cls.GROQ_TEMPERATURE < 0 or cls.GROQ_TEMPERATURE > 2:
-            errors.append(f"GROQ_TEMPERATURE must be between 0 and 2 (got {cls.GROQ_TEMPERATURE})")
-        
-        if cls.GROQ_MAX_TOKENS < 1:
-            errors.append(f"GROQ_MAX_TOKENS must be positive (got {cls.GROQ_MAX_TOKENS})")
-        
-        if cls.MAX_FRAMES_PER_VIDEO < 1:
-            errors.append(f"MAX_FRAMES_PER_VIDEO must be positive (got {cls.MAX_FRAMES_PER_VIDEO})")
-        
-        if cls.FRAME_EXTRACTION_INTERVAL <= 0:
-            errors.append(f"FRAME_EXTRACTION_INTERVAL must be positive (got {cls.FRAME_EXTRACTION_INTERVAL})")
-        
-        if cls.MAX_CONVERSATION_HISTORY < 1:
-            errors.append(f"MAX_CONVERSATION_HISTORY must be positive (got {cls.MAX_CONVERSATION_HISTORY})")
-        
-        # Optional configurations with warnings
-        if not cls.REDIS_ENABLED:
-            warnings.append("Redis caching is disabled. Performance may be impacted.")
-        
-        if cls.DEBUG:
-            warnings.append("DEBUG mode is enabled. This should be disabled in production.")
-        
-        # Print warnings
-        if warnings:
-            print("Configuration warnings:")
-            for warning in warnings:
-                print(f"  ⚠️  {warning}")
-        
-        # Raise errors if any
-        if errors:
-            error_msg = "Configuration validation failed:\n" + "\n".join(f"  ❌ {e}" for e in errors)
-            raise ValueError(error_msg)
-    
+    def reset_cache(cls) -> None:
+        cls._cache.clear()
+
+    @classmethod
+    def is_production(cls) -> bool:
+        return str(cls.APP_ENV).lower() == "production"
+
+    @classmethod
+    def get_mcp_server_url(cls) -> str:
+        if cls.MCP_SERVER_URL:
+            return cls.MCP_SERVER_URL.rstrip("/")
+        return f"http://{cls.MCP_SERVER_HOST}:{cls.MCP_SERVER_PORT}"
+
     @classmethod
     def ensure_directories(cls) -> None:
-        """Create necessary directories if they don't exist."""
-        directories = [
+        for directory in [
             cls.VIDEO_STORAGE_PATH,
             cls.FRAME_STORAGE_PATH,
             cls.CACHE_STORAGE_PATH,
             Path(cls.DATABASE_PATH).parent,
             cls.LOG_DIR,
-        ]
-        
-        for directory in directories:
+        ]:
             Path(directory).mkdir(parents=True, exist_ok=True)
-    
+
     @classmethod
-    def get_mcp_server_url(cls) -> str:
-        """Get the full MCP server URL."""
-        return f"http://{cls.MCP_SERVER_HOST}:{cls.MCP_SERVER_PORT}"
-    
+    def validate(cls, *, require_groq: bool | None = None) -> None:
+        errors: list[str] = []
+        warnings: list[str] = []
+        require_key = cls.is_production() if require_groq is None else require_groq
+        if require_key and not cls.GROQ_API_KEY and not cls.ALLOW_MISSING_GROQ_FOR_TESTS:
+            errors.append("GROQ_API_KEY is required in production. Set it in .env, Streamlit secrets, or the deployment secret manager.")
+        if not 0 <= cls.GROQ_TEMPERATURE <= 2:
+            errors.append(f"GROQ_TEMPERATURE must be between 0 and 2; got {cls.GROQ_TEMPERATURE}.")
+        if cls.GROQ_MAX_TOKENS < 1:
+            errors.append("GROQ_MAX_TOKENS must be positive.")
+        if cls.MAX_UPLOAD_MB < 1:
+            errors.append("MAX_UPLOAD_MB must be positive.")
+        if cls.MAX_FRAMES_PER_VIDEO < 1:
+            errors.append("MAX_FRAMES_PER_VIDEO must be positive.")
+        if cls.FRAME_EXTRACTION_INTERVAL <= 0:
+            errors.append("FRAME_EXTRACTION_INTERVAL must be positive.")
+        if cls.MAX_CONVERSATION_HISTORY < 1:
+            errors.append("MAX_CONVERSATION_HISTORY must be positive.")
+        if not cls.REDIS_ENABLED:
+            warnings.append("Redis caching is disabled; this is acceptable for local development but not ideal for production.")
+        if cls.DEBUG and cls.is_production():
+            errors.append("DEBUG must be false when APP_ENV=production.")
+        if errors:
+            raise ValueError("Configuration validation failed:\n" + "\n".join(f"- {error}" for error in errors))
+        if warnings and cls.DEBUG:
+            for warning in warnings:
+                print(f"Configuration warning: {warning}")
+
+    @classmethod
+    def as_dict(cls, *, include_secrets: bool = False) -> dict[str, Any]:
+        values = {
+            "app_name": cls.APP_NAME,
+            "app_env": cls.APP_ENV,
+            "app_version": cls.APP_VERSION,
+            "groq_model": cls.GROQ_MODEL,
+            "redis_enabled": cls.REDIS_ENABLED,
+            "database_path": cls.DATABASE_PATH,
+            "video_storage_path": cls.VIDEO_STORAGE_PATH,
+            "frame_storage_path": cls.FRAME_STORAGE_PATH,
+            "cache_storage_path": cls.CACHE_STORAGE_PATH,
+            "mcp_server_url": cls.get_mcp_server_url(),
+            "max_upload_mb": cls.MAX_UPLOAD_MB,
+            "max_frames_per_video": cls.MAX_FRAMES_PER_VIDEO,
+            "request_timeout": cls.REQUEST_TIMEOUT,
+            "log_level": cls.LOG_LEVEL,
+        }
+        if include_secrets:
+            values["groq_api_key"] = cls.GROQ_API_KEY
+        return values
+
     @classmethod
     def display_config(cls) -> None:
-        """Display current configuration (masking sensitive values)."""
-        print("\n" + "="*60)
-        print("BRI Configuration")
-        print("="*60)
-        
-        print("\n🤖 Groq API:")
-        print(f"  Model: {cls.GROQ_MODEL}")
-        print(f"  Temperature: {cls.GROQ_TEMPERATURE}")
-        print(f"  Max Tokens: {cls.GROQ_MAX_TOKENS}")
-        api_key_status = '✓ Set' if cls.GROQ_API_KEY else '✗ Missing'
-        print(f"  API Key: {api_key_status}")
-        
-        print("\n💾 Storage:")
-        print(f"  Database: {cls.DATABASE_PATH}")
-        print(f"  Videos: {cls.VIDEO_STORAGE_PATH}")
-        print(f"  Frames: {cls.FRAME_STORAGE_PATH}")
-        print(f"  Cache: {cls.CACHE_STORAGE_PATH}")
-        
-        print("\n🔧 Processing:")
-        print(f"  Max Frames: {cls.MAX_FRAMES_PER_VIDEO}")
-        print(f"  Frame Interval: {cls.FRAME_EXTRACTION_INTERVAL}s")
-        print(f"  Cache TTL: {cls.CACHE_TTL_HOURS}h")
-        
-        print("\n🧠 Memory:")
-        print(f"  Max History: {cls.MAX_CONVERSATION_HISTORY} messages")
-        
-        print("\n⚡ Performance:")
-        print(f"  Tool Timeout: {cls.TOOL_EXECUTION_TIMEOUT}s")
-        print(f"  Request Timeout: {cls.REQUEST_TIMEOUT}s")
-        print(f"  Lazy Load Batch: {cls.LAZY_LOAD_BATCH_SIZE} images")
-        
-        print("\n🌐 MCP Server:")
-        print(f"  URL: {cls.get_mcp_server_url()}")
-        
-        print("\n📦 Redis:")
-        print(f"  Enabled: {'Yes' if cls.REDIS_ENABLED else 'No'}")
-        if cls.REDIS_ENABLED:
-            print(f"  URL: {cls.REDIS_URL}")
-        
-        print("\n🔍 Application:")
-        print(f"  Debug: {'Yes' if cls.DEBUG else 'No'}")
-        print(f"  Log Level: {cls.LOG_LEVEL}")
-        print(f"  Log Directory: {cls.LOG_DIR}")
-        print(f"  Log Rotation: {'Yes' if cls.LOG_ROTATION_ENABLED else 'No'}")
-        
-        print("\n" + "="*60 + "\n")
-
-
-# Don't validate on import - let app.py handle validation after Streamlit is initialized
+        masked = cls.as_dict(include_secrets=False)
+        for key, value in masked.items():
+            print(f"{key}: {value}")

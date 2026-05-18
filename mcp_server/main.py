@@ -3,7 +3,7 @@
 import time
 from typing import Optional
 from pydantic import BaseModel
-from fastapi import FastAPI, HTTPException, Request, status
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -93,8 +93,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize tool registry and cache
+# Initialize tool registry and cache. Tool registration is metadata-only and
+# intentionally safe before startup because optional ML dependencies are loaded
+# lazily only when a tool is executed.
 tool_registry = ToolRegistry()
+tool_registry.register_all_tools()
 cache_manager = CacheManager()
 
 
@@ -227,7 +230,7 @@ async def health_check():
 
 @app.get("/tools", response_model=ToolListResponse)
 @app.get("/v1/tools", response_model=ToolListResponse)
-async def list_tools(request: Request, version: APIVersion = get_api_version):
+async def list_tools(request: Request, version: APIVersion = Depends(get_api_version)):
     """
     List all available tools with their schemas.
     
@@ -271,7 +274,7 @@ async def execute_tool(
     tool_name: str,
     exec_request: ValidatedToolExecutionRequest,
     request: Request,
-    version: APIVersion = get_api_version
+    version: APIVersion = Depends(get_api_version)
 ):
     """
     Execute a specific tool with provided parameters and timeout handling.
@@ -441,7 +444,7 @@ async def process_video(
     video_id: str,
     process_request: ValidatedProcessVideoRequest,
     request: Request,
-    version: APIVersion = get_api_version
+    version: APIVersion = Depends(get_api_version)
 ):
     """
     Process a video with multiple tools in batch with parallel execution.
