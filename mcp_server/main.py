@@ -170,9 +170,15 @@ async def get_version():
     return get_version_info()
 
 
-@app.get("/health", response_model=HealthCheckResponse)
+@app.get("/health")
 async def health_check():
-    """Health check endpoint with detailed component status."""
+    """Health check endpoint with detailed component status.
+
+    Returns HTTP 200 only when overall status is "healthy". Degraded responses
+    (e.g. cache unreachable while DB is fine) use HTTP 200 with status="degraded"
+    so monitoring can inspect the body. Unhealthy responses (DB unreachable)
+    return HTTP 503 so orchestrators and load balancers can act on the probe.
+    """
     import datetime
     
     # Check database connectivity
@@ -207,7 +213,7 @@ async def health_check():
     else:
         overall_status = "unhealthy"
     
-    return HealthCheckResponse(
+    response = HealthCheckResponse(
         status=overall_status,
         version="1.0.0",
         timestamp=datetime.datetime.utcnow().isoformat() + "Z",
@@ -228,6 +234,10 @@ async def health_check():
             }
         }
     )
+
+    # Map overall status to HTTP code: 200 healthy/degraded, 503 unhealthy.
+    http_status = 503 if overall_status == "unhealthy" else 200
+    return JSONResponse(status_code=http_status, content=response.model_dump())
 
 
 @app.get("/tools", response_model=ToolListResponse)

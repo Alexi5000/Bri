@@ -13,36 +13,39 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import DATABASE_PATH
+from utils.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 def init_database():
     """Initialize the database with required tables."""
-    
+
     # Ensure data directory exists
     db_dir = Path(DATABASE_PATH).parent
     db_dir.mkdir(parents=True, exist_ok=True)
-    
-    print(f"Initializing database at: {DATABASE_PATH}")
-    
+
+    logger.info("Initializing database at: %s", DATABASE_PATH)
+
     # Connect to database (creates file if it doesn't exist)
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
-    
+
     # Read schema from file
     schema_path = Path(__file__).parent.parent / "storage" / "schema.sql"
-    
+
     if schema_path.exists():
-        print(f"Loading schema from: {schema_path}")
+        logger.info("Loading schema from: %s", schema_path)
         with open(schema_path, 'r') as f:
             schema_sql = f.read()
-        
+
         # Execute schema
         cursor.executescript(schema_sql)
-        print("✓ Database schema created successfully")
+        logger.info("Database schema applied successfully")
     else:
         # Fallback: create tables inline
-        print("Schema file not found, creating tables inline...")
-        
+        logger.warning("Schema file not found, creating tables inline...")
+
         cursor.executescript("""
             -- Videos table
             CREATE TABLE IF NOT EXISTS videos (
@@ -54,7 +57,7 @@ def init_database():
                 processing_status TEXT DEFAULT 'pending',
                 thumbnail_path TEXT
             );
-            
+
             -- Memory table for conversation history
             CREATE TABLE IF NOT EXISTS memory (
                 message_id TEXT PRIMARY KEY,
@@ -64,7 +67,7 @@ def init_database():
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (video_id) REFERENCES videos(video_id) ON DELETE CASCADE
             );
-            
+
             -- Video context table for processed data
             CREATE TABLE IF NOT EXISTS video_context (
                 context_id TEXT PRIMARY KEY,
@@ -75,7 +78,7 @@ def init_database():
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (video_id) REFERENCES videos(video_id) ON DELETE CASCADE
             );
-            
+
             -- Indexes for performance
             CREATE INDEX IF NOT EXISTS idx_memory_video_id ON memory(video_id);
             CREATE INDEX IF NOT EXISTS idx_memory_timestamp ON memory(timestamp);
@@ -83,15 +86,17 @@ def init_database():
             CREATE INDEX IF NOT EXISTS idx_context_type ON video_context(context_type);
             CREATE INDEX IF NOT EXISTS idx_context_timestamp ON video_context(timestamp);
         """)
-        print("✓ Database tables created successfully")
-    
+        logger.info("Database tables created successfully")
+
     # Commit and close
     conn.commit()
     conn.close()
-    
-    print(f"✓ Database initialization complete!")
-    print(f"  Location: {DATABASE_PATH}")
-    print(f"  Size: {Path(DATABASE_PATH).stat().st_size} bytes")
+
+    logger.info(
+        "Database initialization complete: location=%s size=%d bytes",
+        DATABASE_PATH,
+        Path(DATABASE_PATH).stat().st_size,
+    )
 
 
 if __name__ == "__main__":
@@ -99,5 +104,5 @@ if __name__ == "__main__":
         init_database()
         sys.exit(0)
     except Exception as e:
-        print(f"✗ Error initializing database: {e}", file=sys.stderr)
+        logger.error("Error initializing database: %s", e)
         sys.exit(1)
