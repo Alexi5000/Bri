@@ -1,5 +1,8 @@
 # Dockerfile for MCP Server
-FROM python:3.11-slim
+# Pinned to Debian 12 (bookworm) for OpenCV runtime library stability.
+# python:3.11-slim now resolves to Debian 13 (trixie), which renamed
+# libgl1-mesa-glx -> libgl1 and libglib2.0-0 -> libglib2.0-0t64.
+FROM python:3.11-slim-bookworm
 
 WORKDIR /app
 
@@ -27,6 +30,7 @@ COPY mcp_server/ ./mcp_server/
 COPY storage/ ./storage/
 COPY services/ ./services/
 COPY utils/ ./utils/
+COPY scripts/ ./scripts/
 COPY config.py .
 
 # Create necessary directories

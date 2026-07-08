@@ -12,10 +12,12 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from config import DATABASE_PATH
+from config import Config
 from utils.logging_config import get_logger
 
 logger = get_logger(__name__)
+
+DATABASE_PATH = Config.DATABASE_PATH
 
 
 def init_database():

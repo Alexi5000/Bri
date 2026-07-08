@@ -4,8 +4,10 @@ services:
   redis:
     image: redis:7-alpine
     container_name: bri-redis
-    ports:
-      - "6379:6379"
+    # Redis is internal-only; mcp-server reaches it via the bri-network.
+    # No host port mapping by design.
+    expose:
+      - "6379"
     volumes:
       - redis-data:/data
     command: redis-server --appendonly yes
