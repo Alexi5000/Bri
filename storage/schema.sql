@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS videos (
     processing_status TEXT DEFAULT 'pending' NOT NULL,
     thumbnail_path TEXT,
     deleted_at DATETIME,  -- Soft delete support
-    CHECK (processing_status IN ('pending', 'processing', 'complete', 'error')),
+    CHECK (processing_status IN ('pending', 'processing', 'extracting', 'captioning', 'transcribing', 'complete', 'error')),
     CHECK (duration > 0),  -- Duration must be positive
     CHECK (filename != ''),  -- Filename cannot be empty
     CHECK (file_path != '')  -- File path cannot be empty

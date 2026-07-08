@@ -381,9 +381,13 @@ class DataValidator:
         
         # Check field types
         field_types = schema.get('field_types', {})
+        optional_fields = schema.get('optional_fields', [])
         for field, expected_type in field_types.items():
             if field in data:
                 value = data[field]
+                # Allow None for optional fields
+                if value is None and field in optional_fields:
+                    continue
                 if not isinstance(value, expected_type):
                     return False, (
                         f"{data_type}: Field '{field}' has wrong type. "

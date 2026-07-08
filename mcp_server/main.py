@@ -43,8 +43,10 @@ from mcp_server.versioning import (
     get_api_version,
     version_header,
     get_version_info,
-    APIVersion
+    APIVersion,
+    DEFAULT_VERSION
 )
+from fastapi import Depends
 from mcp_server.response_models import (
     create_standard_response,
     create_paginated_response,

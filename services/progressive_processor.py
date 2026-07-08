@@ -199,6 +199,7 @@ class ProgressiveProcessor:
 
         frame_tool = self._get_registered_tool(ToolRegistry, "extract_frames")
         result = await frame_tool.execute(video_id, {})
+        self._store_results(video_id, "extract_frames", result)
         frames_count = len(result.get("frames", []))
 
         progress = progress.with_updates(
@@ -235,6 +236,7 @@ class ProgressiveProcessor:
 
         caption_tool = self._get_registered_tool(ToolRegistry, "caption_frames")
         result = await caption_tool.execute(video_id, {})
+        self._store_results(video_id, "caption_frames", result)
         captions_count = len(result.get("captions", []))
 
         progress = progress.with_updates(
@@ -325,6 +327,7 @@ class ProgressiveProcessor:
         """Run transcription and return a normalized count tuple."""
 
         result = await tool.execute(video_id, {})
+        self._store_results(video_id, "transcribe_audio", result)
         segments_count = len(result.get("segments", []))
         logger.info("Transcription complete: %s segments", segments_count)
         return "transcript_segments", segments_count
@@ -333,9 +336,34 @@ class ProgressiveProcessor:
         """Run object detection and return a normalized count tuple."""
 
         result = await tool.execute(video_id, {})
+        self._store_results(video_id, "detect_objects", result)
         detections_count = len(result.get("detections", []))
         logger.info("Object detection complete: %s detections", detections_count)
         return "objects_detected", detections_count
+
+    def _store_results(self, video_id: str, tool_name: str, result: Dict[str, Any]) -> None:
+        """Persist tool outputs to the video processing service.
+
+        Failures here are logged but never raised: the pipeline's primary job
+        is to keep the user-visible progress stream alive, so a DB write glitch
+        must not abort the rest of the run.
+        """
+
+        try:
+            from services.video_processing_service import get_video_processing_service
+
+            service = get_video_processing_service()
+            counts = service.store_tool_results(video_id, tool_name, result)
+
+            for data_type, count in counts.items():
+                logger.info(
+                    "Stored %s %s for video %s",
+                    count,
+                    data_type,
+                    video_id,
+                )
+        except Exception as exc:
+            logger.error("Failed to store %s results: %s", tool_name, exc)
 
     def _update_progress(self, progress: ProcessingProgress) -> None:
         """Store progress atomically and notify the callback with a snapshot."""
