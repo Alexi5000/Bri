@@ -3,10 +3,10 @@ Conversation History Panel Component for BRI
 Displays past conversations for selected video in sidebar
 """
 
-import streamlit as st
-from datetime import datetime
-from typing import List, Optional
 import logging
+from datetime import datetime
+
+import streamlit as st
 
 from models.memory import MemoryRecord
 from services.memory import Memory
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 def render_conversation_history_panel(
     video_id: str,
     memory: Memory,
-    on_conversation_select: Optional[callable] = None
+    on_conversation_select: "Callable | None" = None,
 ) -> None:
     """Render conversation history panel in sidebar with pagination.
     
@@ -113,7 +113,7 @@ def _render_empty_history() -> None:
     )
 
 
-def _group_into_sessions(conversation_history: List[MemoryRecord]) -> List[List[MemoryRecord]]:
+def _group_into_sessions(conversation_history: list[MemoryRecord]) -> list[list[MemoryRecord]]:
     """Group conversation history into sessions (user-assistant pairs).
     
     Args:
@@ -142,9 +142,9 @@ def _group_into_sessions(conversation_history: List[MemoryRecord]) -> List[List[
 
 
 def _render_conversation_session(
-    session: List[MemoryRecord],
+    session: list[MemoryRecord],
     session_idx: int,
-    on_conversation_select: Optional[callable]
+    on_conversation_select: "Callable | None",
 ) -> None:
     """Render a single conversation session.
     
@@ -338,7 +338,7 @@ def _format_conversation_timestamp(timestamp: datetime) -> str:
         return timestamp.strftime("%b %d, %Y")
 
 
-def get_conversation_summary(session: List[MemoryRecord]) -> str:
+def get_conversation_summary(session: list[MemoryRecord]) -> str:
     """Get a summary of a conversation session.
     
     Args:
@@ -361,7 +361,7 @@ def get_conversation_summary(session: List[MemoryRecord]) -> str:
 
 
 def load_conversation_context(
-    session: List[MemoryRecord],
+    session: list[MemoryRecord],
     video_id: str
 ) -> None:
     """Load a conversation session into the current context.

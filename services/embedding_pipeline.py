@@ -1,10 +1,10 @@
 """Embedding pipeline for batch processing and incremental updates."""
 
-import logging
 import json
-from typing import List, Optional, Dict, Any
+import logging
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -62,11 +62,11 @@ class EmbeddingPipeline:
         else:
             logger.warning("Embedding pipeline disabled (dependencies not installed)")
     
-    def _load_metadata(self) -> Dict[str, Any]:
+    def _load_metadata(self) -> dict[str, Any]:
         """Load embedding metadata from file."""
         try:
             if Path(self.metadata_file).exists():
-                with open(self.metadata_file, 'r') as f:
+                with open(self.metadata_file) as f:
                     return json.load(f)
         except Exception as e:
             logger.warning(f"Failed to load embedding metadata: {e}")
@@ -127,8 +127,8 @@ class EmbeddingPipeline:
     def process_video(
         self,
         video_id: str,
-        captions: Optional[List[Dict[str, Any]]] = None,
-        transcript_segments: Optional[List[Dict[str, Any]]] = None,
+        captions: list[dict[str, Any]] | None = None,
+        transcript_segments: list[dict[str, Any]] | None = None,
         force: bool = False
     ) -> bool:
         """Process a single video for embedding generation.
@@ -192,10 +192,10 @@ class EmbeddingPipeline:
     
     def process_batch(
         self,
-        video_ids: List[str],
-        fetch_data_callback: Optional[callable] = None,
+        video_ids: list[str],
+        fetch_data_callback: "Callable | None" = None,
         force: bool = False
-    ) -> Dict[str, bool]:
+    ) -> dict[str, bool]:
         """Process multiple videos in batch.
         
         Args:
@@ -273,7 +273,7 @@ class EmbeddingPipeline:
         self._save_metadata()
         logger.info(f"Updated model version from {old_version} to {new_version}. All videos marked for reindexing.")
     
-    def get_indexed_videos(self) -> List[str]:
+    def get_indexed_videos(self) -> list[str]:
         """Get list of videos that have been indexed.
         
         Returns:
@@ -281,7 +281,7 @@ class EmbeddingPipeline:
         """
         return list(self.metadata["videos"].keys())
     
-    def get_video_metadata(self, video_id: str) -> Optional[Dict[str, Any]]:
+    def get_video_metadata(self, video_id: str) -> dict[str, Any] | None:
         """Get embedding metadata for a specific video.
         
         Args:
@@ -292,7 +292,7 @@ class EmbeddingPipeline:
         """
         return self.metadata["videos"].get(video_id)
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get pipeline statistics.
         
         Returns:
@@ -353,7 +353,7 @@ class EmbeddingPipeline:
             logger.error(f"Failed to delete embeddings for video {video_id}: {e}")
             return False
     
-    def reindex_all(self, fetch_data_callback: callable) -> Dict[str, bool]:
+    def reindex_all(self, fetch_data_callback: callable) -> dict[str, bool]:
         """Reindex all videos in the system.
         
         Args:
@@ -372,7 +372,7 @@ class EmbeddingPipeline:
         
         return self.process_batch(video_ids, fetch_data_callback, force=True)
     
-    def monitor_quality(self, test_queries: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def monitor_quality(self, test_queries: list[dict[str, Any]]) -> dict[str, Any]:
         """Monitor embedding quality using test queries.
         
         Args:

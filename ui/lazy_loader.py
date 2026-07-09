@@ -1,9 +1,9 @@
 """Lazy loading utilities for UI components."""
 
-import streamlit as st
-from typing import List, Optional
 import logging
 from pathlib import Path
+
+import streamlit as st
 
 logger = logging.getLogger(__name__)
 
@@ -25,10 +25,10 @@ class LazyImageLoader:
     
     def render_lazy_images(
         self,
-        image_paths: List[str],
-        timestamps: Optional[List[float]] = None,
+        image_paths: list[str],
+        timestamps: list[float] | None = None,
         columns: int = 3,
-        on_timestamp_click: Optional[callable] = None
+        on_timestamp_click: "Callable | None" = None
     ) -> None:
         """Render images with lazy loading support.
         
@@ -80,9 +80,9 @@ class LazyImageLoader:
     def _render_single_image(
         self,
         image_path: str,
-        timestamp: Optional[float],
+        timestamp: float | None,
         idx: int,
-        on_timestamp_click: Optional[callable]
+        on_timestamp_click: "Callable | None"
     ) -> None:
         """Render a single image with optional timestamp.
         
@@ -157,7 +157,7 @@ class LazyListLoader:
     
     def render_paginated_list(
         self,
-        items: List,
+        items: list,
         render_item: callable,
         key_prefix: str = "lazy_list"
     ) -> None:
