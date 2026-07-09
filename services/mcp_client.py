@@ -14,9 +14,10 @@ from typing import Any
 import httpx
 
 from config import Config
+from services.errors import UpstreamError
 
 
-class MCPClientError(RuntimeError):
+class MCPClientError(UpstreamError):
     """Raised when the MCP service returns an invalid or failed response."""
 
 

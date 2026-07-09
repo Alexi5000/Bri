@@ -7,12 +7,13 @@ from PIL import Image
 import base64
 from io import BytesIO
 
+from services.errors import ProcessingError
+
 logger = logging.getLogger(__name__)
 
 
-class MediaError(Exception):
-    """Custom exception for media processing errors."""
-    pass
+class MediaError(ProcessingError):
+    """Raised when frame or image processing fails."""
 
 
 class MediaUtils:

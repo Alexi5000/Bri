@@ -6,13 +6,14 @@ Validates all data before database insertion to ensure integrity
 import json
 from typing import Dict, Any, List, Optional, Tuple
 from utils.logging_config import get_logger
+from services.errors import ValidationError as _BriValidationError
+
 
 logger = get_logger(__name__)
 
 
-class ValidationError(Exception):
-    """Custom exception for data validation errors."""
-    pass
+class ValidationError(_BriValidationError):
+    """Raised when stored data fails structural validation."""
 
 
 class DataValidator:

@@ -6,6 +6,7 @@ from typing import Callable, Any, Optional, Dict
 from threading import Lock
 from functools import wraps
 from utils.logging_config import get_logger
+from services.errors import UpstreamError
 
 logger = get_logger(__name__)
 
@@ -209,9 +210,8 @@ class CircuitBreaker:
             logger.info(f"Circuit breaker '{self.name}' manually reset")
 
 
-class CircuitBreakerOpenError(Exception):
-    """Exception raised when circuit breaker is open."""
-    pass
+class CircuitBreakerOpenError(UpstreamError):
+    """Raised when a call is rejected because the circuit breaker is open."""
 
 
 def circuit_breaker(

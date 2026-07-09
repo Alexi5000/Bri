@@ -7,13 +7,13 @@ import logging
 from pathlib import Path
 from typing import Optional, BinaryIO
 from config import Config
+from services.errors import StorageError
 
 logger = logging.getLogger(__name__)
 
 
-class FileStoreError(Exception):
-    """Custom exception for file storage errors."""
-    pass
+class FileStoreError(StorageError):
+    """Raised when a file storage operation fails."""
 
 
 class FileStore:

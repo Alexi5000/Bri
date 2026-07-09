@@ -6,14 +6,14 @@ from datetime import datetime
 from typing import List, Optional
 from models.memory import MemoryRecord
 from storage.database import Database, DatabaseError
+from services.errors import StorageError
 from config import Config
 
 logger = logging.getLogger(__name__)
 
 
-class MemoryError(Exception):
-    """Custom exception for memory-related errors."""
-    pass
+class MemoryError(StorageError):
+    """Raised when conversation memory cannot be persisted or retrieved."""
 
 
 class Memory:

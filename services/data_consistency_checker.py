@@ -7,13 +7,14 @@ import json
 from typing import Dict, Any, Optional
 from storage.database import Database
 from utils.logging_config import get_logger
+from services.errors import StateError
+
 
 logger = get_logger(__name__)
 
 
-class ConsistencyError(Exception):
-    """Custom exception for data consistency errors."""
-    pass
+class ConsistencyError(StateError):
+    """Raised when persisted data violates a consistency invariant."""
 
 
 class DataConsistencyChecker:

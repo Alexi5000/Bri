@@ -8,14 +8,14 @@ import requests
 import time
 from typing import Dict, Any, Optional, Callable
 from config import Config
+from services.errors import ProcessingError
 from storage.database import update_video_status
 
 logger = logging.getLogger(__name__)
 
 
-class VideoProcessingError(Exception):
-    """Custom exception for video processing errors."""
-    pass
+class VideoProcessingError(ProcessingError):
+    """Raised when the video processing workflow fails."""
 
 
 class VideoProcessor:

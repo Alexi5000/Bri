@@ -10,14 +10,14 @@ from typing import Dict, Any, List, Optional
 from storage.database import Database
 from services.data_validator import ValidationError, get_data_validator
 from services.data_lineage_tracker import get_lineage_tracker
+from services.errors import ProcessingError
 from utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
 
-class VideoProcessingServiceError(Exception):
-    """Custom exception for video processing service errors."""
-    pass
+class VideoProcessingServiceError(ProcessingError):
+    """Raised when the video processing pipeline fails irrecoverably."""
 
 
 class VideoProcessingService:

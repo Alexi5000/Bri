@@ -8,18 +8,17 @@ from pathlib import Path
 from typing import Optional, List, Tuple, Dict, Any
 from contextlib import contextmanager
 from config import Config
+from services.errors import StorageError, ValidationError as _BriValidationError
 
 logger = logging.getLogger(__name__)
 
 
-class DatabaseError(Exception):
-    """Custom exception for database errors."""
-    pass
+class DatabaseError(StorageError):
+    """Raised when a database operation fails (connection, query, transaction)."""
 
 
-class ValidationError(Exception):
-    """Custom exception for data validation errors."""
-    pass
+class ValidationError(_BriValidationError):
+    """Raised when input destined for the database fails structural validation."""
 
 
 class Database:

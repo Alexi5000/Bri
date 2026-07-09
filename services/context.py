@@ -16,12 +16,16 @@ try:
 except ImportError:
     SEMANTIC_SEARCH_AVAILABLE = False
 
+from services.errors import ProcessingError
+
 logger = logging.getLogger(__name__)
 
 
-class ContextError(Exception):
-    """Custom exception for context-related errors."""
-    pass
+class ContextError(ProcessingError):
+    """Raised when context aggregation fails for a video."""
+
+
+__all__ = ["ContextError"]
 
 
 @dataclass

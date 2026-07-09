@@ -14,6 +14,7 @@ from services.router import ToolRouter, ToolPlan
 from services.context import ContextBuilder
 from services.media_utils import MediaUtils
 from services.error_handler import ErrorHandler
+from services.errors import BriError
 from config import Config
 from utils.logging_config import get_logger, get_performance_logger, get_api_logger
 
@@ -22,9 +23,8 @@ perf_logger = get_performance_logger(__name__)
 api_logger = get_api_logger(__name__)
 
 
-class AgentError(Exception):
-    """Custom exception for agent-related errors."""
-    pass
+class AgentError(BriError):
+    """Raised when the conversation agent cannot fulfill a request."""
 
 
 class GroqAgent:
