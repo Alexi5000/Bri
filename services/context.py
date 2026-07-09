@@ -82,7 +82,7 @@ class ContextBuilder:
                 else:
                     logger.info("Context Builder initialized (semantic search unavailable)")
             except Exception as e:
-                logger.warning(f"Failed to initialize semantic search: {e}")
+                logger.warning("Failed to initialize semantic search: %s", (e))
                 self.semantic_search = None
         else:
             logger.info("Context Builder initialized (semantic search disabled)")
@@ -113,7 +113,7 @@ class ContextBuilder:
             print(f"Found {len(context.captions)} captions")
         """
         try:
-            logger.debug(f"Building comprehensive context for video {video_id}")
+            logger.debug("Building comprehensive context for video %s", (video_id))
             
             # Retrieve ALL data types from database
             # Priority order: captions > transcripts > objects > frames
@@ -163,14 +163,14 @@ class ContextBuilder:
                 data_summary.append(f"{len(frames)} frames")
             
             if data_summary:
-                logger.info(f"Built context for video {video_id}: {', '.join(data_summary)}")
+                logger.info("Built context for video %s: %s", (video_id), (', '.join(data_summary)))
             else:
-                logger.warning(f"No processed data found for video {video_id}")
+                logger.warning("No processed data found for video %s", (video_id))
             
             return context
             
         except Exception as e:
-            logger.error(f"Failed to build context for video {video_id}: {e}")
+            logger.error("Failed to build context for video %s: %s", (video_id), (e))
             raise ContextError(f"Failed to build video context: {e}")
 
     def build_rich_context_description(
@@ -253,7 +253,7 @@ class ContextBuilder:
             return "\n".join(description_parts)
             
         except Exception as e:
-            logger.error(f"Failed to build rich context description: {e}")
+            logger.error("Failed to build rich context description: %s", (e))
             return "Unable to retrieve video context."
     
     def _format_timestamp(self, seconds: float) -> str:
@@ -301,13 +301,13 @@ class ContextBuilder:
                 print(f"{caption.frame_timestamp}s: {caption.text}")
         """
         try:
-            logger.debug(f"Searching captions for video {video_id} with query: {query}")
+            logger.debug("Searching captions for video %s with query: %s", (video_id), (query))
             
             # Get all captions for the video
             all_captions = self._get_captions(video_id)
             
             if not all_captions:
-                logger.warning(f"No captions found for video {video_id}")
+                logger.warning("No captions found for video %s", (video_id))
                 return []
             
             # Normalize and process query
@@ -400,7 +400,7 @@ class ContextBuilder:
                     return results[:top_k]
                     
                 except Exception as e:
-                    logger.warning(f"Hybrid search failed, falling back to keyword search: {e}")
+                    logger.warning("Hybrid search failed, falling back to keyword search: %s", (e))
             
             # Fallback to keyword-only results
             results = [caption for score, caption in keyword_results[:top_k]]
@@ -412,7 +412,7 @@ class ContextBuilder:
             return results
             
         except Exception as e:
-            logger.error(f"Failed to search captions: {e}")
+            logger.error("Failed to search captions: %s", (e))
             raise ContextError(f"Failed to search captions: {e}")
     
     def _tokenize_and_stem(self, text: str) -> set:
@@ -524,13 +524,13 @@ class ContextBuilder:
                 print(f"{segment.start}s-{segment.end}s: {segment.text}")
         """
         try:
-            logger.debug(f"Searching transcripts for video {video_id} with query: {query}")
+            logger.debug("Searching transcripts for video %s with query: %s", (video_id), (query))
             
             # Get transcript for the video
             transcript = self._get_transcript(video_id)
             
             if not transcript or not transcript.segments:
-                logger.warning(f"No transcript found for video {video_id}")
+                logger.warning("No transcript found for video %s", (video_id))
                 return []
             
             # Normalize and process query
@@ -586,7 +586,7 @@ class ContextBuilder:
             return matching_segments
             
         except Exception as e:
-            logger.error(f"Failed to search transcripts: {e}")
+            logger.error("Failed to search transcripts: %s", (e))
             raise ContextError(f"Failed to search transcripts: {e}")
     
     def get_frames_with_object(
@@ -611,13 +611,13 @@ class ContextBuilder:
             print(f"Found dog in {len(frames)} frames")
         """
         try:
-            logger.debug(f"Searching for object '{object_class}' in video {video_id}")
+            logger.debug("Searching for object '%s' in video %s", (object_class), (video_id))
             
             # Get all object detections for the video
             detections = self._get_object_detections(video_id)
             
             if not detections:
-                logger.warning(f"No object detections found for video {video_id}")
+                logger.warning("No object detections found for video %s", (video_id))
                 return []
             
             # Normalize object class for matching
@@ -631,7 +631,7 @@ class ContextBuilder:
                         matching_timestamps.add(detection.frame_timestamp)
             
             if not matching_timestamps:
-                logger.info(f"Object '{object_class}' not found in video {video_id}")
+                logger.info("Object '%s' not found in video %s", (object_class), (video_id))
                 return []
             
             # Get frames at those timestamps
@@ -641,11 +641,11 @@ class ContextBuilder:
                 if frame.timestamp in matching_timestamps
             ]
             
-            logger.info(f"Found object '{object_class}' in {len(matching_frames)} frames")
+            logger.info("Found object '%s' in %s frames", (object_class), (len(matching_frames)))
             return matching_frames
             
         except Exception as e:
-            logger.error(f"Failed to search for object: {e}")
+            logger.error("Failed to search for object: %s", (e))
             raise ContextError(f"Failed to search for object: {e}")
     
     def get_context_at_timestamp(
@@ -672,7 +672,7 @@ class ContextBuilder:
             print(f"Found {len(context.nearby_frames)} frames near 30.5s")
         """
         try:
-            logger.debug(f"Getting context at timestamp {timestamp}s for video {video_id}")
+            logger.debug("Getting context at timestamp %ss for video %s", (timestamp), (video_id))
             
             start_time = max(0, timestamp - window)
             end_time = timestamp + window
@@ -720,7 +720,7 @@ class ContextBuilder:
             return context
             
         except Exception as e:
-            logger.error(f"Failed to get context at timestamp: {e}")
+            logger.error("Failed to get context at timestamp: %s", (e))
             raise ContextError(f"Failed to get timestamp context: {e}")
 
     # Private helper methods for data retrieval
@@ -751,7 +751,7 @@ class ContextBuilder:
             return VideoMetadata(**data)
             
         except Exception as e:
-            logger.warning(f"Failed to retrieve metadata for video {video_id}: {e}")
+            logger.warning("Failed to retrieve metadata for video %s: %s", (video_id), (e))
             return None
     
     def _get_frames(self, video_id: str) -> List[Frame]:
@@ -780,7 +780,7 @@ class ContextBuilder:
             return frames
             
         except Exception as e:
-            logger.warning(f"Failed to retrieve frames for video {video_id}: {e}")
+            logger.warning("Failed to retrieve frames for video %s: %s", (video_id), (e))
             return []
     
     def _get_captions(self, video_id: str) -> List[Caption]:
@@ -809,7 +809,7 @@ class ContextBuilder:
             return captions
             
         except Exception as e:
-            logger.warning(f"Failed to retrieve captions for video {video_id}: {e}")
+            logger.warning("Failed to retrieve captions for video %s: %s", (video_id), (e))
             return []
     
     def _get_transcript(self, video_id: str) -> Optional[Transcript]:
@@ -838,7 +838,7 @@ class ContextBuilder:
             return Transcript(**data)
             
         except Exception as e:
-            logger.warning(f"Failed to retrieve transcript for video {video_id}: {e}")
+            logger.warning("Failed to retrieve transcript for video %s: %s", (video_id), (e))
             return None
     
     def _get_object_detections(self, video_id: str) -> List[DetectionResult]:
@@ -867,7 +867,7 @@ class ContextBuilder:
             return detections
             
         except Exception as e:
-            logger.warning(f"Failed to retrieve object detections for video {video_id}: {e}")
+            logger.warning("Failed to retrieve object detections for video %s: %s", (video_id), (e))
             return []
     
     def _get_conversation_history(self, video_id: str) -> List[MemoryRecord]:
@@ -885,7 +885,7 @@ class ContextBuilder:
             return memory.get_conversation_history(video_id)
             
         except Exception as e:
-            logger.warning(f"Failed to retrieve conversation history for video {video_id}: {e}")
+            logger.warning("Failed to retrieve conversation history for video %s: %s", (video_id), (e))
             return []
     
     def _get_transcript_segment_at_timestamp(
@@ -916,7 +916,7 @@ class ContextBuilder:
             return None
             
         except Exception as e:
-            logger.warning(f"Failed to get transcript segment at {timestamp}s: {e}")
+            logger.warning("Failed to get transcript segment at %ss: %s", (timestamp), (e))
             return None
     
     def index_video_for_semantic_search(self, video_id: str) -> bool:
@@ -936,7 +936,7 @@ class ContextBuilder:
             return False
         
         try:
-            logger.info(f"Indexing video {video_id} for semantic search")
+            logger.info("Indexing video %s for semantic search", (video_id))
             
             # Index captions
             captions = self._get_captions(video_id)
@@ -950,7 +950,7 @@ class ContextBuilder:
                     for cap in captions
                 ]
                 self.semantic_search.index_captions(video_id, caption_dicts)
-                logger.info(f"Indexed {len(captions)} captions")
+                logger.info("Indexed %s captions", (len(captions)))
             
             # Index transcript segments
             transcript = self._get_transcript(video_id)
@@ -965,13 +965,13 @@ class ContextBuilder:
                     for seg in transcript.segments
                 ]
                 self.semantic_search.index_transcripts(video_id, segment_dicts)
-                logger.info(f"Indexed {len(transcript.segments)} transcript segments")
+                logger.info("Indexed %s transcript segments", (len(transcript.segments)))
             
-            logger.info(f"Successfully indexed video {video_id} for semantic search")
+            logger.info("Successfully indexed video %s for semantic search", (video_id))
             return True
             
         except Exception as e:
-            logger.error(f"Failed to index video for semantic search: {e}")
+            logger.error("Failed to index video for semantic search: %s", (e))
             return False
     
     def search_captions_semantic(
@@ -1007,7 +1007,7 @@ class ContextBuilder:
             )
             
             if not results:
-                logger.info(f"No semantic results found for query: {query}")
+                logger.info("No semantic results found for query: %s", (query))
                 return []
             
             # Convert semantic results back to Caption objects
@@ -1019,11 +1019,11 @@ class ContextBuilder:
                 if result.text in caption_map:
                     matched_captions.append(caption_map[result.text])
             
-            logger.info(f"Semantic search found {len(matched_captions)} captions for query: {query}")
+            logger.info("Semantic search found %s captions for query: %s", (len(matched_captions)), (query))
             return matched_captions
             
         except Exception as e:
-            logger.error(f"Semantic search failed: {e}")
+            logger.error("Semantic search failed: %s", (e))
             return []
     
     def get_semantic_search_stats(self) -> dict:

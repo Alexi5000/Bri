@@ -68,10 +68,10 @@ class Memory:
             )
             
             self.db.execute_update(query, parameters)
-            logger.debug(f"Inserted memory record: {memory_record.message_id} for video {memory_record.video_id}")
+            logger.debug("Inserted memory record: %s for video %s", (memory_record.message_id), (memory_record.video_id))
             
         except DatabaseError as e:
-            logger.error(f"Failed to insert memory record: {e}")
+            logger.error("Failed to insert memory record: %s", (e))
             raise MemoryError(f"Failed to store conversation turn: {e}")
     
     def get_conversation_history(
@@ -129,11 +129,11 @@ class Memory:
                     timestamp=datetime.fromisoformat(row['timestamp'])
                 ))
             
-            logger.debug(f"Retrieved {len(memory_records)} memory records for video {video_id} (offset: {offset})")
+            logger.debug("Retrieved %s memory records for video %s (offset: %s)", (len(memory_records)), (video_id), (offset))
             return memory_records
             
         except DatabaseError as e:
-            logger.error(f"Failed to retrieve conversation history: {e}")
+            logger.error("Failed to retrieve conversation history: %s", (e))
             raise MemoryError(f"Failed to retrieve conversation history: {e}")
     
     def get_by_message_id(self, message_id: str) -> Optional[MemoryRecord]:
@@ -171,7 +171,7 @@ class Memory:
             )
             
         except DatabaseError as e:
-            logger.error(f"Failed to retrieve message {message_id}: {e}")
+            logger.error("Failed to retrieve message %s: %s", (message_id), (e))
             raise MemoryError(f"Failed to retrieve message: {e}")
     
     def reset_memory(self, video_id: str) -> int:
@@ -198,11 +198,11 @@ class Memory:
             parameters = (video_id,)
             
             deleted_count = self.db.execute_update(query, parameters)
-            logger.info(f"Reset memory for video {video_id}: deleted {deleted_count} records")
+            logger.info("Reset memory for video %s: deleted %s records", (video_id), (deleted_count))
             return deleted_count
             
         except DatabaseError as e:
-            logger.error(f"Failed to reset memory for video {video_id}: {e}")
+            logger.error("Failed to reset memory for video %s: %s", (video_id), (e))
             raise MemoryError(f"Failed to reset conversation history: {e}")
     
     def count_messages(self, video_id: str) -> int:
@@ -229,7 +229,7 @@ class Memory:
             return rows[0]['count'] if rows else 0
             
         except DatabaseError as e:
-            logger.error(f"Failed to count messages for video {video_id}: {e}")
+            logger.error("Failed to count messages for video %s: %s", (video_id), (e))
             raise MemoryError(f"Failed to count messages: {e}")
     
     def add_memory_pair(
@@ -280,11 +280,11 @@ class Memory:
                 timestamp=datetime.now()
             ))
             
-            logger.debug(f"Added memory pair for video {video_id}")
+            logger.debug("Added memory pair for video %s", (video_id))
             return user_id, assistant_id
             
         except MemoryError as e:
-            logger.error(f"Failed to add memory pair: {e}")
+            logger.error("Failed to add memory pair: %s", (e))
             raise
     
     def get_recent_context(
@@ -319,7 +319,7 @@ class Memory:
             return "\n".join(context_lines)
             
         except MemoryError as e:
-            logger.warning(f"Failed to get recent context: {e}")
+            logger.warning("Failed to get recent context: %s", (e))
             return ""
     
     def close(self) -> None:

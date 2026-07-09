@@ -7,6 +7,9 @@ from transformers import BlipProcessor, BlipForConditionalGeneration
 import torch
 
 from models.tools import Caption
+from utils.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 class ImageCaptioner:
@@ -23,10 +26,10 @@ class ImageCaptioner:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         
         # Load BLIP model and processor
-        print(f"Loading BLIP model: {model_name} on {self.device}...")
+        logger.info("Loading BLIP model: %s on %s", model_name, self.device)
         self.processor = BlipProcessor.from_pretrained(model_name)
         self.model = BlipForConditionalGeneration.from_pretrained(model_name).to(self.device)
-        print("BLIP model loaded successfully!")
+        logger.info("BLIP model loaded successfully")
     
     def caption_frame(self, image_path: str, timestamp: float = 0.0) -> Caption:
         """
@@ -113,13 +116,13 @@ class ImageCaptioner:
                 captions.extend(batch_captions)
             except Exception as e:
                 # If batch fails, fall back to individual processing
-                print(f"Batch processing failed, falling back to individual: {str(e)}")
+                logger.warning("Batch processing failed, falling back to individual: %s", str(e))
                 for path, ts in zip(batch_paths, batch_timestamps):
                     try:
                         caption = self.caption_frame(path, ts)
                         captions.append(caption)
                     except Exception as frame_error:
-                        print(f"Failed to caption frame {path}: {str(frame_error)}")
+                        logger.warning("Failed to caption frame %s: %s", path, str(frame_error))
                         # Add placeholder caption for failed frames
                         captions.append(Caption(
                             frame_timestamp=ts,
@@ -155,7 +158,7 @@ class ImageCaptioner:
                     images.append(image)
                     valid_indices.append(idx)
                 except Exception as e:
-                    print(f"Failed to load image {path}: {str(e)}")
+                    logger.warning("Failed to load image %s: %s", path, str(e))
         
         if not images:
             raise Exception("No valid images in batch")

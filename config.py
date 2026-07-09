@@ -11,6 +11,10 @@ import os
 from pathlib import Path
 from typing import Any, Callable, ClassVar
 
+from utils.logging_config import get_logger
+
+logger = get_logger(__name__)
+
 try:
     from dotenv import load_dotenv
 except ModuleNotFoundError:  # pragma: no cover - minimal validation environments
@@ -172,7 +176,7 @@ class Config(metaclass=ConfigMeta):
             raise ValueError("Configuration validation failed:\n" + "\n".join(f"- {error}" for error in errors))
         if warnings and cls.DEBUG:
             for warning in warnings:
-                print(f"Configuration warning: {warning}")
+                logger.warning("Configuration warning: %s", warning)
 
     @classmethod
     def as_dict(cls, *, include_secrets: bool = False) -> dict[str, Any]:
@@ -200,4 +204,4 @@ class Config(metaclass=ConfigMeta):
     def display_config(cls) -> None:
         masked = cls.as_dict(include_secrets=False)
         for key, value in masked.items():
-            print(f"{key}: {value}")
+            logger.info("%s: %s", key, value)
