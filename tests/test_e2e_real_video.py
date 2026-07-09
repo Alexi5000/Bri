@@ -34,6 +34,11 @@ class TestE2ERealVideo:
     @pytest.fixture
     def agent(self, memory):
         """Get agent instance."""
+        from config import Config
+
+        Config.reset_cache()
+        if not Config.GROQ_API_KEY or Config.ALLOW_MISSING_GROQ_FOR_TESTS:
+            pytest.skip("No live GROQ_API_KEY configured for this run")
         return GroqAgent(memory=memory)
 
     @pytest.fixture
