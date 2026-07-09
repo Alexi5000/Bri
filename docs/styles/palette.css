@@ -1,0 +1,84 @@
+/*
+ * BRI palette — single source of truth for documentation site theming.
+ * Consumed by GitHub Pages (mkdocs-material) and referenced from
+ * ui/styles.py so that product and docs share one identity.
+ *
+ * Editing this file updates both surfaces. Do NOT duplicate hex values
+ * elsewhere — point them at these custom properties instead.
+ */
+
+:root {
+  /* Surfaces — warm, dark, feminine product feel. */
+  --bri-bg:              #0a0a0a;
+  --bri-bg-elevated:     #1a1a1a;
+  --bri-bg-card:         #2a2a2a;
+  --bri-bg-inverse:      #ffffff;
+
+  /* Foregrounds. */
+  --bri-text:            #ffffff;
+  --bri-text-muted:      #a0a0a0;
+  --bri-text-faint:      #666666;
+  --bri-text-inverse:    #0a0a0a;
+
+  /* Borders and dividers. */
+  --bri-border:          #333333;
+  --bri-border-strong:   #555555;
+
+  /* Brand accents — pink → purple → teal gradient. */
+  --bri-accent-pink:     #FF69B4;
+  --bri-accent-purple:   #BA68C8;
+  --bri-accent-teal:     #40E0D0;
+  --bri-accent-pink-soft:   rgba(255, 105, 180, 0.18);
+  --bri-accent-purple-soft: rgba(186, 104, 200, 0.18);
+  --bri-accent-teal-soft:   rgba(64, 224, 208, 0.18);
+
+  /* Semantic states. */
+  --bri-success:         #22c55e;
+  --bri-warning:         #f59e0b;
+  --bri-danger:          #ef4444;
+  --bri-info:            #38bdf8;
+
+  /* Typography. */
+  --bri-font-sans:  -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --bri-font-mono:  ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace;
+
+  /* Spacing scale (4px base). */
+  --bri-space-1: 0.25rem;
+  --bri-space-2: 0.5rem;
+  --bri-space-3: 0.75rem;
+  --bri-space-4: 1rem;
+  --bri-space-6: 1.5rem;
+  --bri-space-8: 2rem;
+  --bri-space-12: 3rem;
+
+  /* Radii. */
+  --bri-radius-sm: 6px;
+  --bri-radius-md: 12px;
+  --bri-radius-lg: 24px;
+  --bri-radius-pill: 9999px;
+
+  /* Elevation. */
+  --bri-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --bri-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45);
+  --bri-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55);
+}
+
+/* Convenience: apply to a block. */
+.bri-card {
+  background: var(--bri-bg-card);
+  color: var(--bri-text);
+  border: 1px solid var(--bri-border);
+  border-radius: var(--bri-radius-md);
+  padding: var(--bri-space-6);
+  box-shadow: var(--bri-shadow-sm);
+}
+
+.bri-tag {
+  display: inline-block;
+  padding: var(--bri-space-1) var(--bri-space-3);
+  border-radius: var(--bri-radius-pill);
+  background: var(--bri-accent-pink-soft);
+  color: var(--bri-accent-pink);
+  font-family: var(--bri-font-mono);
+  font-size: 0.85em;
+}
