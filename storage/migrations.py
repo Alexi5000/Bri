@@ -334,17 +334,12 @@ def migration_003_add_video_tags() -> Migration:
     -- Create tags index
     CREATE INDEX IF NOT EXISTS idx_videos_tags ON videos(tags);
     """
-    
-    down_sql = """
-    -- Remove tags column (SQLite doesn't support DROP COLUMN directly)
-    -- Would need to recreate table without tags column
-    """
-    
+
     return create_migration(
         version=3,
         description="Add tags support to videos",
         up_sql=up_sql,
-        down_sql=None  # Rollback not supported for this migration
+        down_sql=None,  # Rollback not supported for this migration
     )
 
 

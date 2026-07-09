@@ -87,7 +87,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         return 0
     sub = args[0]
-    rest = args[1:]
 
     if sub == "mcp":
         return run_mcp()

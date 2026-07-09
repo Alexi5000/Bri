@@ -479,9 +479,10 @@ class ManualReprocessing:
             }
         
         try:
-            # Parse data
-            data = json.loads(item['data'])
-            
+            # Parse data — load validates the payload is well-formed JSON
+            # even though the parsed object isn't forwarded here.
+            json.loads(item['data'])
+
             # Here you would call the appropriate reprocessing function
             # For now, just mark as processed
             self.dlq.mark_processed(dlq_id)

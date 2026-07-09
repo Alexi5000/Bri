@@ -181,8 +181,10 @@ class DataQualityMetrics:
                 }
             
             upload_time_str = video_rows[0]['upload_timestamp']
-            upload_time = datetime.fromisoformat(upload_time_str)
-            
+            # upload_time is intentionally unused; we read it for side-effect
+            # validation that the stored timestamp parses cleanly.
+            datetime.fromisoformat(upload_time_str)
+
             # Get last context update time
             context_query = """
                 SELECT MAX(created_at) as last_update

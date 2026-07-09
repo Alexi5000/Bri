@@ -230,7 +230,8 @@ def _handle_upload(uploaded_file):
 
             video = result.video
             video_id = video.video_id
-            file_path = video.file_path
+            # file_path is intentionally not surfaced to the UI here;
+            # it's read from the database when the chat panel needs it.
             duration = video.duration
 
             # Add to session state from the typed middle-layer result.

@@ -1,8 +1,8 @@
 """Lazy loading utilities for UI components."""
 
 import logging
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable
 
 import streamlit as st
 

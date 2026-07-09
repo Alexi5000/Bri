@@ -4,8 +4,8 @@ Displays past conversations for selected video in sidebar
 """
 
 import logging
+from collections.abc import Callable
 from datetime import datetime
-from typing import Callable
 
 import streamlit as st
 

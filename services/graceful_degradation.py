@@ -110,8 +110,9 @@ class GracefulDegradationService:
             from config import Config
             
             client = Groq(api_key=Config.GROQ_API_KEY)
-            # Simple test request
-            response = client.chat.completions.create(
+            # Simple test request — we only need the round-trip to succeed.
+            # The response is intentionally not consumed.
+            client.chat.completions.create(
                 model=Config.GROQ_MODEL,
                 messages=[{"role": "user", "content": "test"}],
                 max_tokens=5

@@ -109,6 +109,9 @@ ignore = ["E501"]
 "scripts/archive/**" = ["E", "F", "I", "UP", "B"]
 "docs/archive/**" = ["E", "F", "I", "UP", "B"]
 "tests/archive/**" = ["E", "F", "I", "UP", "B"]
+# Tests frequently bind ``agent`` and ``video_id`` fixtures that are
+# consumed indirectly through mocks; tolerate that.
+"tests/**" = ["F841"]
 
 [tool.coverage.run]
 source = ["config", "models", "services", "storage", "mcp_server", "tools", "ui"]
