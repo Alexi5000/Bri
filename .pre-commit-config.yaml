@@ -1,0 +1,75 @@
+# .pre-commit-config.yaml — runs locally on `git commit` and in CI on every PR.
+# Install: `pip install pre-commit && pre-commit install`
+# Update hooks: `pre-commit autoupdate`
+# Run on demand (no commit): `pre-commit run --all-files`
+
+repos:
+  # --- Python: formatter + linter -----------------------------------------
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        name: ruff (lint)
+        args: ["--fix", "--exit-non-zero-on-fix"]
+        types_or: [python, pyi]
+      - id: ruff-format
+        name: ruff (format)
+        types_or: [python, pyi]
+
+  # --- Python: type checker ----------------------------------------------
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.2
+    hooks:
+      - id: mypy
+        name: mypy
+        files: ^(mcp_server|services|tools|storage|models|utils|app|config)\.py$
+        additional_dependencies:
+          - pydantic>=2.5.0
+          - types-requests
+          - types-redis
+
+  # --- Standard hygiene --------------------------------------------------
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^\.gitignore$
+      - id: end-of-file-fixer
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=512"]
+      - id: check-yaml
+        exclude: ^mkdocs\.yml$
+      - id: check-toml
+      - id: check-json
+        exclude: ^(\.vscode/.*\.json)$
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+      - id: detect-private-key
+
+  # --- Markdown ---------------------------------------------------------
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.42.0
+    hooks:
+      - id: markdownlint
+        args: ["--config", "markdownlint.json"]
+        exclude: |
+          (?x)^(
+            docs/archive/.*|
+            docs/root-history/.*|
+            CHANGELOG\.md
+          )$
+
+  # --- EditorConfig + shell safety -------------------------------------
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+
+  # --- Conventional commits enforcement --------------------------------
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v3.6.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args: []
