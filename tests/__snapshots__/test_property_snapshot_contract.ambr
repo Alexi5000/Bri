@@ -1,0 +1,59 @@
+# serializer version: 1
+# name: TestResponseEnvelopesSnapshot.test_assistant_message_response_shape
+  dict({
+    'frame_contexts': None,
+    'frames': list([
+      '/tmp/frame_001.jpg',
+    ]),
+    'message': 'BRI found three frames of interest.',
+    'suggestions': list([
+      'What happens next?',
+    ]),
+    'timestamps': list([
+      15.0,
+    ]),
+  })
+# ---
+# name: TestResponseEnvelopesSnapshot.test_bri_error_envelope_shape
+  dict({
+    'auth': dict({
+      'error': 'AuthError',
+      'message': 'nope',
+    }),
+    'bare': dict({
+      'error': 'BriError',
+      'message': 'plain',
+    }),
+    'dependency': dict({
+      'error': 'DependencyError',
+      'message': 'optional missing',
+    }),
+    'processing': dict({
+      'error': 'ProcessingError',
+      'message': 'kaboom',
+    }),
+    'storage': dict({
+      'error': 'StorageError',
+      'message': 'disk full',
+    }),
+    'validation': dict({
+      'error': 'bad_input',
+      'message': 'bad input',
+    }),
+  })
+# ---
+# name: TestResponseEnvelopesSnapshot.test_tool_execution_response_shape
+  dict({
+    'cached': False,
+    'execution_time': 0.042,
+    'result': dict({
+      'frames': list([
+        dict({
+          'path': '/tmp/x.jpg',
+          'timestamp': 0.0,
+        }),
+      ]),
+    }),
+    'status': 'success',
+  })
+# ---
