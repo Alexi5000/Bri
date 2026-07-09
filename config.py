@@ -9,11 +9,19 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Any, Callable, ClassVar
+from typing import TYPE_CHECKING, Any, Callable, ClassVar
 
-from utils.logging_config import get_logger
+if TYPE_CHECKING:
+    # Import only for type checkers; at runtime we lazy-load the logger to
+    # avoid a circular import between config.py and utils.logging_config.
+    from utils.logging_config import LoggerProtocol
 
-logger = get_logger(__name__)
+
+def _get_logger():
+    """Lazy logger accessor that breaks the config <-> utils cycle."""
+    from utils.logging_config import get_logger  # noqa: WPS433 (intentional lazy import)
+
+    return get_logger(__name__)
 
 try:
     from dotenv import load_dotenv
@@ -175,6 +183,7 @@ class Config(metaclass=ConfigMeta):
         if errors:
             raise ValueError("Configuration validation failed:\n" + "\n".join(f"- {error}" for error in errors))
         if warnings and cls.DEBUG:
+            logger = _get_logger()
             for warning in warnings:
                 logger.warning("Configuration warning: %s", warning)
 
@@ -203,5 +212,6 @@ class Config(metaclass=ConfigMeta):
     @classmethod
     def display_config(cls) -> None:
         masked = cls.as_dict(include_secrets=False)
+        logger = _get_logger()
         for key, value in masked.items():
             logger.info("%s: %s", key, value)

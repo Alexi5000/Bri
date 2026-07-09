@@ -14,13 +14,14 @@ import logging.handlers
 import os
 import sys
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import TYPE_CHECKING, Optional, Dict, Any
 from datetime import datetime
 import json
 import threading
 from contextvars import ContextVar
 
-from config import Config
+if TYPE_CHECKING:
+    from config import Config
 
 # Context variables for request-scoped logging
 _log_context: ContextVar[Dict[str, Any]] = ContextVar('log_context', default={})
@@ -263,7 +264,11 @@ def setup_logging(
         json_format: If True, output logs as JSON
         enable_rotation: If True, enable log rotation
     """
-    # Get configuration
+    # Get configuration. Lazy-import to break the config <-> utils cycle that
+    # otherwise surfaces when pytest collects tests from sub-directories
+    # whose name shadows the top-level ``config`` module.
+    from config import Config  # noqa: WPS433 (intentional lazy import)
+
     log_level = log_level or Config.LOG_LEVEL
     log_dir = log_dir or Config.LOG_DIR
     
