@@ -1,0 +1,49 @@
+# CODEOWNERS — every PR must be reviewed by the listed owners for that path.
+# One handle per line. The first matching rule wins; rules below are evaluated
+# from bottom to top. Keep this file in sync with MAINTAINERS.md.
+
+# Default owner: project lead reviews anything not matched by a more specific rule.
+*                  @Alexi5000
+
+# Application packages.
+/mcp_server/       @Alexi5000
+/services/         @Alexi5000
+/tools/            @Alexi5000
+/storage/          @Alexi5000
+/ui/               @Alexi5000
+/models/           @Alexi5000
+/utils/            @Alexi5000
+/app.py            @Alexi5000
+/config.py         @Alexi5000
+
+# Tests.
+/tests/            @Alexi5000
+
+# Operator scripts.
+/scripts/          @Alexi5000
+
+# Build / packaging.
+/Dockerfile.mcp    @Alexi5000
+/Dockerfile.ui     @Alexi5000
+/docker-compose.yml @Alexi5000
+/pyproject.toml    @Alexi5000
+/requirements.txt  @Alexi5000
+/Makefile          @Alexi5000
+/packages.txt      @Alexi5000
+
+# Documentation and design system.
+/docs/             @Alexi5000
+/README.md         @Alexi5000
+/AUDIT.md          @Alexi5000
+/FINAL_REPORT.md   @Alexi5000
+/assets/           @Alexi5000
+
+# Repository hygiene and CI.
+/.github/          @Alexi5000
+/.gitattributes    @Alexi5000
+/.gitignore        @Alexi5000
+/.editorconfig     @Alexi5000
+/.dockerignore     @Alexi5000
+
+# License.
+/LICENSE           @Alexi5000
