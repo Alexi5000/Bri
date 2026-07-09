@@ -307,10 +307,17 @@ class TestMemorySystem:
 class TestVideoProcessing:
     """Test video processing functionality."""
     
-    def test_frame_extraction_limit(self):
-        """Test that frame extraction respects limits."""
+    def test_frame_extraction_limit(self, monkeypatch):
+        """Test that frame extraction respects the documented default."""
+        import os
+
         from config import Config
-        
+
+        # A local .env may override this value. Reset to a clean state so the
+        # assertion reflects the documented default rather than operator prefs.
+        monkeypatch.delenv("MAX_FRAMES_PER_VIDEO", raising=False)
+        Config.reset_cache()
+
         max_frames = Config.MAX_FRAMES_PER_VIDEO
         assert max_frames == 20  # Should be 20 for performance
     

@@ -520,10 +520,10 @@ class VideoProcessingService:
     def verify_video_data_completeness(self, video_id: str) -> Dict[str, Any]:
         """
         Verify that all expected data has been stored for a video.
-        
+
         Args:
             video_id: Video identifier
-            
+
         Returns:
             Dictionary with completeness status:
             {
@@ -536,14 +536,14 @@ class VideoProcessingService:
                 'missing': []
             }
         """
-        logger.info(f"Verifying data completeness for video {video_id}")
-        
+        logger.info("Verifying data completeness for video %s", video_id)
+
         # Check each data type
         frames_count = self._count_context_type(video_id, 'frame')
         captions_count = self._count_context_type(video_id, 'caption')
         transcripts_count = self._count_context_type(video_id, 'transcript')
         objects_count = self._count_context_type(video_id, 'object')
-        
+
         # Determine what's missing
         missing = []
         if frames_count == 0:
@@ -554,39 +554,47 @@ class VideoProcessingService:
             missing.append('transcripts')
         if objects_count == 0:
             missing.append('objects')
-        
+
         # Overall completeness
         complete = len(missing) == 0
-        
+
         status = {
             'video_id': video_id,
             'complete': complete,
             'frames': {
                 'count': frames_count,
-                'present': frames_count > 0
+                'present': frames_count > 0,
+                'complete': frames_count > 0,
             },
             'captions': {
                 'count': captions_count,
-                'present': captions_count > 0
+                'present': captions_count > 0,
+                'complete': captions_count > 0,
             },
             'transcripts': {
                 'count': transcripts_count,
-                'present': transcripts_count > 0
+                'present': transcripts_count > 0,
+                'complete': transcripts_count > 0,
             },
             'objects': {
                 'count': objects_count,
-                'present': objects_count > 0
+                'present': objects_count > 0,
+                'complete': objects_count > 0,
             },
-            'missing': missing
+            'missing': missing,
         }
-        
+
         logger.info(
-            f"Video {video_id} completeness: {complete} "
-            f"(frames={frames_count}, captions={captions_count}, "
-            f"transcripts={transcripts_count}, objects={objects_count})"
+            "Video %s completeness: %s (frames=%s, captions=%s, transcripts=%s, objects=%s)",
+            video_id, complete, frames_count, captions_count, transcripts_count, objects_count,
         )
-        
+
         return status
+
+    # Backwards-compatible alias used by tests and external callers.
+    def verify_video_data(self, video_id: str) -> Dict[str, Any]:
+        """Alias for :meth:`verify_video_data_completeness`."""
+        return self.verify_video_data_completeness(video_id)
     
     def _count_context_type(self, video_id: str, context_type: str) -> int:
         """

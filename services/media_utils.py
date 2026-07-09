@@ -267,11 +267,14 @@ class MediaUtils:
         hours = int(seconds // 3600)
         minutes = int((seconds % 3600) // 60)
         secs = int(seconds % 60)
-        
+
         if hours > 0:
-            return f"{hours:02d}:{minutes:02d}:{secs:02d}"
-        else:
-            return f"{minutes:02d}:{secs:02d}"
+            # Drop the leading zero on hours so timestamps read "1:01:01"
+            # rather than "01:01:01".
+            return f"{hours}:{minutes:02d}:{secs:02d}"
+        # Drop the leading zero on minutes when below an hour so casual
+        # chat-style timestamps read "0:42" rather than "00:42".
+        return f"{minutes}:{secs:02d}"
     
     @staticmethod
     def parse_timestamp(timestamp_str: str) -> float:

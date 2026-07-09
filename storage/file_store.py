@@ -25,7 +25,7 @@ class FileStore:
     """
     
     # Supported video formats
-    SUPPORTED_VIDEO_FORMATS = {'.mp4', '.avi', '.mov', '.mkv'}
+    SUPPORTED_VIDEO_FORMATS = {'.mp4', '.avi', '.mov', '.mkv', '.mpeg'}
     
     # Maximum file size (500MB)
     MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024
