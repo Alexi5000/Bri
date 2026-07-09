@@ -13,6 +13,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from models.responses import ToolExecutionResponse
+from services.errors import BriError, http_status_for
 from mcp_server.registry import ToolRegistry
 from mcp_server.cache import CacheManager
 from mcp_server.validation import (
@@ -94,6 +95,24 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# ---------------------------------------------------------------------------
+# Exception boundary: every BriError is mapped to its HTTP status code and a
+# standard JSON envelope. Anything else propagates to FastAPI's default
+# handler, which logs the traceback and returns a generic 500.
+# ---------------------------------------------------------------------------
+@app.exception_handler(BriError)
+async def _bri_error_handler(_request: Request, exc: BriError) -> JSONResponse:
+    """Translate :class:`BriError` into a JSON envelope with the right status."""
+    status_code = http_status_for(exc)
+    logger.warning(
+        "BriError raised: code=%s status=%s message=%s",
+        exc.code,
+        status_code,
+        exc.message,
+    )
+    return JSONResponse(status_code=status_code, content=exc.to_dict())
 
 # Initialize tool registry and cache. Tool registration is metadata-only and
 # intentionally safe before startup because optional ML dependencies are loaded
