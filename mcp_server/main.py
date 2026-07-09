@@ -113,7 +113,7 @@ async def startup_event():
         Config.validate()
         logger.info("Configuration validated successfully")
     except ValueError as e:
-        logger.error(f"Configuration validation failed: {e}")
+        logger.error("Configuration validation failed: %s", (e))
         raise
     
     # Ensure directories exist
@@ -123,7 +123,7 @@ async def startup_event():
     # Register all available tools
     tool_registry.register_all_tools()
     
-    logger.info(f"Registered {len(tool_registry.list_tools())} tools")
+    logger.info("Registered %s tools", (len(tool_registry.list_tools())))
     
     # Start processing queue workers
     try:
@@ -131,9 +131,9 @@ async def startup_event():
         await start_queue_workers()
         logger.info("Processing queue workers started")
     except Exception as e:
-        logger.error(f"Failed to start queue workers: {e}")
+        logger.error("Failed to start queue workers: %s", (e))
     
-    logger.info(f"Server running on {Config.get_mcp_server_url()}")
+    logger.info("Server running on %s", (Config.get_mcp_server_url()))
 
 
 @app.on_event("shutdown")
@@ -147,7 +147,7 @@ async def shutdown_event():
         await shutdown_queue()
         logger.info("Processing queue shutdown complete")
     except Exception as e:
-        logger.error(f"Error during queue shutdown: {e}")
+        logger.error("Error during queue shutdown: %s", (e))
     
     cache_manager.close()
 
@@ -189,7 +189,7 @@ async def health_check():
         db = get_database()
         db.execute_query("SELECT 1")
     except Exception as e:
-        logger.error(f"Database health check failed: {e}")
+        logger.error("Database health check failed: %s", (e))
         db_healthy = False
     
     # Check cache connectivity
@@ -199,7 +199,7 @@ async def health_check():
         try:
             cache_manager.get("health_check")
         except Exception as e:
-            logger.error(f"Cache health check failed: {e}")
+            logger.error("Cache health check failed: %s", (e))
             cache_healthy = False
     
     # Get circuit breaker states
@@ -256,7 +256,7 @@ async def list_tools(request: Request, version: APIVersion = Depends(get_api_ver
     
     try:
         tools = tool_registry.list_tools()
-        logger.info(f"Listed {len(tools)} available tools (API v{version.value})")
+        logger.info("Listed %s available tools (API v%s)", (len(tools)), (version.value))
         
         response = ToolListResponse(
             success=True,
@@ -273,7 +273,7 @@ async def list_tools(request: Request, version: APIVersion = Depends(get_api_ver
         return response
         
     except Exception as e:
-        logger.error(f"Failed to list tools: {str(e)}")
+        logger.error("Failed to list tools: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to list tools: {str(e)}"
@@ -335,7 +335,7 @@ async def execute_tool(
         cached_result = cache_manager.get(cache_key)
         if cached_result is not None:
             execution_time = time.time() - start_time
-            logger.info(f"Cache hit for {tool_name} on video {exec_request.video_id}")
+            logger.info("Cache hit for %s on video %s", (tool_name), (exec_request.video_id))
             perf_logger.log_cache_hit(cache_key, hit=True)
             return ToolExecutionResponseV1(
                 success=True,
@@ -355,7 +355,7 @@ async def execute_tool(
             )
         
         # Execute tool with timeout
-        logger.info(f"Executing tool '{tool_name}' for video {exec_request.video_id} (timeout: {timeout_seconds}s)")
+        logger.info("Executing tool '%s' for video %s (timeout: %ss)", (tool_name), (exec_request.video_id), (timeout_seconds))
         perf_logger.log_cache_hit(cache_key, hit=False)
         
         try:
@@ -365,7 +365,7 @@ async def execute_tool(
             )
         except asyncio.TimeoutError:
             execution_time = time.time() - start_time
-            logger.error(f"Tool '{tool_name}' execution timed out after {timeout_seconds}s")
+            logger.error("Tool '%s' execution timed out after %ss", (tool_name), (timeout_seconds))
             perf_logger.log_execution_time(
                 f"tool_{tool_name}",
                 execution_time,
@@ -394,14 +394,12 @@ async def execute_tool(
         cache_manager.set(cache_key, result)
         
         # Store result in database for later retrieval
-        logger.info(f"Storing {tool_name} results in database for video {exec_request.video_id}...")
+        logger.info("Storing %s results in database for video %s...", (tool_name), (exec_request.video_id))
         _store_tool_result_in_db(exec_request.video_id, tool_name, result)
-        logger.info(f"✓ Database storage confirmed for {tool_name}")
+        logger.info("✓ Database storage confirmed for %s", (tool_name))
         
         execution_time = time.time() - start_time
-        logger.info(
-            f"Tool '{tool_name}' executed successfully in {execution_time:.2f}s"
-        )
+        logger.info("Tool '%s' executed successfully in %.2fs", tool_name, execution_time)
         perf_logger.log_execution_time(
             f"tool_{tool_name}",
             execution_time,
@@ -431,7 +429,7 @@ async def execute_tool(
         raise
     except Exception as e:
         execution_time = time.time() - start_time
-        logger.error(f"Tool execution failed: {str(e)}")
+        logger.error("Tool execution failed: %s", (str(e)))
         return ToolExecutionResponseV1(
             success=False,
             data={
@@ -488,7 +486,7 @@ async def process_video(
         if tools is None:
             tools = [tool["name"] for tool in tool_registry.list_tools()]
         
-        logger.info(f"Processing video {video_id} with tools: {tools} (parallel execution)")
+        logger.info("Processing video %s with tools: %s (parallel execution)", (video_id), (tools))
         
         # Create tasks for parallel execution
         tasks = []
@@ -497,7 +495,7 @@ async def process_video(
         for tool_name in tools:
             tool = tool_registry.get_tool(tool_name)
             if tool is None:
-                logger.warning(f"Tool '{tool_name}' not found, skipping")
+                logger.warning("Tool '%s' not found, skipping", (tool_name))
                 continue
             
             # Check cache first
@@ -509,7 +507,7 @@ async def process_video(
             
             cached_result = cache_manager.get(cache_key)
             if cached_result is not None:
-                logger.info(f"Cache hit for {tool_name}")
+                logger.info("Cache hit for %s", (tool_name))
                 # Skip creating task for cached results
                 continue
             
@@ -540,14 +538,14 @@ async def process_video(
         # Add parallel execution results
         for tool_name, result in zip(tool_names, task_results):
             if isinstance(result, Exception):
-                logger.error(f"Tool '{tool_name}' failed: {str(result)}")
+                logger.error("Tool '%s' failed: %s", (tool_name), (str(result)))
                 errors[tool_name] = str(result)
             else:
                 results[tool_name] = {
                     "result": result,
                     "cached": False
                 }
-                logger.info(f"Tool '{tool_name}' completed successfully")
+                logger.info("Tool '%s' completed successfully", (tool_name))
         
         execution_time = time.time() - start_time
         
@@ -585,7 +583,7 @@ async def process_video(
         
     except Exception as e:
         execution_time = time.time() - start_time
-        logger.error(f"Video processing failed: {str(e)}")
+        logger.error("Video processing failed: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Video processing failed: {str(e)}"
@@ -612,16 +610,16 @@ async def _execute_tool_with_cache(tool, tool_name: str, video_id: str, cache_ke
         
         # Cache the result
         cache_manager.set(cache_key, result)
-        logger.debug(f"Cached {tool_name} results for video {video_id}")
+        logger.debug("Cached %s results for video %s", (tool_name), (video_id))
         
         # Store result in database for later retrieval
-        logger.info(f"Storing {tool_name} results in database for video {video_id}...")
+        logger.info("Storing %s results in database for video %s...", (tool_name), (video_id))
         _store_tool_result_in_db(video_id, tool_name, result)
-        logger.info(f"✓ Database storage confirmed for {tool_name}")
+        logger.info("✓ Database storage confirmed for %s", (tool_name))
         
         return result
     except Exception as e:
-        logger.error(f"Tool '{tool_name}' execution failed: {str(e)}")
+        logger.error("Tool '%s' execution failed: %s", (tool_name), (str(e)))
         raise
 
 
@@ -644,10 +642,10 @@ def _store_tool_result_in_db(video_id: str, tool_name: str, result: dict):
         
         # Log detailed metrics
         for data_type, count in counts.items():
-            logger.info(f"✓ Stored {count} {data_type} for video {video_id}")
+            logger.info("✓ Stored %s %s for video %s", (count), (data_type), (video_id))
         
     except Exception as e:
-        logger.error(f"Failed to store tool result in database: {e}", exc_info=True)
+        logger.error("Failed to store tool result in database: %s", e, exc_info=True)
 
 
 @app.get("/cache/stats")
@@ -662,7 +660,7 @@ async def get_cache_stats():
         stats = cache_manager.get_stats()
         return stats
     except Exception as e:
-        logger.error(f"Failed to get cache stats: {str(e)}")
+        logger.error("Failed to get cache stats: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get cache stats: {str(e)}"
@@ -682,14 +680,14 @@ async def clear_video_cache(video_id: str):
     """
     try:
         deleted = cache_manager.clear_video_cache(video_id)
-        logger.info(f"Cleared {deleted} cache entries for video {video_id}")
+        logger.info("Cleared %s cache entries for video %s", (deleted), (video_id))
         return {
             "status": "success",
             "video_id": video_id,
             "deleted_count": deleted
         }
     except Exception as e:
-        logger.error(f"Failed to clear video cache: {str(e)}")
+        logger.error("Failed to clear video cache: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to clear video cache: {str(e)}"
@@ -712,7 +710,7 @@ async def clear_all_cache():
         else:
             return {"status": "skipped", "message": "Cache not enabled"}
     except Exception as e:
-        logger.error(f"Failed to clear cache: {str(e)}")
+        logger.error("Failed to clear cache: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to clear cache: {str(e)}"
@@ -768,7 +766,7 @@ async def get_video_data_status(video_id: str, request: Request):
         return status_report
         
     except Exception as e:
-        logger.error(f"Failed to get video status: {str(e)}")
+        logger.error("Failed to get video status: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get video status: {str(e)}"
@@ -854,7 +852,7 @@ async def process_video_progressive(
         }
         
     except Exception as e:
-        logger.error(f"Failed to queue progressive processing: {str(e)}")
+        logger.error("Failed to queue progressive processing: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to queue processing: {str(e)}"
@@ -917,7 +915,7 @@ async def get_processing_progress(video_id: str, request: Request):
         }
         
     except Exception as e:
-        logger.error(f"Failed to get processing progress: {str(e)}")
+        logger.error("Failed to get processing progress: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get progress: {str(e)}"
@@ -978,7 +976,7 @@ async def reset_circuit_breaker(breaker_name: str, request: Request):
     breaker = breakers[breaker_name]
     breaker.reset()
     
-    logger.info(f"Circuit breaker '{breaker_name}' reset via API")
+    logger.info("Circuit breaker '%s' reset via API", (breaker_name))
     
     return create_standard_response(
         data={
@@ -1014,7 +1012,7 @@ async def get_queue_status():
         }
         
     except Exception as e:
-        logger.error(f"Failed to get queue status: {str(e)}")
+        logger.error("Failed to get queue status: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get queue status: {str(e)}"
@@ -1049,7 +1047,7 @@ async def get_job_status(video_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to get job status: {str(e)}")
+        logger.error("Failed to get job status: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get job status: {str(e)}"
@@ -1070,16 +1068,16 @@ async def _run_progressive_processing(video_id: str, video_path: str):
         processor = get_progressive_processor()
         await processor.process_video_progressive(video_id, video_path)
         
-        logger.info(f"Progressive processing completed for video {video_id}")
+        logger.info("Progressive processing completed for video %s", (video_id))
         
     except Exception as e:
-        logger.error(f"Progressive processing failed for video {video_id}: {e}")
+        logger.error("Progressive processing failed for video %s: %s", (video_id), (e))
 
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
     """Global exception handler for unhandled errors."""
-    logger.error(f"Unhandled exception: {str(exc)}", exc_info=True)
+    logger.error("Unhandled exception: %s", str(exc), exc_info=True)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
