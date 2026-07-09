@@ -7,7 +7,7 @@ import logging
 from multiprocessing import Process
 
 # Add parent directory to path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -17,25 +17,20 @@ def start_server():
     """Start the MCP server in a separate process."""
     import uvicorn
     from mcp_server.main import app
-    
+
     # Use a different port for testing to avoid conflicts
-    uvicorn.run(
-        app,
-        host="localhost",
-        port=8765,
-        log_level="error"
-    )
+    uvicorn.run(app, host="localhost", port=8765, log_level="error")
 
 
 def test_endpoints():
     """Test MCP server endpoints."""
     import requests
-    
+
     # Use test port
     base_url = "http://localhost:8765"
-    
+
     logger.info(f"Testing MCP server at {base_url}")
-    
+
     # Wait for server to start
     max_retries = 10
     for i in range(max_retries):
@@ -50,7 +45,7 @@ def test_endpoints():
             else:
                 logger.error("✗ Server failed to start")
                 return False
-    
+
     # Test root endpoint
     try:
         response = requests.get(f"{base_url}/")
@@ -61,7 +56,7 @@ def test_endpoints():
     except Exception as e:
         logger.error(f"✗ Root endpoint failed: {str(e)}", exc_info=True)
         return False
-    
+
     # Test health endpoint
     try:
         response = requests.get(f"{base_url}/health")
@@ -72,7 +67,7 @@ def test_endpoints():
     except Exception as e:
         logger.error(f"✗ Health endpoint failed: {str(e)}")
         return False
-    
+
     # Test tools listing
     try:
         response = requests.get(f"{base_url}/tools")
@@ -86,7 +81,7 @@ def test_endpoints():
     except Exception as e:
         logger.error(f"✗ Tools endpoint failed: {str(e)}")
         return False
-    
+
     # Test cache stats
     try:
         response = requests.get(f"{base_url}/cache/stats")
@@ -96,7 +91,7 @@ def test_endpoints():
     except Exception as e:
         logger.error(f"✗ Cache stats endpoint failed: {str(e)}")
         return False
-    
+
     logger.info("\n✓ All endpoint tests passed!")
     return True
 
@@ -106,15 +101,15 @@ def main():
     logger.info("=" * 60)
     logger.info("MCP Server Integration Tests")
     logger.info("=" * 60 + "\n")
-    
+
     # Start server in separate process
     server_process = Process(target=start_server)
     server_process.start()
-    
+
     try:
         # Run tests
         success = test_endpoints()
-        
+
         if success:
             logger.info("\n" + "=" * 60)
             logger.info("All integration tests passed!")

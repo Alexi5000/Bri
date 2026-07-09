@@ -30,7 +30,9 @@ class DummyResponse:
             raise RuntimeError(f"HTTP {self.status_code}")
 
 
-def test_mcp_client_unwraps_standardized_tool_and_progress_envelopes(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_mcp_client_unwraps_standardized_tool_and_progress_envelopes(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     def fake_get(url: str, timeout: float) -> DummyResponse:
         if url.endswith("/tools"):
             return DummyResponse(
@@ -89,10 +91,14 @@ def test_mcp_client_rejects_failed_standardized_envelope() -> None:
         MCPClient._unwrap({"success": False, "error": "tool execution rejected"})
 
 
-def test_application_service_snapshot_uses_middle_layer_boundaries(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_application_service_snapshot_uses_middle_layer_boundaries(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     class FakeMCPClient:
         def health(self) -> SimpleNamespace:
-            return SimpleNamespace(online=True, status="healthy", url="http://mcp.local", components={}, detail="ok")
+            return SimpleNamespace(
+                online=True, status="healthy", url="http://mcp.local", components={}, detail="ok"
+            )
 
         def list_tools(self) -> list[SimpleNamespace]:
             return [SimpleNamespace(name="analyze_video_context")]
@@ -120,7 +126,9 @@ def test_application_service_snapshot_uses_middle_layer_boundaries(monkeypatch: 
             },
         ],
     )
-    monkeypatch.setattr("services.application.BriApplicationService._count_conversations", lambda self: 3)
+    monkeypatch.setattr(
+        "services.application.BriApplicationService._count_conversations", lambda self: 3
+    )
 
     snapshot = BriApplicationService(mcp_client=FakeMCPClient()).snapshot()
 
@@ -133,7 +141,9 @@ def test_application_service_snapshot_uses_middle_layer_boundaries(monkeypatch: 
     assert snapshot.videos[1].status_label == "Processing"
 
 
-def test_application_service_progress_requires_persisted_video(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_application_service_progress_requires_persisted_video(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     service = BriApplicationService(mcp_client=SimpleNamespace())
     monkeypatch.setattr("services.application.database.get_video", lambda video_id: None)
 

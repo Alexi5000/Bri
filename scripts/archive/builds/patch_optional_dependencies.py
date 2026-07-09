@@ -6,16 +6,19 @@ ROOT = Path(__file__).resolve().parents[1]
 
 agent_path = ROOT / "services" / "agent.py"
 agent_text = agent_path.read_text(encoding="utf-8")
-agent_text = agent_text.replace("from groq import Groq", "try:\n    from groq import Groq\nexcept ModuleNotFoundError:  # pragma: no cover - optional production dependency\n    Groq = None  # type: ignore[assignment]")
 agent_text = agent_text.replace(
-"""        self.groq_api_key = groq_api_key or Config.GROQ_API_KEY
+    "from groq import Groq",
+    "try:\n    from groq import Groq\nexcept ModuleNotFoundError:  # pragma: no cover - optional production dependency\n    Groq = None  # type: ignore[assignment]",
+)
+agent_text = agent_text.replace(
+    """        self.groq_api_key = groq_api_key or Config.GROQ_API_KEY
         if not self.groq_api_key:
             raise AgentError("Groq API key is required")
         
         # Initialize Groq client
         self.groq_client = Groq(api_key=self.groq_api_key)
 """,
-"""        self.groq_api_key = groq_api_key or Config.GROQ_API_KEY
+    """        self.groq_api_key = groq_api_key or Config.GROQ_API_KEY
         if not self.groq_api_key:
             raise AgentError("Groq API key is required")
         if Groq is None:
@@ -76,12 +79,12 @@ agent_path.write_text(agent_text, encoding="utf-8")
 registry_path = ROOT / "mcp_server" / "registry.py"
 registry_text = registry_path.read_text(encoding="utf-8")
 registry_text = registry_text.replace(
-"""from tools.frame_extractor import FrameExtractor
+    """from tools.frame_extractor import FrameExtractor
 from tools.image_captioner import ImageCaptioner
 from tools.audio_transcriber import AudioTranscriber
 from tools.object_detector import ObjectDetector
 """,
-"""def _load_tool_class(module_name: str, class_name: str):
+    """def _load_tool_class(module_name: str, class_name: str):
     try:
         module = __import__(module_name, fromlist=[class_name])
         return getattr(module, class_name)
@@ -92,12 +95,24 @@ from tools.object_detector import ObjectDetector
         ) from exc
 """,
 )
-registry_text = registry_text.replace("self.extractor = FrameExtractor()", "self.extractor = _load_tool_class('tools.frame_extractor', 'FrameExtractor')()")
-registry_text = registry_text.replace("self.captioner = ImageCaptioner()", "self.captioner = _load_tool_class('tools.image_captioner', 'ImageCaptioner')()")
-registry_text = registry_text.replace("self.transcriber = AudioTranscriber()", "self.transcriber = _load_tool_class('tools.audio_transcriber', 'AudioTranscriber')()")
-registry_text = registry_text.replace("self.detector = ObjectDetector()", "self.detector = _load_tool_class('tools.object_detector', 'ObjectDetector')()")
 registry_text = registry_text.replace(
-"""    def register_all_tools(self) -> None:
+    "self.extractor = FrameExtractor()",
+    "self.extractor = _load_tool_class('tools.frame_extractor', 'FrameExtractor')()",
+)
+registry_text = registry_text.replace(
+    "self.captioner = ImageCaptioner()",
+    "self.captioner = _load_tool_class('tools.image_captioner', 'ImageCaptioner')()",
+)
+registry_text = registry_text.replace(
+    "self.transcriber = AudioTranscriber()",
+    "self.transcriber = _load_tool_class('tools.audio_transcriber', 'AudioTranscriber')()",
+)
+registry_text = registry_text.replace(
+    "self.detector = ObjectDetector()",
+    "self.detector = _load_tool_class('tools.object_detector', 'ObjectDetector')()",
+)
+registry_text = registry_text.replace(
+    """    def register_all_tools(self) -> None:
         \"\"\"Register all available video processing tools.\"\"\"
         try:
             # Register frame extraction tool
@@ -117,7 +132,7 @@ registry_text = registry_text.replace(
             logger.error(f\"Failed to register tools: {str(e)}\")
             raise
 """,
-"""    def register_all_tools(self) -> None:
+    """    def register_all_tools(self) -> None:
         \"\"\"Register all available video processing tools.\n\n        Tool classes are registered as lightweight wrappers. Heavy optional\n        media dependencies are loaded only when the corresponding tool instance\n        is created, keeping health checks and tool discovery usable in lean CI\n        and API-only deployments.\n        \"\"\"
         for tool_cls in [
             FrameExtractionTool,

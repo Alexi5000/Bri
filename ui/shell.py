@@ -68,7 +68,10 @@ def render_dashboard(snapshot: DashboardSnapshot) -> None:
 
     status = "Online" if snapshot.mcp_health.online else "Offline"
     status_color = "#40E0D0" if snapshot.mcp_health.online else "#FFB86C"
-    tools = ", ".join(tool.name for tool in snapshot.tools[:6]) or "Tool catalog unavailable in local mode"
+    tools = (
+        ", ".join(tool.name for tool in snapshot.tools[:6])
+        or "Tool catalog unavailable in local mode"
+    )
     st.markdown(
         f"""
         <div class="bri-system-panel" role="status" aria-live="polite">
@@ -136,7 +139,7 @@ def render_persistence_panel(readiness: PersistenceReadiness | None) -> None:
             <div>
                 <span class="bri-panel-label">SQLite integrity</span>
                 <strong style="color:{status_color}">{html.escape(status)}</strong>
-                <small>{html.escape('; '.join(integrity.messages))}</small>
+                <small>{html.escape("; ".join(integrity.messages))}</small>
             </div>
             <div>
                 <span class="bri-panel-label">Durability mode</span>
@@ -145,7 +148,7 @@ def render_persistence_panel(readiness: PersistenceReadiness | None) -> None:
             </div>
             <div>
                 <span class="bri-panel-label">WAL checkpoint</span>
-                <strong>{integrity.wal_checkpoint.get('checkpointed_frames', 0)} frames</strong>
+                <strong>{integrity.wal_checkpoint.get("checkpointed_frames", 0)} frames</strong>
                 <small>{html.escape(integrity.database_path)}</small>
             </div>
         </div>

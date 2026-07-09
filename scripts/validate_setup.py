@@ -35,7 +35,7 @@ def check_dependencies():
         "dotenv",
         "pydantic",
     ]
-    
+
     missing = []
     for package in required_packages:
         try:
@@ -45,13 +45,13 @@ def check_dependencies():
                 import_name = "cv2"
             elif package == "dotenv":
                 import_name = "dotenv"
-            
+
             __import__(import_name)
             print(f"  ✓ {package}")
         except ImportError:
             print(f"  ✗ {package} (missing)")
             missing.append(package)
-    
+
     if missing:
         print(f"\n  Install missing packages: pip install {' '.join(missing)}")
         return False
@@ -76,14 +76,14 @@ def check_directories():
     print("\n📁 Checking directories...")
     try:
         Config.ensure_directories()
-        
+
         directories = [
             Config.VIDEO_STORAGE_PATH,
             Config.FRAME_STORAGE_PATH,
             Config.CACHE_STORAGE_PATH,
             Path(Config.DATABASE_PATH).parent,
         ]
-        
+
         for directory in directories:
             if Path(directory).exists():
                 print(f"  ✓ {directory}")
@@ -102,9 +102,10 @@ def check_redis():
     if not Config.REDIS_ENABLED:
         print("  ⚠️  Redis is disabled in configuration")
         return True
-    
+
     try:
         import redis
+
         client = redis.from_url(Config.REDIS_URL, socket_connect_timeout=2)
         client.ping()
         print(f"  ✓ Redis is available at {Config.REDIS_URL}")
@@ -130,10 +131,10 @@ def check_env_file():
 
 def main():
     """Run all validation checks."""
-    print("="*60)
+    print("=" * 60)
     print("BRI Setup Validation")
-    print("="*60)
-    
+    print("=" * 60)
+
     checks = [
         ("Python Version", check_python_version),
         ("Environment File", check_env_file),
@@ -142,7 +143,7 @@ def main():
         ("Directories", check_directories),
         ("Redis", check_redis),
     ]
-    
+
     results = []
     for name, check_func in checks:
         try:
@@ -151,21 +152,21 @@ def main():
         except Exception as e:
             print(f"\n  ✗ Unexpected error in {name}: {e}")
             results.append((name, False))
-    
+
     # Summary
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("Summary")
-    print("="*60)
-    
+    print("=" * 60)
+
     passed = sum(1 for _, result in results if result)
     total = len(results)
-    
+
     for name, result in results:
         status = "✓" if result else "✗"
         print(f"  {status} {name}")
-    
+
     print(f"\nPassed: {passed}/{total}")
-    
+
     if passed == total:
         print("\n🎉 All checks passed! You're ready to run BRI.")
         print("\nNext steps:")

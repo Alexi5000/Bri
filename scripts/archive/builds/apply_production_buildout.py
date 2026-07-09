@@ -4,6 +4,7 @@
 This script is intentionally idempotent so the repository can be regenerated during
 review without losing existing graphics or application modules.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -39,7 +40,9 @@ def cleanup() -> None:
 def main() -> None:
     cleanup()
 
-    write("config.py", r'''
+    write(
+        "config.py",
+        r'''
 """Production configuration management for BRI.
 
 Configuration is resolved lazily from Streamlit secrets first and environment
@@ -239,9 +242,12 @@ class Config(metaclass=ConfigMeta):
         masked = cls.as_dict(include_secrets=False)
         for key, value in masked.items():
             print(f"{key}: {value}")
-''')
+''',
+    )
 
-    write("pyproject.toml", r'''
+    write(
+        "pyproject.toml",
+        r"""
 [build-system]
 requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
@@ -324,9 +330,15 @@ ignore = ["E501"]
 [tool.coverage.run]
 source = ["config", "models", "services", "storage", "mcp_server"]
 omit = ["tests/*", "scripts/*"]
-'''.replace('python_files = ["test_*.py"]norecursedirs', 'python_files = ["test_*.py"]\nnorecursedirs'))
+""".replace(
+            'python_files = ["test_*.py"]norecursedirs',
+            'python_files = ["test_*.py"]\nnorecursedirs',
+        ),
+    )
 
-    write("Makefile", r'''
+    write(
+        "Makefile",
+        r"""
 .PHONY: install install-dev init-db run-ui run-api test test-core validate smoke clean
 
 install:
@@ -360,9 +372,12 @@ clean:
 	find . -type d -name __pycache__ -prune -exec rm -rf {} +
 	find . -type f -name '*.pyc' -delete
 	rm -rf .pytest_cache .mypy_cache .ruff_cache
-''')
+""",
+    )
 
-    write(".env.example", r'''
+    write(
+        ".env.example",
+        r"""
 # BRI production environment template
 APP_NAME=BRI
 APP_ENV=development
@@ -406,9 +421,12 @@ LOG_LEVEL=INFO
 LOG_DIR=logs
 LOG_ROTATION_ENABLED=true
 LOG_JSON_FORMAT=false
-''')
+""",
+    )
 
-    write(".gitignore", r'''
+    write(
+        ".gitignore",
+        r"""
 # Python
 __pycache__/
 *.py[cod]
@@ -453,9 +471,12 @@ Thumbs.db
 uploads/
 tmp/
 temp/
-''')
+""",
+    )
 
-    write("scripts/validate_production.py", r'''
+    write(
+        "scripts/validate_production.py",
+        r'''
 #!/usr/bin/env python3
 """Production validation for Bri.
 
@@ -517,9 +538,12 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-''')
+''',
+    )
 
-    write("scripts/smoke_api.py", r'''
+    write(
+        "scripts/smoke_api.py",
+        r'''
 #!/usr/bin/env python3
 """Smoke test a running BRI MCP API server."""
 from __future__ import annotations
@@ -556,9 +580,12 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-''')
+''',
+    )
 
-    write("tests/test_production_contract.py", r'''
+    write(
+        "tests/test_production_contract.py",
+        r"""
 from __future__ import annotations
 
 import importlib
@@ -611,9 +638,12 @@ def test_env_example_has_parseable_numeric_values() -> None:
         assert matching, key
         value = matching[0].split("=", 1)[1]
         assert "#" not in value, f"{key} should not include inline comments in value"
-''')
+""",
+    )
 
-    write("docs/API.md", r'''
+    write(
+        "docs/API.md",
+        r"""
 # BRI API Reference
 
 BRI exposes a FastAPI service that coordinates video processing tools behind a small MCP-style contract. The Streamlit interface calls this service for frame extraction, captioning, transcription, object detection, cache inspection, and progressive job status.
@@ -650,9 +680,12 @@ API responses use structured Pydantic envelopes for successful results, validati
 ## Operational notes
 
 The API should be run behind a production reverse proxy with request-size limits and TLS termination. Redis is optional for local development but recommended in production so expensive tool calls can be cached and reused safely.
-''')
+""",
+    )
 
-    write("docs/TESTING.md", r'''
+    write(
+        "docs/TESTING.md",
+        r"""
 # Testing Guide
 
 BRI separates fast production checks from heavy video and model tests so contributors can validate changes without requiring a GPU, Redis, uploaded media, or a live Groq key.
@@ -679,9 +712,12 @@ ALLOW_MISSING_GROQ_FOR_TESTS=true pytest tests/test_production_contract.py
 ## Heavy tests
 
 Some existing tests exercise media extraction, transcription, object detection, vector search, or end-to-end video workflows. Treat those as local QA or CI jobs with explicit model/cache provisioning rather than required pre-commit checks.
-''')
+""",
+    )
 
-    write("docs/README.md", r'''
+    write(
+        "docs/README.md",
+        r"""
 # BRI Documentation Index
 
 | Document | Description |
@@ -692,9 +728,12 @@ Some existing tests exercise media extraction, transcription, object detection, 
 | [Deployment](DEPLOYMENT.md) | Container and service deployment guidance. |
 | [Configuration](CONFIGURATION.md) | Environment variables and runtime tuning. |
 | [Operations Runbook](OPERATIONS_RUNBOOK.md) | Production monitoring, backup, restore, and incident operations. |
-''')
+""",
+    )
 
-    write("docs/ARCHITECTURE.md", r'''
+    write(
+        "docs/ARCHITECTURE.md",
+        r"""
 # BRI Production Architecture
 
 BRI is a complete Python video intelligence application that combines a **Streamlit operator interface**, a **FastAPI MCP-style processing service**, a **SQLite persistence layer**, optional **Redis caching**, and a **Groq-powered conversation agent**. The build is optimized for local development, Docker deployment, and incremental production hardening without requiring contributors to run heavyweight media models for every change.
@@ -721,13 +760,19 @@ BRI is a complete Python video intelligence application that combines a **Stream
 ## Production principles
 
 BRI keeps secrets in environment variables or deployment secret managers, stores generated media under ignored runtime directories, uses validation contracts around every API boundary, and provides fast tests that verify packaging, documentation, configuration, and API contracts without requiring GPU-backed model execution.
-''')
+""",
+    )
 
     # Append concise production block to deployment docs while preserving existing file if present.
     deployment = ROOT / "docs/DEPLOYMENT.md"
-    existing_deployment = deployment.read_text(encoding="utf-8") if deployment.exists() else "# Deployment\n"
+    existing_deployment = (
+        deployment.read_text(encoding="utf-8") if deployment.exists() else "# Deployment\n"
+    )
     if "## Production quick path" not in existing_deployment:
-        deployment.write_text(existing_deployment.rstrip() + "\n\n" + r'''
+        deployment.write_text(
+            existing_deployment.rstrip()
+            + "\n\n"
+            + r"""
 ## Production quick path
 
 Use Docker Compose when you need the Streamlit UI, FastAPI service, Redis cache, and shared data volumes to run together.
@@ -739,9 +784,14 @@ docker compose up --build
 ```
 
 For platform deployments, run `uvicorn mcp_server.main:app --host 0.0.0.0 --port 8000` for the API service and `streamlit run app.py --server.port 8501` for the UI. Mount persistent volumes for `data/` and `logs/`, configure Redis for cache reuse, and keep `.env` outside source control.
-'''.strip() + "\n", encoding="utf-8")
+""".strip()
+            + "\n",
+            encoding="utf-8",
+        )
 
-    write("README.md", r'''
+    write(
+        "README.md",
+        r"""
 <div align="center">
   <img src="assets/icon.png" alt="BRI logo" width="112" />
 
@@ -848,7 +898,8 @@ Generated media, logs, databases, Python caches, virtual environments, and secre
 ## License
 
 BRI is released under the [MIT License](LICENSE).
-''')
+""",
+    )
 
 
 if __name__ == "__main__":

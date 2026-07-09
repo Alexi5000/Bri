@@ -5,6 +5,7 @@ By default this script validates the FastAPI application in-process with
 ``TestClient`` so CI and local validation do not require a separately running
 server. Pass ``--url`` to smoke test a live deployment instead.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -34,7 +35,9 @@ def smoke_in_process() -> int:
         tools = client.get("/tools")
 
     if health.status_code != 200:
-        print(f"Health smoke failed with status {health.status_code}: {health.text}", file=sys.stderr)
+        print(
+            f"Health smoke failed with status {health.status_code}: {health.text}", file=sys.stderr
+        )
         return 1
     if tools.status_code != 200:
         print(f"Tools smoke failed with status {tools.status_code}: {tools.text}", file=sys.stderr)
@@ -70,8 +73,12 @@ def smoke_live_server(base_url: str, *, allow_offline: bool) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Smoke test the BRI FastAPI service")
-    parser.add_argument("--url", help="Optional live API base URL. If omitted, TestClient is used in-process.")
-    parser.add_argument("--allow-offline", action="store_true", help="Return success if the live API is not running")
+    parser.add_argument(
+        "--url", help="Optional live API base URL. If omitted, TestClient is used in-process."
+    )
+    parser.add_argument(
+        "--allow-offline", action="store_true", help="Return success if the live API is not running"
+    )
     args = parser.parse_args()
 
     if args.url:

@@ -141,11 +141,7 @@ class Database:
                 logger.error(f"Transaction rolled back due to error: {e}")
                 raise DatabaseError(f"Transaction failed: {e}")
 
-    def execute_query(
-        self,
-        query: str,
-        parameters: tuple | None = None
-    ) -> list[sqlite3.Row]:
+    def execute_query(self, query: str, parameters: tuple | None = None) -> list[sqlite3.Row]:
         """Execute a SELECT query and return results.
 
         Args:
@@ -169,11 +165,7 @@ class Database:
             logger.error(f"Query execution failed: {query} - {e}")
             raise DatabaseError(f"Query execution failed: {e}")
 
-    def execute_update(
-        self,
-        query: str,
-        parameters: tuple | None = None
-    ) -> int:
+    def execute_update(self, query: str, parameters: tuple | None = None) -> int:
         """Execute an INSERT, UPDATE, or DELETE query.
 
         Args:
@@ -197,11 +189,7 @@ class Database:
             logger.error(f"Update execution failed: {query} - {e}")
             raise DatabaseError(f"Update execution failed: {e}")
 
-    def execute_many(
-        self,
-        query: str,
-        parameters_list: list[tuple]
-    ) -> int:
+    def execute_many(self, query: str, parameters_list: list[tuple]) -> int:
         """Execute a query multiple times with different parameters.
 
         Args:
@@ -288,7 +276,6 @@ class Database:
         except sqlite3.Error as e:
             logger.warning(f"Failed to create performance indexes: {e}")
 
-
     def add_video(
         self,
         filename: str,
@@ -363,31 +350,31 @@ class Database:
             parsed = json.loads(data)
 
             # Type-specific validation
-            if schema_type == 'caption':
+            if schema_type == "caption":
                 if not isinstance(parsed, dict):
                     raise ValidationError("Caption data must be a dictionary")
-                if 'text' not in parsed:
+                if "text" not in parsed:
                     raise ValidationError("Caption data must contain 'text' field")
-                if 'confidence' in parsed:
-                    confidence = parsed['confidence']
+                if "confidence" in parsed:
+                    confidence = parsed["confidence"]
                     if not (0 <= confidence <= 1):
                         raise ValidationError("Confidence must be between 0 and 1")
 
-            elif schema_type == 'transcript':
+            elif schema_type == "transcript":
                 if not isinstance(parsed, dict):
                     raise ValidationError("Transcript data must be a dictionary")
-                if 'text' not in parsed:
+                if "text" not in parsed:
                     raise ValidationError("Transcript data must contain 'text' field")
 
-            elif schema_type == 'object':
+            elif schema_type == "object":
                 if not isinstance(parsed, dict):
                     raise ValidationError("Object detection data must be a dictionary")
-                if 'objects' in parsed:
-                    if not isinstance(parsed['objects'], list):
+                if "objects" in parsed:
+                    if not isinstance(parsed["objects"], list):
                         raise ValidationError("Objects field must be a list")
-                    for obj in parsed['objects']:
-                        if 'confidence' in obj:
-                            confidence = obj['confidence']
+                    for obj in parsed["objects"]:
+                        if "confidence" in obj:
+                            confidence = obj["confidence"]
                             if not (0 <= confidence <= 1):
                                 raise ValidationError("Object confidence must be between 0 and 1")
 
@@ -397,11 +384,7 @@ class Database:
             raise ValidationError(f"Invalid JSON: {e}")
 
     def validate_video_data(
-        self,
-        video_id: str,
-        filename: str,
-        file_path: str,
-        duration: float
+        self, video_id: str, filename: str, file_path: str, duration: float
     ) -> None:
         """Validate video data before insertion.
 
@@ -429,7 +412,7 @@ class Database:
         video_id: str,
         context_type: str,
         data: str,
-        timestamp: float | None = None
+        timestamp: float | None = None,
     ) -> None:
         """Validate video context data before insertion.
 
@@ -447,7 +430,14 @@ class Database:
             raise ValidationError("context_id must be a non-empty string")
         if not video_id or not isinstance(video_id, str):
             raise ValidationError("video_id must be a non-empty string")
-        if context_type not in ['frame', 'caption', 'transcript', 'object', 'metadata', 'idempotency']:
+        if context_type not in [
+            "frame",
+            "caption",
+            "transcript",
+            "object",
+            "metadata",
+            "idempotency",
+        ]:
             raise ValidationError(f"Invalid context_type: {context_type}")
         if not data or not isinstance(data, str):
             raise ValidationError("data must be a non-empty string")
@@ -466,8 +456,8 @@ class Database:
         try:
             query = "SELECT MAX(version) as version FROM schema_version"
             results = self.execute_query(query)
-            if results and results[0]['version']:
-                return results[0]['version']
+            if results and results[0]["version"]:
+                return results[0]["version"]
             return None
         except sqlite3.Error:
             return None
@@ -479,43 +469,45 @@ class Database:
             Dictionary with constraint check results
         """
         results = {
-            'foreign_keys_enabled': False,
-            'orphaned_memory': 0,
-            'orphaned_context': 0,
-            'invalid_durations': 0,
-            'invalid_timestamps': 0
+            "foreign_keys_enabled": False,
+            "orphaned_memory": 0,
+            "orphaned_context": 0,
+            "invalid_durations": 0,
+            "invalid_timestamps": 0,
         }
 
         try:
             # Check if foreign keys are enabled
             fk_check = self.execute_query("PRAGMA foreign_keys")
-            results['foreign_keys_enabled'] = fk_check[0][0] == 1 if fk_check else False
+            results["foreign_keys_enabled"] = fk_check[0][0] == 1 if fk_check else False
 
             # Check for orphaned memory records
             orphaned_memory = self.execute_query("""
                 SELECT COUNT(*) as count FROM memory
                 WHERE video_id NOT IN (SELECT video_id FROM videos)
             """)
-            results['orphaned_memory'] = orphaned_memory[0]['count'] if orphaned_memory else 0
+            results["orphaned_memory"] = orphaned_memory[0]["count"] if orphaned_memory else 0
 
             # Check for orphaned context records
             orphaned_context = self.execute_query("""
                 SELECT COUNT(*) as count FROM video_context
                 WHERE video_id NOT IN (SELECT video_id FROM videos)
             """)
-            results['orphaned_context'] = orphaned_context[0]['count'] if orphaned_context else 0
+            results["orphaned_context"] = orphaned_context[0]["count"] if orphaned_context else 0
 
             # Check for invalid durations
             invalid_durations = self.execute_query("""
                 SELECT COUNT(*) as count FROM videos WHERE duration <= 0
             """)
-            results['invalid_durations'] = invalid_durations[0]['count'] if invalid_durations else 0
+            results["invalid_durations"] = invalid_durations[0]["count"] if invalid_durations else 0
 
             # Check for invalid timestamps
             invalid_timestamps = self.execute_query("""
                 SELECT COUNT(*) as count FROM video_context WHERE timestamp < 0
             """)
-            results['invalid_timestamps'] = invalid_timestamps[0]['count'] if invalid_timestamps else 0
+            results["invalid_timestamps"] = (
+                invalid_timestamps[0]["count"] if invalid_timestamps else 0
+            )
 
         except sqlite3.Error as e:
             logger.error(f"Constraint check failed: {e}")
@@ -596,7 +588,6 @@ class Transaction:
         logger.debug(f"Released savepoint: {savepoint_name}")
 
 
-
 # Global database instance
 _db_instance: Database | None = None
 _db_instance_lock = threading.Lock()
@@ -628,12 +619,9 @@ def initialize_database(schema_path: str | None = None) -> None:
 
 # Video-specific database operations
 
+
 def insert_video(
-    video_id: str,
-    filename: str,
-    file_path: str,
-    duration: float,
-    thumbnail_path: str | None = None
+    video_id: str, filename: str, file_path: str, duration: float, thumbnail_path: str | None = None
 ) -> None:
     """
     Insert a new video record into the database.

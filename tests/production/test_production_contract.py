@@ -45,7 +45,12 @@ def test_config_supports_explicit_mcp_url(monkeypatch: pytest.MonkeyPatch) -> No
 
 def test_env_example_has_parseable_numeric_values() -> None:
     env_text = (ROOT / ".env.example").read_text(encoding="utf-8")
-    for key in ["MCP_SERVER_PORT", "MAX_FRAMES_PER_VIDEO", "TOOL_EXECUTION_TIMEOUT", "REQUEST_TIMEOUT"]:
+    for key in [
+        "MCP_SERVER_PORT",
+        "MAX_FRAMES_PER_VIDEO",
+        "TOOL_EXECUTION_TIMEOUT",
+        "REQUEST_TIMEOUT",
+    ]:
         matching = [line for line in env_text.splitlines() if line.startswith(f"{key}=")]
         assert matching, key
         value = matching[0].split("=", 1)[1]
@@ -56,10 +61,18 @@ def test_env_example_has_parseable_numeric_values() -> None:
     ("payload", "message"),
     [
         ({"video_id": "../secret.mp4", "parameters": {}}, "invalid character"),
-        ({"video_id": "clip-001", "parameters": {"nested": {"a": {"b": {"c": {"d": {"e": {"f": "too-deep"}}}}}}}}, "nesting"),
+        (
+            {
+                "video_id": "clip-001",
+                "parameters": {"nested": {"a": {"b": {"c": {"d": {"e": {"f": "too-deep"}}}}}}},
+            },
+            "nesting",
+        ),
     ],
 )
-def test_tool_execution_request_rejects_unsafe_payloads(payload: dict[str, object], message: str) -> None:
+def test_tool_execution_request_rejects_unsafe_payloads(
+    payload: dict[str, object], message: str
+) -> None:
     from mcp_server.validation import ValidatedToolExecutionRequest
 
     with pytest.raises(Exception) as error:
@@ -77,7 +90,10 @@ def test_progressive_process_request_rejects_traversal_and_unsupported_formats()
     with pytest.raises(Exception):
         ValidatedProgressiveProcessRequest(video_path="uploads/clip.txt")
 
-    assert ValidatedProgressiveProcessRequest(video_path="uploads/clip.mp4").video_path == "uploads/clip.mp4"
+    assert (
+        ValidatedProgressiveProcessRequest(video_path="uploads/clip.mp4").video_path
+        == "uploads/clip.mp4"
+    )
 
 
 def test_api_documentation_tracks_mcp_endpoints() -> None:
@@ -87,8 +103,8 @@ def test_api_documentation_tracks_mcp_endpoints() -> None:
     for route in ["/health", "/tools", "/tools/{tool_name}/execute", "/videos/{video_id}/process"]:
         assert route in api_doc
 
-    assert "@app.get(\"/health" in server
-    assert "@app.post(\"/tools/{tool_name}/execute\")" in server
+    assert '@app.get("/health' in server
+    assert '@app.post("/tools/{tool_name}/execute")' in server
 
 
 def test_smoke_script_uses_fastapi_test_client_not_network() -> None:

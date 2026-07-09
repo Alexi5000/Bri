@@ -17,6 +17,7 @@ logger = get_logger(__name__)
 
 class JobPriority(Enum):
     """Job priority levels."""
+
     HIGH = 1  # User-requested processing
     NORMAL = 2  # Background processing
     LOW = 3  # Reprocessing/optimization
@@ -25,13 +26,14 @@ class JobPriority(Enum):
 @dataclass(order=True)
 class ProcessingJob:
     """Represents a video processing job."""
+
     priority: int = field(compare=True)
     video_id: str = field(compare=False)
     video_path: str = field(compare=False)
     created_at: float = field(default_factory=time.time, compare=False)
     started_at: float | None = field(default=None, compare=False)
     completed_at: float | None = field(default=None, compare=False)
-    status: str = field(default='queued', compare=False)  # queued, processing, complete, failed
+    status: str = field(default="queued", compare=False)  # queued, processing, complete, failed
     error: str | None = field(default=None, compare=False)
 
 
@@ -77,10 +79,7 @@ class ProcessingQueue:
         logger.info(f"Processing Queue initialized (max_concurrent={max_concurrent_jobs})")
 
     async def add_job(
-        self,
-        video_id: str,
-        video_path: str,
-        priority: JobPriority = JobPriority.NORMAL
+        self, video_id: str, video_path: str, priority: JobPriority = JobPriority.NORMAL
     ) -> ProcessingJob:
         """
         Add a job to the processing queue.
@@ -106,11 +105,7 @@ class ProcessingQueue:
                     return job
 
             # Create new job
-            job = ProcessingJob(
-                priority=priority.value,
-                video_id=video_id,
-                video_path=video_path
-            )
+            job = ProcessingJob(priority=priority.value, video_id=video_id, video_path=video_path)
 
             # Add to queue (maintain sorted order by priority)
             with self._state_lock:
@@ -139,7 +134,7 @@ class ProcessingQueue:
             # atomically into the active set for consistent status snapshots.
             with self._state_lock:
                 job = self.queue.pop(0)
-                job.status = 'processing'
+                job.status = "processing"
                 job.started_at = time.time()
                 self.active_jobs[job.video_id] = job
 
@@ -151,10 +146,7 @@ class ProcessingQueue:
             return job
 
     async def complete_job(
-        self,
-        video_id: str,
-        success: bool = True,
-        error: str | None = None
+        self, video_id: str, success: bool = True, error: str | None = None
     ) -> None:
         """
         Mark a job as complete.
@@ -174,7 +166,7 @@ class ProcessingQueue:
             # from the Streamlit middle layer while workers are active.
             with self._state_lock:
                 job.completed_at = time.time()
-                job.status = 'complete' if success else 'failed'
+                job.status = "complete" if success else "failed"
                 job.error = error
                 self.completed_jobs.append(job)
                 del self.active_jobs[video_id]
@@ -223,11 +215,7 @@ class ProcessingQueue:
 
                 except Exception as e:
                     logger.error(f"Worker {worker_id} job failed: {e}")
-                    await self.complete_job(
-                        job.video_id,
-                        success=False,
-                        error=str(e)
-                    )
+                    await self.complete_job(job.video_id, success=False, error=str(e))
 
             except Exception as e:
                 logger.error(f"Worker {worker_id} error: {e}")
@@ -246,10 +234,7 @@ class ProcessingQueue:
 
         processor = get_progressive_processor()
 
-        await processor.process_video_progressive(
-            job.video_id,
-            job.video_path
-        )
+        await processor.process_video_progressive(job.video_id, job.video_path)
 
     async def shutdown(self, timeout: float = 30.0) -> None:
         """
@@ -265,8 +250,7 @@ class ProcessingQueue:
         # Wait for workers to finish (with timeout)
         try:
             await asyncio.wait_for(
-                asyncio.gather(*self.workers, return_exceptions=True),
-                timeout=timeout
+                asyncio.gather(*self.workers, return_exceptions=True), timeout=timeout
             )
             logger.info("All workers stopped gracefully")
         except asyncio.TimeoutError:
@@ -291,11 +275,11 @@ class ProcessingQueue:
         """
         with self._state_lock:
             return {
-                'active_jobs': len(self.active_jobs),
-                'queued_jobs': len(self.queue),
-                'completed_jobs': len(self.completed_jobs),
-                'workers': len(self.workers),
-                'shutdown_requested': self.shutdown_requested
+                "active_jobs": len(self.active_jobs),
+                "queued_jobs": len(self.queue),
+                "completed_jobs": len(self.completed_jobs),
+                "workers": len(self.workers),
+                "shutdown_requested": self.shutdown_requested,
             }
 
     def get_job_status(self, video_id: str) -> dict | None:
@@ -313,34 +297,38 @@ class ProcessingQueue:
             if video_id in self.active_jobs:
                 job = self.active_jobs[video_id]
                 return {
-                    'video_id': job.video_id,
-                    'status': job.status,
-                    'priority': job.priority,
-                    'started_at': job.started_at,
-                    'duration': time.time() - job.started_at if job.started_at else 0
+                    "video_id": job.video_id,
+                    "status": job.status,
+                    "priority": job.priority,
+                    "started_at": job.started_at,
+                    "duration": time.time() - job.started_at if job.started_at else 0,
                 }
 
             # Check queue
             for position, job in enumerate(self.queue, start=1):
                 if job.video_id == video_id:
                     return {
-                        'video_id': job.video_id,
-                        'status': job.status,
-                        'priority': job.priority,
-                        'position': position,
-                        'queue_size': len(self.queue)
+                        "video_id": job.video_id,
+                        "status": job.status,
+                        "priority": job.priority,
+                        "position": position,
+                        "queue_size": len(self.queue),
                     }
 
             # Check completed jobs
             for job in self.completed_jobs:
                 if job.video_id == video_id:
-                    duration = job.completed_at - job.started_at if job.started_at and job.completed_at else 0
+                    duration = (
+                        job.completed_at - job.started_at
+                        if job.started_at and job.completed_at
+                        else 0
+                    )
                     return {
-                        'video_id': job.video_id,
-                        'status': job.status,
-                        'priority': job.priority,
-                        'duration': duration,
-                        'error': job.error
+                        "video_id": job.video_id,
+                        "status": job.status,
+                        "priority": job.priority,
+                        "duration": duration,
+                        "error": job.error,
                     }
 
             return None

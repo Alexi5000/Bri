@@ -8,6 +8,11 @@ import numpy as np
 import pytest
 from PIL import Image
 
+# The optional ``[ai]`` extra ships torch + ultralytics; skip the whole
+# module when either dep is absent so CI without heavy ML deps still collects.
+pytest.importorskip("torch", reason="torch is part of the optional [ai] extra")
+pytest.importorskip("ultralytics", reason="ultralytics is part of the optional [ai] extra")
+
 from models.tools import DetectedObject, DetectionResult
 from tools.object_detector import ObjectDetector
 
@@ -173,9 +178,7 @@ class TestObjectDetectorInitialization:
 class TestDetectObjectsInFrames:
     """Tests for ObjectDetector.detect_objects_in_frames() method."""
 
-    def test_detect_objects_success(
-        self, object_detector, sample_image, mock_yolo_model
-    ):
+    def test_detect_objects_success(self, object_detector, sample_image, mock_yolo_model):
         """Test detecting objects in frames successfully."""
         frame_paths = [sample_image]
         timestamps = [5.0]
@@ -208,16 +211,12 @@ class TestDetectObjectsInFrames:
         # Mock model inference results for each frame
         mock_results = [
             create_mock_detection_result(num_objects=2),
-            create_mock_detection_result(
-                num_objects=1, class_ids=[16], confidences=[0.9]
-            ),
+            create_mock_detection_result(num_objects=1, class_ids=[16], confidences=[0.9]),
             create_mock_detection_result(num_objects=0),
             create_mock_detection_result(
                 num_objects=3, class_ids=[0, 2, 17], confidences=[0.8, 0.7, 0.85]
             ),
-            create_mock_detection_result(
-                num_objects=1, class_ids=[1], confidences=[0.65]
-            ),
+            create_mock_detection_result(num_objects=1, class_ids=[1], confidences=[0.65]),
         ]
         mock_yolo_model["model"].return_value = mock_results
 
@@ -318,9 +317,7 @@ class TestDetectObjectsInFrames:
 
         assert len(results) == 1
 
-    def test_detect_objects_no_detections(
-        self, object_detector, sample_image, mock_yolo_model
-    ):
+    def test_detect_objects_no_detections(self, object_detector, sample_image, mock_yolo_model):
         """Test detecting objects when no objects are found."""
         frame_paths = [sample_image]
         timestamps = [1.0]
@@ -335,9 +332,7 @@ class TestDetectObjectsInFrames:
         assert results[0].frame_timestamp == 1.0
         assert len(results[0].objects) == 0
 
-    def test_detect_objects_bbox_format(
-        self, object_detector, sample_image, mock_yolo_model
-    ):
+    def test_detect_objects_bbox_format(self, object_detector, sample_image, mock_yolo_model):
         """Test that bounding boxes are in correct format (x, y, w, h)."""
         frame_paths = [sample_image]
         timestamps = [1.0]
@@ -381,9 +376,7 @@ class TestDetectObjectsInFrames:
 class TestSearchForObject:
     """Tests for ObjectDetector.search_for_object() method."""
 
-    def test_search_for_object_found(
-        self, object_detector, multiple_images, mock_yolo_model
-    ):
+    def test_search_for_object_found(self, object_detector, multiple_images, mock_yolo_model):
         """Test searching for specific object class that exists."""
         timestamps = [0.0, 2.0, 4.0, 6.0, 8.0]
 
@@ -392,9 +385,7 @@ class TestSearchForObject:
             create_mock_detection_result(
                 num_objects=2, class_ids=[0, 2], confidences=[0.9, 0.8]
             ),  # person, car
-            create_mock_detection_result(
-                num_objects=1, class_ids=[2], confidences=[0.85]
-            ),  # car
+            create_mock_detection_result(num_objects=1, class_ids=[2], confidences=[0.85]),  # car
             create_mock_detection_result(
                 num_objects=1, class_ids=[0], confidences=[0.75]
             ),  # person
@@ -408,9 +399,7 @@ class TestSearchForObject:
         mock_yolo_model["model"].return_value = mock_results
 
         # Search for 'person'
-        results = object_detector.search_for_object(
-            multiple_images, timestamps, "person"
-        )
+        results = object_detector.search_for_object(multiple_images, timestamps, "person")
 
         # Should find person in frames 0, 2, 4
         assert len(results) == 3
@@ -423,30 +412,20 @@ class TestSearchForObject:
             for obj in result.objects:
                 assert obj.class_name == "person"
 
-    def test_search_for_object_not_found(
-        self, object_detector, multiple_images, mock_yolo_model
-    ):
+    def test_search_for_object_not_found(self, object_detector, multiple_images, mock_yolo_model):
         """Test searching for object class that doesn't exist."""
         timestamps = [0.0, 2.0, 4.0]
 
         # Mock results with no 'cat' objects
         mock_results = [
-            create_mock_detection_result(
-                num_objects=1, class_ids=[0], confidences=[0.9]
-            ),  # person
-            create_mock_detection_result(
-                num_objects=1, class_ids=[2], confidences=[0.85]
-            ),  # car
-            create_mock_detection_result(
-                num_objects=1, class_ids=[16], confidences=[0.75]
-            ),  # dog
+            create_mock_detection_result(num_objects=1, class_ids=[0], confidences=[0.9]),  # person
+            create_mock_detection_result(num_objects=1, class_ids=[2], confidences=[0.85]),  # car
+            create_mock_detection_result(num_objects=1, class_ids=[16], confidences=[0.75]),  # dog
         ]
         mock_yolo_model["model"].return_value = mock_results
 
         # Search for 'cat'
-        results = object_detector.search_for_object(
-            multiple_images[:3], timestamps, "cat"
-        )
+        results = object_detector.search_for_object(multiple_images[:3], timestamps, "cat")
 
         # Should return empty list
         assert len(results) == 0
@@ -463,15 +442,9 @@ class TestSearchForObject:
         mock_yolo_model["model"].return_value = [mock_result]
 
         # Search with different cases
-        results_lower = object_detector.search_for_object(
-            [sample_image], timestamps, "car"
-        )
-        results_upper = object_detector.search_for_object(
-            [sample_image], timestamps, "CAR"
-        )
-        results_mixed = object_detector.search_for_object(
-            [sample_image], timestamps, "Car"
-        )
+        results_lower = object_detector.search_for_object([sample_image], timestamps, "car")
+        results_upper = object_detector.search_for_object([sample_image], timestamps, "CAR")
+        results_mixed = object_detector.search_for_object([sample_image], timestamps, "Car")
 
         # All should find the object
         assert len(results_lower) == 1
@@ -492,9 +465,7 @@ class TestSearchForObject:
         )
         mock_yolo_model["model"].return_value = [mock_result]
 
-        results = object_detector.search_for_object(
-            [sample_image], timestamps, "person"
-        )
+        results = object_detector.search_for_object([sample_image], timestamps, "person")
 
         # Should return one result with all 3 person objects
         assert len(results) == 1
@@ -507,9 +478,7 @@ class TestSearchForObject:
         """Test searching with custom confidence threshold."""
         timestamps = [1.0]
 
-        mock_result = create_mock_detection_result(
-            num_objects=1, class_ids=[0], confidences=[0.9]
-        )
+        mock_result = create_mock_detection_result(num_objects=1, class_ids=[0], confidences=[0.9])
         mock_yolo_model["model"].return_value = [mock_result]
 
         results = object_detector.search_for_object(
@@ -534,19 +503,13 @@ class TestSearchForObject:
             create_mock_detection_result(
                 num_objects=3, class_ids=[0, 2, 16], confidences=[0.9, 0.8, 0.85]
             ),
-            create_mock_detection_result(
-                num_objects=2, class_ids=[2, 17], confidences=[0.75, 0.9]
-            ),
-            create_mock_detection_result(
-                num_objects=2, class_ids=[0, 2], confidences=[0.88, 0.82]
-            ),
+            create_mock_detection_result(num_objects=2, class_ids=[2, 17], confidences=[0.75, 0.9]),
+            create_mock_detection_result(num_objects=2, class_ids=[0, 2], confidences=[0.88, 0.82]),
         ]
         mock_yolo_model["model"].return_value = mock_results
 
         # Search for 'car' only
-        results = object_detector.search_for_object(
-            multiple_images[:3], timestamps, "car"
-        )
+        results = object_detector.search_for_object(multiple_images[:3], timestamps, "car")
 
         # Should find car in all 3 frames
         assert len(results) == 3
@@ -565,9 +528,7 @@ class TestSearchForObject:
 class TestDetectSingleFrame:
     """Tests for ObjectDetector.detect_single_frame() method."""
 
-    def test_detect_single_frame_success(
-        self, object_detector, sample_image, mock_yolo_model
-    ):
+    def test_detect_single_frame_success(self, object_detector, sample_image, mock_yolo_model):
         """Test detecting objects in a single frame."""
         timestamp = 5.5
 
@@ -580,9 +541,7 @@ class TestDetectSingleFrame:
         assert result.frame_timestamp == 5.5
         assert len(result.objects) == 2
 
-    def test_detect_single_frame_no_objects(
-        self, object_detector, sample_image, mock_yolo_model
-    ):
+    def test_detect_single_frame_no_objects(self, object_detector, sample_image, mock_yolo_model):
         """Test detecting single frame with no objects."""
         timestamp = 1.0
 
@@ -663,9 +622,7 @@ class TestObjectDetectorEdgeCases:
         assert len(results) == 1
         assert len(results[0].objects) == 2
 
-    def test_bbox_coordinates_are_integers(
-        self, object_detector, sample_image, mock_yolo_model
-    ):
+    def test_bbox_coordinates_are_integers(self, object_detector, sample_image, mock_yolo_model):
         """Test that bounding box coordinates are converted to integers."""
         timestamps = [1.0]
 
@@ -683,15 +640,11 @@ class TestObjectDetectorEdgeCases:
         assert isinstance(w, int)
         assert isinstance(h, int)
 
-    def test_confidence_values_are_floats(
-        self, object_detector, sample_image, mock_yolo_model
-    ):
+    def test_confidence_values_are_floats(self, object_detector, sample_image, mock_yolo_model):
         """Test that confidence values are floats between 0 and 1."""
         timestamps = [1.0]
 
-        mock_result = create_mock_detection_result(
-            num_objects=2, confidences=[0.85, 0.92]
-        )
+        mock_result = create_mock_detection_result(num_objects=2, confidences=[0.85, 0.92])
         mock_yolo_model["model"].return_value = [mock_result]
 
         results = object_detector.detect_objects_in_frames([sample_image], timestamps)
@@ -700,9 +653,7 @@ class TestObjectDetectorEdgeCases:
             assert isinstance(obj.confidence, float)
             assert 0.0 <= obj.confidence <= 1.0
 
-    def test_class_names_are_strings(
-        self, object_detector, sample_image, mock_yolo_model
-    ):
+    def test_class_names_are_strings(self, object_detector, sample_image, mock_yolo_model):
         """Test that class names are strings."""
         timestamps = [1.0]
 
@@ -715,9 +666,7 @@ class TestObjectDetectorEdgeCases:
             assert isinstance(obj.class_name, str)
             assert len(obj.class_name) > 0
 
-    def test_detection_result_structure(
-        self, object_detector, sample_image, mock_yolo_model
-    ):
+    def test_detection_result_structure(self, object_detector, sample_image, mock_yolo_model):
         """Test that DetectionResult has correct structure."""
         timestamps = [1.0]
 

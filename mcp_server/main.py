@@ -49,7 +49,7 @@ setup_logging(
     log_level=Config.LOG_LEVEL,
     log_dir=Config.LOG_DIR,
     json_format=Config.LOG_JSON_FORMAT,
-    enable_rotation=Config.LOG_ROTATION_ENABLED
+    enable_rotation=Config.LOG_ROTATION_ENABLED,
 )
 
 logger = get_logger(__name__)
@@ -59,7 +59,7 @@ perf_logger = get_performance_logger(__name__)
 app = FastAPI(
     title="BRI MCP Server",
     description="Model Context Protocol server for video processing tools",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # Add custom middleware
@@ -93,6 +93,7 @@ async def _bri_error_handler(_request: Request, exc: BriError) -> JSONResponse:
     )
     return JSONResponse(status_code=status_code, content=exc.to_dict())
 
+
 # Initialize tool registry and cache. Tool registration is metadata-only and
 # intentionally safe before startup because optional ML dependencies are loaded
 # lazily only when a tool is executed.
@@ -105,7 +106,7 @@ cache_manager = CacheManager()
 async def startup_event():
     """Initialize server components on startup."""
     logger.info("Starting BRI MCP Server...")
-    
+
     # Validate configuration
     try:
         Config.validate()
@@ -113,24 +114,25 @@ async def startup_event():
     except ValueError as e:
         logger.error("Configuration validation failed: %s", (e))
         raise
-    
+
     # Ensure directories exist
     Config.ensure_directories()
     logger.info("Required directories verified")
-    
+
     # Register all available tools
     tool_registry.register_all_tools()
-    
+
     logger.info("Registered %s tools", (len(tool_registry.list_tools())))
-    
+
     # Start processing queue workers
     try:
         from services.processing_queue import start_queue_workers
+
         await start_queue_workers()
         logger.info("Processing queue workers started")
     except Exception as e:
         logger.error("Failed to start queue workers: %s", (e))
-    
+
     logger.info("Server running on %s", (Config.get_mcp_server_url()))
 
 
@@ -138,15 +140,16 @@ async def startup_event():
 async def shutdown_event():
     """Cleanup on server shutdown."""
     logger.info("Shutting down BRI MCP Server...")
-    
+
     # Shutdown processing queue gracefully
     try:
         from services.processing_queue import shutdown_queue
+
         await shutdown_queue()
         logger.info("Processing queue shutdown complete")
     except Exception as e:
         logger.error("Error during queue shutdown: %s", (e))
-    
+
     cache_manager.close()
 
 
@@ -158,7 +161,7 @@ async def root():
         "version": "1.0.0",
         "status": "running",
         "tools_available": len(tool_registry.list_tools()),
-        "api_versioning": get_version_info()
+        "api_versioning": get_version_info(),
     }
 
 
@@ -178,18 +181,19 @@ async def health_check():
     return HTTP 503 so orchestrators and load balancers can act on the probe.
     """
     import datetime
-    
+
     # Check database connectivity
     db_healthy = True
     db_circuit_state = database_breaker.get_state()
     try:
         from storage.database import get_database
+
         db = get_database()
         db.execute_query("SELECT 1")
     except Exception as e:
         logger.error("Database health check failed: %s", (e))
         db_healthy = False
-    
+
     # Check cache connectivity
     cache_healthy = Config.REDIS_ENABLED
     cache_circuit_state = cache_breaker.get_state()
@@ -199,10 +203,10 @@ async def health_check():
         except Exception as e:
             logger.error("Cache health check failed: %s", (e))
             cache_healthy = False
-    
+
     # Get circuit breaker states
     tool_circuit_state = tool_execution_breaker.get_state()
-    
+
     # Determine overall status
     if db_healthy and (cache_healthy or not Config.REDIS_ENABLED):
         overall_status = "healthy"
@@ -210,7 +214,7 @@ async def health_check():
         overall_status = "degraded"
     else:
         overall_status = "unhealthy"
-    
+
     response = HealthCheckResponse(
         status=overall_status,
         version="1.0.0",
@@ -218,19 +222,21 @@ async def health_check():
         checks={
             "database": {
                 "status": "healthy" if db_healthy else "unhealthy",
-                "circuit_breaker": db_circuit_state
+                "circuit_breaker": db_circuit_state,
             },
             "cache": {
-                "status": "healthy" if cache_healthy else ("disabled" if not Config.REDIS_ENABLED else "unhealthy"),
+                "status": "healthy"
+                if cache_healthy
+                else ("disabled" if not Config.REDIS_ENABLED else "unhealthy"),
                 "enabled": Config.REDIS_ENABLED,
-                "circuit_breaker": cache_circuit_state
+                "circuit_breaker": cache_circuit_state,
             },
             "tools": {
                 "status": "healthy",
                 "count": len(tool_registry.list_tools()),
-                "circuit_breaker": tool_circuit_state
-            }
-        }
+                "circuit_breaker": tool_circuit_state,
+            },
+        },
     )
 
     # Map overall status to HTTP code: 200 healthy/degraded, 503 unhealthy.
@@ -243,19 +249,19 @@ async def health_check():
 async def list_tools(request: Request, version: APIVersion = Depends(get_api_version)):
     """
     List all available tools with their schemas.
-    
+
     Supports versioned endpoint: /v1/tools
-    
+
     Returns:
         Standardized response with list of tool definitions
     """
     # Rate limiting
     await check_rate_limit(request, general_limiter)
-    
+
     try:
         tools = tool_registry.list_tools()
         logger.info("Listed %s available tools (API v%s)", (len(tools)), (version.value))
-        
+
         response = ToolListResponse(
             success=True,
             data={"tools": tools, "count": len(tools)},
@@ -263,18 +269,18 @@ async def list_tools(request: Request, version: APIVersion = Depends(get_api_ver
                 request_id=get_request_id(request),
                 timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                 version=version.value,
-                execution_time=get_execution_time(request)
-            )
+                execution_time=get_execution_time(request),
+            ),
         )
-        
+
         # Add version headers
         return response
-        
+
     except Exception as e:
         logger.error("Failed to list tools: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list tools: {str(e)}"
+            detail=f"Failed to list tools: {str(e)}",
         )
 
 
@@ -284,52 +290,49 @@ async def execute_tool(
     tool_name: str,
     exec_request: ValidatedToolExecutionRequest,
     request: Request,
-    version: APIVersion = Depends(get_api_version)
+    version: APIVersion = Depends(get_api_version),
 ):
     """
     Execute a specific tool with provided parameters and timeout handling.
-    
+
     Args:
         tool_name: Name of the tool to execute
         exec_request: Tool execution request with video_id and parameters
         request: FastAPI request object
-        
+
     Returns:
         Tool execution response with result, status, and metadata
     """
     import asyncio
-    
+
     # Rate limiting
     await check_rate_limit(request, tool_execution_limiter)
-    
+
     # Request size validation
     await RequestSizeValidator.validate_request_size(request)
-    
+
     # Validate parameters size
     RequestSizeValidator.validate_parameters(exec_request.parameters)
-    
+
     # Validate video exists
     VideoIdValidator.validate_or_raise(exec_request.video_id)
-    
+
     start_time = time.time()
     timeout_seconds = Config.TOOL_EXECUTION_TIMEOUT
-    
+
     try:
         # Validate tool exists
         tool = tool_registry.get_tool(tool_name)
         if tool is None:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Tool '{tool_name}' not found"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Tool '{tool_name}' not found"
             )
-        
+
         # Check cache first
         cache_key = cache_manager.generate_cache_key(
-            tool_name,
-            exec_request.video_id,
-            exec_request.parameters
+            tool_name, exec_request.video_id, exec_request.parameters
         )
-        
+
         cached_result = cache_manager.get(cache_key)
         if cached_result is not None:
             execution_time = time.time() - start_time
@@ -342,24 +345,29 @@ async def execute_tool(
                     "result": cached_result,
                     "cached": True,
                     "tool_name": tool_name,
-                    "video_id": exec_request.video_id
+                    "video_id": exec_request.video_id,
                 },
                 metadata=ResponseMetadata(
                     request_id=get_request_id(request),
                     timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                     version="1.0.0",
-                    execution_time=execution_time
-                )
+                    execution_time=execution_time,
+                ),
             )
-        
+
         # Execute tool with timeout
-        logger.info("Executing tool '%s' for video %s (timeout: %ss)", (tool_name), (exec_request.video_id), (timeout_seconds))
+        logger.info(
+            "Executing tool '%s' for video %s (timeout: %ss)",
+            (tool_name),
+            (exec_request.video_id),
+            (timeout_seconds),
+        )
         perf_logger.log_cache_hit(cache_key, hit=False)
-        
+
         try:
             result = await asyncio.wait_for(
                 tool.execute(exec_request.video_id, exec_request.parameters),
-                timeout=timeout_seconds
+                timeout=timeout_seconds,
             )
         except asyncio.TimeoutError:
             execution_time = time.time() - start_time
@@ -369,7 +377,7 @@ async def execute_tool(
                 execution_time,
                 success=False,
                 video_id=exec_request.video_id,
-                error="timeout"
+                error="timeout",
             )
             return ToolExecutionResponseV1(
                 success=False,
@@ -378,24 +386,26 @@ async def execute_tool(
                     "error": f"Tool execution timed out after {timeout_seconds} seconds",
                     "cached": False,
                     "tool_name": tool_name,
-                    "video_id": exec_request.video_id
+                    "video_id": exec_request.video_id,
                 },
                 metadata=ResponseMetadata(
                     request_id=get_request_id(request),
                     timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                     version="1.0.0",
-                    execution_time=execution_time
-                )
+                    execution_time=execution_time,
+                ),
             )
-        
+
         # Cache the result
         cache_manager.set(cache_key, result)
-        
+
         # Store result in database for later retrieval
-        logger.info("Storing %s results in database for video %s...", (tool_name), (exec_request.video_id))
+        logger.info(
+            "Storing %s results in database for video %s...", (tool_name), (exec_request.video_id)
+        )
         _store_tool_result_in_db(exec_request.video_id, tool_name, result)
         logger.info("✓ Database storage confirmed for %s", (tool_name))
-        
+
         execution_time = time.time() - start_time
         logger.info("Tool '%s' executed successfully in %.2fs", tool_name, execution_time)
         perf_logger.log_execution_time(
@@ -403,9 +413,9 @@ async def execute_tool(
             execution_time,
             success=True,
             video_id=exec_request.video_id,
-            cached=False
+            cached=False,
         )
-        
+
         return ToolExecutionResponseV1(
             success=True,
             data={
@@ -413,16 +423,16 @@ async def execute_tool(
                 "result": result,
                 "cached": False,
                 "tool_name": tool_name,
-                "video_id": exec_request.video_id
+                "video_id": exec_request.video_id,
             },
             metadata=ResponseMetadata(
                 request_id=get_request_id(request),
                 timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                 version="1.0.0",
-                execution_time=execution_time
-            )
+                execution_time=execution_time,
+            ),
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -435,14 +445,14 @@ async def execute_tool(
                 "error": str(e),
                 "cached": False,
                 "tool_name": tool_name,
-                "video_id": exec_request.video_id
+                "video_id": exec_request.video_id,
             },
             metadata=ResponseMetadata(
                 request_id=get_request_id(request),
                 timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                 version="1.0.0",
-                execution_time=execution_time
-            )
+                execution_time=execution_time,
+            ),
         )
 
 
@@ -452,101 +462,91 @@ async def process_video(
     video_id: str,
     process_request: ValidatedProcessVideoRequest,
     request: Request,
-    version: APIVersion = Depends(get_api_version)
+    version: APIVersion = Depends(get_api_version),
 ):
     """
     Process a video with multiple tools in batch with parallel execution.
-    
+
     Args:
         video_id: Video identifier
         process_request: Processing request with optional tools list
         request: FastAPI request object
-        
+
     Returns:
         Processing status and results from all tools
     """
     import asyncio
-    
+
     # Rate limiting
     await check_rate_limit(request, video_processing_limiter)
-    
+
     # Request size validation
     await RequestSizeValidator.validate_request_size(request)
-    
+
     # Validate video exists
     VideoIdValidator.validate_or_raise(video_id)
-    
+
     start_time = time.time()
-    
+
     try:
         # Default to all tools if not specified
         tools = process_request.tools
         if tools is None:
             tools = [tool["name"] for tool in tool_registry.list_tools()]
-        
+
         logger.info("Processing video %s with tools: %s (parallel execution)", (video_id), (tools))
-        
+
         # Create tasks for parallel execution
         tasks = []
         tool_names = []
-        
+
         for tool_name in tools:
             tool = tool_registry.get_tool(tool_name)
             if tool is None:
                 logger.warning("Tool '%s' not found, skipping", (tool_name))
                 continue
-            
+
             # Check cache first
-            cache_key = cache_manager.generate_cache_key(
-                tool_name,
-                video_id,
-                {}
-            )
-            
+            cache_key = cache_manager.generate_cache_key(tool_name, video_id, {})
+
             cached_result = cache_manager.get(cache_key)
             if cached_result is not None:
                 logger.info("Cache hit for %s", (tool_name))
                 # Skip creating task for cached results
                 continue
-            
+
             # Create async task for tool execution
             tasks.append(_execute_tool_with_cache(tool, tool_name, video_id, cache_key))
             tool_names.append(tool_name)
-        
+
         # Execute all tools in parallel
         if tasks:
             task_results = await asyncio.gather(*tasks, return_exceptions=True)
         else:
             task_results = []
-        
+
         # Process results
         results = {}
         errors = {}
-        
+
         # Add cached results
         for tool_name in tools:
             cache_key = cache_manager.generate_cache_key(tool_name, video_id, {})
             cached_result = cache_manager.get(cache_key)
             if cached_result is not None and tool_name not in tool_names:
-                results[tool_name] = {
-                    "result": cached_result,
-                    "cached": True
-                }
-        
+                results[tool_name] = {"result": cached_result, "cached": True}
+
         # Add parallel execution results
         for tool_name, result in zip(tool_names, task_results):
             if isinstance(result, Exception):
                 logger.error("Tool '%s' failed: %s", (tool_name), (str(result)))
                 errors[tool_name] = str(result)
             else:
-                results[tool_name] = {
-                    "result": result,
-                    "cached": False
-                }
+                results[tool_name] = {"result": result, "cached": False}
                 logger.info("Tool '%s' completed successfully", (tool_name))
-        
+
         execution_time = time.time() - start_time
-        
+
         logger.info(
             f"Video processing complete: {len(results)} succeeded, "
             f"{len(errors)} failed in {execution_time:.2f}s (parallel)"
@@ -557,9 +557,9 @@ async def process_video(
             success=len(errors) == 0,
             video_id=video_id,
             tools_succeeded=len(results),
-            tools_failed=len(errors)
+            tools_failed=len(errors),
         )
-        
+
         return VideoProcessingResponse(
             success=len(errors) == 0,
             data={
@@ -569,52 +569,52 @@ async def process_video(
                 "errors": errors if errors else None,
                 "parallel_execution": True,
                 "tools_succeeded": len(results),
-                "tools_failed": len(errors)
+                "tools_failed": len(errors),
             },
             metadata=ResponseMetadata(
                 request_id=get_request_id(request),
                 timestamp=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                 version="1.0.0",
-                execution_time=execution_time
-            )
+                execution_time=execution_time,
+            ),
         )
-        
+
     except Exception as e:
         execution_time = time.time() - start_time
         logger.error("Video processing failed: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Video processing failed: {str(e)}"
+            detail=f"Video processing failed: {str(e)}",
         )
 
 
 async def _execute_tool_with_cache(tool, tool_name: str, video_id: str, cache_key: str):
     """Execute a tool and cache the result.
-    
+
     Args:
         tool: Tool instance to execute
         tool_name: Name of the tool
         video_id: Video identifier
         cache_key: Cache key for storing result
-        
+
     Returns:
         Tool execution result
-        
+
     Raises:
         Exception: If tool execution fails
     """
     try:
         result = await tool.execute(video_id, {})
-        
+
         # Cache the result
         cache_manager.set(cache_key, result)
         logger.debug("Cached %s results for video %s", (tool_name), (video_id))
-        
+
         # Store result in database for later retrieval
         logger.info("Storing %s results in database for video %s...", (tool_name), (video_id))
         _store_tool_result_in_db(video_id, tool_name, result)
         logger.info("✓ Database storage confirmed for %s", (tool_name))
-        
+
         return result
     except Exception as e:
         logger.error("Tool '%s' execution failed: %s", (tool_name), (str(e)))
@@ -623,7 +623,7 @@ async def _execute_tool_with_cache(tool, tool_name: str, video_id: str, cache_ke
 
 def _store_tool_result_in_db(video_id: str, tool_name: str, result: dict):
     """Store tool result in database for later retrieval by the agent.
-    
+
     Uses VideoProcessingService for centralized storage with:
     - Transaction support
     - Validation after INSERT
@@ -632,16 +632,16 @@ def _store_tool_result_in_db(video_id: str, tool_name: str, result: dict):
     """
     try:
         from services.video_processing_service import get_video_processing_service
-        
+
         service = get_video_processing_service()
-        
+
         # Store results with transaction support and validation
         counts = service.store_tool_results(video_id, tool_name, result)
-        
+
         # Log detailed metrics
         for data_type, count in counts.items():
             logger.info("✓ Stored %s %s for video %s", (count), (data_type), (video_id))
-        
+
     except Exception as e:
         logger.error("Failed to store tool result in database: %s", e, exc_info=True)
 
@@ -650,7 +650,7 @@ def _store_tool_result_in_db(video_id: str, tool_name: str, result: dict):
 async def get_cache_stats():
     """
     Get cache statistics.
-    
+
     Returns:
         Cache statistics including total keys and memory usage
     """
@@ -661,7 +661,7 @@ async def get_cache_stats():
         logger.error("Failed to get cache stats: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get cache stats: {str(e)}"
+            detail=f"Failed to get cache stats: {str(e)}",
         )
 
 
@@ -669,26 +669,22 @@ async def get_cache_stats():
 async def clear_video_cache(video_id: str):
     """
     Clear all cached results for a specific video.
-    
+
     Args:
         video_id: Video identifier
-        
+
     Returns:
         Number of cache entries deleted
     """
     try:
         deleted = cache_manager.clear_video_cache(video_id)
         logger.info("Cleared %s cache entries for video %s", (deleted), (video_id))
-        return {
-            "status": "success",
-            "video_id": video_id,
-            "deleted_count": deleted
-        }
+        return {"status": "success", "video_id": video_id, "deleted_count": deleted}
     except Exception as e:
         logger.error("Failed to clear video cache: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to clear video cache: {str(e)}"
+            detail=f"Failed to clear video cache: {str(e)}",
         )
 
 
@@ -696,7 +692,7 @@ async def clear_video_cache(video_id: str):
 async def clear_all_cache():
     """
     Clear all BRI cache entries.
-    
+
     Returns:
         Success status
     """
@@ -711,7 +707,7 @@ async def clear_all_cache():
         logger.error("Failed to clear cache: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to clear cache: {str(e)}"
+            detail=f"Failed to clear cache: {str(e)}",
         )
 
 
@@ -719,20 +715,20 @@ async def clear_all_cache():
 async def get_video_data_status(video_id: str, request: Request):
     """
     Get data completeness status for a video.
-    
+
     Shows detailed information about what data has been processed and stored:
     - Frames extracted
     - Captions generated
     - Transcripts created
     - Objects detected
-    
+
     Args:
         video_id: Video identifier
         request: FastAPI request object
-        
+
     Returns:
         Detailed status report with counts for each data type
-        
+
     Example Response:
         {
             "video_id": "vid_123",
@@ -746,28 +742,28 @@ async def get_video_data_status(video_id: str, request: Request):
     """
     # Rate limiting
     await check_rate_limit(request, general_limiter)
-    
+
     # Validate video exists
     VideoIdValidator.validate_or_raise(video_id)
-    
+
     try:
         from services.video_processing_service import get_video_processing_service
-        
+
         service = get_video_processing_service()
         status_report = service.verify_video_data_completeness(video_id)
-        
+
         logger.info(
             f"Video {video_id} status: complete={status_report['complete']}, "
             f"missing={status_report['missing']}"
         )
-        
+
         return status_report
-        
+
     except Exception as e:
         logger.error("Failed to get video status: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get video status: {str(e)}"
+            detail=f"Failed to get video status: {str(e)}",
         )
 
 
@@ -776,84 +772,82 @@ async def process_video_progressive(
     video_id: str,
     prog_request: ValidatedProgressiveProcessRequest,
     http_request: Request,
-    priority: str = "normal"  # "high", "normal", "low"
+    priority: str = "normal",  # "high", "normal", "low"
 ):
     """
     Process a video progressively through 3 stages using job queue.
-    
+
     Stages:
     1. EXTRACTING (Fast - 10s): Extract frames → User can start chatting
     2. CAPTIONING (Medium - 60s): Generate captions → Richer responses
     3. TRANSCRIBING (Slow - 120s): Full transcription + objects → Complete intelligence
-    
+
     This endpoint returns immediately and processing continues in background queue.
     Use GET /videos/{video_id}/progress to check status.
-    
+
     Args:
         video_id: Video identifier
         prog_request: Request with video_path
         http_request: FastAPI request object
         priority: Job priority ("high", "normal", "low")
-        
+
     Returns:
         Immediate response with processing queued confirmation
     """
     # Rate limiting
     await check_rate_limit(http_request, video_processing_limiter)
-    
+
     # Request size validation
     await RequestSizeValidator.validate_request_size(http_request)
-    
+
     # Validate video exists
     VideoIdValidator.validate_or_raise(video_id)
-    
+
     try:
         from services.processing_queue import JobPriority, get_processing_queue
-        
+
         queue = get_processing_queue()
-        
+
         # Map priority string to enum
         priority_map = {
             "high": JobPriority.HIGH,
             "normal": JobPriority.NORMAL,
-            "low": JobPriority.LOW
+            "low": JobPriority.LOW,
         }
         job_priority = priority_map.get(priority.lower(), JobPriority.NORMAL)
-        
+
         # Add job to queue
         job = await queue.add_job(
-            video_id=video_id,
-            video_path=prog_request.video_path,
-            priority=job_priority
+            video_id=video_id, video_path=prog_request.video_path, priority=job_priority
         )
-        
+
         logger.info(
             f"Added video {video_id} to processing queue "
             f"(priority: {priority}, status: {job.status})"
         )
-        
+
         # Get queue status
         queue_status = queue.get_status()
-        
+
         return {
-            "status": "queued" if job.status == 'queued' else "processing",
+            "status": "queued" if job.status == "queued" else "processing",
             "video_id": video_id,
             "message": f"Video added to processing queue with {priority} priority",
             "queue_position": len([j for j in queue.queue if j.priority <= job.priority]),
-            "queue_size": queue_status['queued_jobs'],
-            "active_jobs": queue_status['active_jobs'],
+            "queue_size": queue_status["queued_jobs"],
+            "active_jobs": queue_status["active_jobs"],
             "stages": [
                 "Stage 1: Extracting frames (10s)",
                 "Stage 2: Generating captions (60s)",
-                "Stage 3: Transcription + objects (120s)"
-            ]
+                "Stage 3: Transcription + objects (120s)",
+            ],
         }
-        
+
     except Exception as e:
         logger.error("Failed to queue progressive processing: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to queue processing: {str(e)}"
+            detail=f"Failed to queue processing: {str(e)}",
         )
 
 
@@ -861,14 +855,14 @@ async def process_video_progressive(
 async def get_processing_progress(video_id: str, request: Request):
     """
     Get current processing progress for a video.
-    
+
     Args:
         video_id: Video identifier
         request: FastAPI request object
-        
+
     Returns:
         Current processing progress or None if not processing
-        
+
     Example Response:
         {
             "video_id": "vid_123",
@@ -883,23 +877,23 @@ async def get_processing_progress(video_id: str, request: Request):
     """
     # Rate limiting
     await check_rate_limit(request, general_limiter)
-    
+
     # Validate video exists
     VideoIdValidator.validate_or_raise(video_id)
-    
+
     try:
         from services.progressive_processor import get_progressive_processor
-        
+
         processor = get_progressive_processor()
         progress = processor.get_progress(video_id)
-        
+
         if progress is None:
             return {
                 "video_id": video_id,
                 "processing": False,
-                "message": "No active processing for this video"
+                "message": "No active processing for this video",
             }
-        
+
         return {
             "video_id": progress.video_id,
             "processing": True,
@@ -909,14 +903,14 @@ async def get_processing_progress(video_id: str, request: Request):
             "frames_extracted": progress.frames_extracted,
             "captions_generated": progress.captions_generated,
             "transcript_segments": progress.transcript_segments,
-            "objects_detected": progress.objects_detected
+            "objects_detected": progress.objects_detected,
         }
-        
+
     except Exception as e:
         logger.error("Failed to get processing progress: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get progress: {str(e)}"
+            detail=f"Failed to get progress: {str(e)}",
         )
 
 
@@ -924,23 +918,23 @@ async def get_processing_progress(video_id: str, request: Request):
 async def get_circuit_breaker_status(request: Request):
     """
     Get status of all circuit breakers.
-    
+
     Returns:
         Status of all circuit breakers in the system
     """
     # Rate limiting
     await check_rate_limit(request, general_limiter)
-    
+
     return create_standard_response(
         data={
             "circuit_breakers": {
                 "database": database_breaker.get_state(),
                 "cache": cache_breaker.get_state(),
-                "tool_execution": tool_execution_breaker.get_state()
+                "tool_execution": tool_execution_breaker.get_state(),
             }
         },
         execution_time=get_execution_time(request),
-        request_id=get_request_id(request)
+        request_id=get_request_id(request),
     )
 
 
@@ -948,41 +942,41 @@ async def get_circuit_breaker_status(request: Request):
 async def reset_circuit_breaker(breaker_name: str, request: Request):
     """
     Manually reset a circuit breaker.
-    
+
     Args:
         breaker_name: Name of circuit breaker to reset
         request: FastAPI request object
-        
+
     Returns:
         Success status
     """
     # Rate limiting
     await check_rate_limit(request, general_limiter)
-    
+
     breakers = {
         "database": database_breaker,
         "cache": cache_breaker,
-        "tool_execution": tool_execution_breaker
+        "tool_execution": tool_execution_breaker,
     }
-    
+
     if breaker_name not in breakers:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Circuit breaker '{breaker_name}' not found"
+            detail=f"Circuit breaker '{breaker_name}' not found",
         )
-    
+
     breaker = breakers[breaker_name]
     breaker.reset()
-    
+
     logger.info("Circuit breaker '%s' reset via API", (breaker_name))
-    
+
     return create_standard_response(
         data={
             "message": f"Circuit breaker '{breaker_name}' reset successfully",
-            "state": breaker.get_state()
+            "state": breaker.get_state(),
         },
         execution_time=get_execution_time(request),
-        request_id=get_request_id(request)
+        request_id=get_request_id(request),
     )
 
 
@@ -990,30 +984,30 @@ async def reset_circuit_breaker(breaker_name: str, request: Request):
 async def get_queue_status():
     """
     Get processing queue status.
-    
+
     Returns:
         Queue statistics including active jobs, queued jobs, and completed jobs
     """
     try:
         from services.processing_queue import get_processing_queue
-        
+
         queue = get_processing_queue()
         status = queue.get_status()
-        
+
         return {
             "status": "running",
-            "active_jobs": status['active_jobs'],
-            "queued_jobs": status['queued_jobs'],
-            "completed_jobs": status['completed_jobs'],
-            "workers": status['workers'],
-            "shutdown_requested": status['shutdown_requested']
+            "active_jobs": status["active_jobs"],
+            "queued_jobs": status["queued_jobs"],
+            "completed_jobs": status["completed_jobs"],
+            "workers": status["workers"],
+            "shutdown_requested": status["shutdown_requested"],
         }
-        
+
     except Exception as e:
         logger.error("Failed to get queue status: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get queue status: {str(e)}"
+            detail=f"Failed to get queue status: {str(e)}",
         )
 
 
@@ -1021,53 +1015,52 @@ async def get_queue_status():
 async def get_job_status(video_id: str):
     """
     Get status of a specific processing job.
-    
+
     Args:
         video_id: Video identifier
-        
+
     Returns:
         Job status or 404 if not found
     """
     try:
         from services.processing_queue import get_processing_queue
-        
+
         queue = get_processing_queue()
         job_status = queue.get_job_status(video_id)
-        
+
         if job_status is None:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"No job found for video {video_id}"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"No job found for video {video_id}"
             )
-        
+
         return job_status
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error("Failed to get job status: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get job status: {str(e)}"
+            detail=f"Failed to get job status: {str(e)}",
         )
 
 
 async def _run_progressive_processing(video_id: str, video_path: str):
     """
     Run progressive processing in background.
-    
+
     Args:
         video_id: Video identifier
         video_path: Path to video file
     """
     try:
         from services.progressive_processor import get_progressive_processor
-        
+
         processor = get_progressive_processor()
         await processor.process_video_progressive(video_id, video_path)
-        
+
         logger.info("Progressive processing completed for video %s", (video_id))
-        
+
     except Exception as e:
         logger.error("Progressive processing failed for video %s: %s", (video_id), (e))
 
@@ -1078,21 +1071,17 @@ async def global_exception_handler(request, exc):
     logger.error("Unhandled exception: %s", str(exc), exc_info=True)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={
-            "status": "error",
-            "detail": "An unexpected error occurred",
-            "error": str(exc)
-        }
+        content={"status": "error", "detail": "An unexpected error occurred", "error": str(exc)},
     )
 
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     uvicorn.run(
         "main:app",
         host=Config.MCP_SERVER_HOST,
         port=Config.MCP_SERVER_PORT,
         reload=Config.DEBUG,
-        log_level=Config.LOG_LEVEL.lower()
+        log_level=Config.LOG_LEVEL.lower(),
     )

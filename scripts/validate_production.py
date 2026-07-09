@@ -5,6 +5,7 @@ Runs fast checks that do not require GPU models, Redis, a Groq key, or uploaded
 media. Heavy model and end-to-end media tests remain available through pytest
 markers and local QA workflows.
 """
+
 from __future__ import annotations
 
 import os

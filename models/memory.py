@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 class MemoryRecord(BaseModel):
     """A single conversation turn stored in memory."""
+
     message_id: str = Field(..., description="Unique message identifier")
     video_id: str = Field(..., description="Associated video ID")
     role: str = Field(..., description="Message role: 'user' or 'assistant'")

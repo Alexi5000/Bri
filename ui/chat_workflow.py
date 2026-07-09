@@ -49,7 +49,9 @@ def render_video_chat_workspace(service: BriApplicationService, video: VideoSumm
         render_chat_panel(service, video.video_id, conversation_history)
 
 
-def render_chat_panel(service: BriApplicationService, video_id: str, conversation_history: list[Any]) -> None:
+def render_chat_panel(
+    service: BriApplicationService, video_id: str, conversation_history: list[Any]
+) -> None:
     """Render conversation history, suggestions, and message input for a video."""
 
     st.markdown("### 💭 Conversation")
@@ -71,7 +73,9 @@ def process_user_message(service: BriApplicationService, video_id: str, message:
 
     validation_error = _validate_message(video_id, message)
     if validation_error:
-        st.warning(validation_error) if validation_error.startswith("⚠️") or validation_error.startswith("⏱️") else st.error(validation_error)
+        st.warning(validation_error) if validation_error.startswith(
+            "⚠️"
+        ) or validation_error.startswith("⏱️") else st.error(validation_error)
         return False
 
     st.session_state.last_message_time = time.time()
@@ -131,7 +135,7 @@ def _render_message(message: Any) -> None:
                 <span style="font-size: 0.8rem; color: #666;">just now</span>
             </div>
             <div style="padding: 1rem 1.25rem; border-radius: 18px; {bubble_style}">
-                {str(content).replace(chr(10), '<br>')}
+                {str(content).replace(chr(10), "<br>")}
             </div>
         </div>
         """,

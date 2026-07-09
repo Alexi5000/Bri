@@ -54,15 +54,29 @@ if "def add_video(" not in database_text:
 
 contract_path = ROOT / "tests" / "production" / "test_production_contract.py"
 contract_text = contract_path.read_text(encoding="utf-8")
-contract_text = contract_text.replace("ROOT = Path(__file__).resolve().parents[1]", "ROOT = Path(__file__).resolve().parents[2]")
+contract_text = contract_text.replace(
+    "ROOT = Path(__file__).resolve().parents[1]", "ROOT = Path(__file__).resolve().parents[2]"
+)
 contract_path.write_text(contract_text, encoding="utf-8")
 
 storage_path = ROOT / "tests" / "production" / "test_storage_contract.py"
 storage_text = storage_path.read_text(encoding="utf-8")
-storage_text = storage_text.replace("    assert db_path.exists()\n", "    database.initialize_schema()\n    assert db_path.exists()\n")
-storage_text = storage_text.replace("    video_id = database.add_video(\"demo.mp4\", \"/tmp/demo.mp4\", 12.5)\n", "    database.initialize_schema()\n    video_id = database.add_video(\"demo.mp4\", \"/tmp/demo.mp4\", 12.5)\n")
-storage_text = storage_text.replace("    assert database.get_video(video_id)[\"status\"] == \"completed\"\n", "    assert database.get_video(video_id)[\"processing_status\"] == \"complete\"\n")
-storage_text = storage_text.replace("    database.update_video_status(video_id, \"completed\")\n", "    database.update_video_status(video_id, \"complete\")\n")
+storage_text = storage_text.replace(
+    "    assert db_path.exists()\n",
+    "    database.initialize_schema()\n    assert db_path.exists()\n",
+)
+storage_text = storage_text.replace(
+    '    video_id = database.add_video("demo.mp4", "/tmp/demo.mp4", 12.5)\n',
+    '    database.initialize_schema()\n    video_id = database.add_video("demo.mp4", "/tmp/demo.mp4", 12.5)\n',
+)
+storage_text = storage_text.replace(
+    '    assert database.get_video(video_id)["status"] == "completed"\n',
+    '    assert database.get_video(video_id)["processing_status"] == "complete"\n',
+)
+storage_text = storage_text.replace(
+    '    database.update_video_status(video_id, "completed")\n',
+    '    database.update_video_status(video_id, "complete")\n',
+)
 storage_path.write_text(storage_text, encoding="utf-8")
 
 print("Patched storage convenience methods and production test expectations.")

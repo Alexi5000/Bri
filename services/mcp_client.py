@@ -81,7 +81,9 @@ class MCPClient:
             response = httpx.get(f"{self.base_url}/health", timeout=min(self.timeout, 5.0))
             response.raise_for_status()
             payload = self._unwrap(response.json())
-            status = str(payload.get("status", "healthy")) if isinstance(payload, dict) else "healthy"
+            status = (
+                str(payload.get("status", "healthy")) if isinstance(payload, dict) else "healthy"
+            )
             components = payload.get("components", {}) if isinstance(payload, dict) else {}
             return MCPHealth(
                 online=True,
@@ -121,7 +123,9 @@ class MCPClient:
                     MCPToolSummary(
                         name=str(item.get("name", "")),
                         description=str(item.get("description", "")),
-                        parameters=item.get("parameters", {}) if isinstance(item.get("parameters", {}), dict) else {},
+                        parameters=item.get("parameters", {})
+                        if isinstance(item.get("parameters", {}), dict)
+                        else {},
                     )
                 )
         return [tool for tool in tools if tool.name]
@@ -150,7 +154,9 @@ class MCPClient:
     def video_status(self, video_id: str) -> dict[str, Any]:
         """Return processing/status data for a video from the MCP API."""
 
-        response = httpx.get(f"{self.base_url}/videos/{video_id}/status", timeout=min(self.timeout, 10.0))
+        response = httpx.get(
+            f"{self.base_url}/videos/{video_id}/status", timeout=min(self.timeout, 10.0)
+        )
         response.raise_for_status()
         payload = self._unwrap(response.json())
         return payload if isinstance(payload, dict) else {"status": payload}
@@ -158,7 +164,9 @@ class MCPClient:
     def video_progress(self, video_id: str) -> VideoProgress:
         """Return typed progressive-processing status for a video."""
 
-        response = httpx.get(f"{self.base_url}/videos/{video_id}/progress", timeout=min(self.timeout, 10.0))
+        response = httpx.get(
+            f"{self.base_url}/videos/{video_id}/progress", timeout=min(self.timeout, 10.0)
+        )
         response.raise_for_status()
         payload = self._unwrap(response.json())
         data = payload if isinstance(payload, dict) else {"message": str(payload)}
@@ -180,10 +188,14 @@ class MCPClient:
         """Unwrap Bri's standardized API envelope when present."""
 
         if isinstance(payload, dict):
-            if "data" in payload and any(key in payload for key in ("success", "request_id", "api_version")):
+            if "data" in payload and any(
+                key in payload for key in ("success", "request_id", "api_version")
+            ):
                 return payload["data"]
             if payload.get("success") is False:
-                raise MCPClientError(str(payload.get("error") or payload.get("message") or "MCP request failed."))
+                raise MCPClientError(
+                    str(payload.get("error") or payload.get("message") or "MCP request failed.")
+                )
         return payload
 
 

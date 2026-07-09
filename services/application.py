@@ -83,7 +83,9 @@ class DashboardSnapshot:
     conversations: int
     mcp_health: MCPHealth
     tools: list[MCPToolSummary] = field(default_factory=list)
-    generated_at: str = field(default_factory=lambda: datetime.utcnow().isoformat(timespec="seconds") + "Z")
+    generated_at: str = field(
+        default_factory=lambda: datetime.utcnow().isoformat(timespec="seconds") + "Z"
+    )
 
 
 @dataclass(frozen=True)
@@ -173,7 +175,9 @@ class BriApplicationService:
         row = database.get_video(video_id)
         return self._row_to_video_summary(row) if row else None
 
-    def upload_video(self, uploaded_file: BinaryIO | Any, *, start_processing: bool = True) -> UploadResult:
+    def upload_video(
+        self, uploaded_file: BinaryIO | Any, *, start_processing: bool = True
+    ) -> UploadResult:
         """Persist an uploaded video and optionally start MCP progressive processing."""
 
         if uploaded_file is None:
@@ -185,8 +189,12 @@ class BriApplicationService:
             file_size = int(getattr(uploaded_file, "size", 0) or 0)
             is_valid, validation_error = self.file_store.validate_video_file(filename, file_size)
             if not is_valid:
-                return UploadResult(ok=False, message=str(validation_error or "Unsupported video upload."))
-            saved_video_id, saved_path = self.file_store.save_uploaded_video(uploaded_file, filename, video_id)
+                return UploadResult(
+                    ok=False, message=str(validation_error or "Unsupported video upload.")
+                )
+            saved_video_id, saved_path = self.file_store.save_uploaded_video(
+                uploaded_file, filename, video_id
+            )
             video_id = saved_video_id
             duration = self._safe_video_duration(saved_path)
             database.insert_video(
@@ -199,7 +207,9 @@ class BriApplicationService:
             processing_result: ProcessingStartResult | None = None
             if start_processing:
                 try:
-                    processing_result = self.mcp_client.start_progressive_processing(video_id, saved_path)
+                    processing_result = self.mcp_client.start_progressive_processing(
+                        video_id, saved_path
+                    )
                     database.update_video_status(video_id, "processing")
                     video = self.get_video(video_id)
                 except Exception as exc:
@@ -212,7 +222,9 @@ class BriApplicationService:
             return UploadResult(
                 ok=True,
                 video=video,
-                message="Video uploaded and processing workflow started." if processing_result else "Video uploaded.",
+                message="Video uploaded and processing workflow started."
+                if processing_result
+                else "Video uploaded.",
                 processing=processing_result,
             )
         except Exception as exc:
@@ -242,7 +254,9 @@ class BriApplicationService:
         database.delete_video(video_id)
         return bool(file_deleted)
 
-    def get_conversation_history(self, video_id: str, *, limit: int = 20) -> list[ConversationMessage]:
+    def get_conversation_history(
+        self, video_id: str, *, limit: int = 20
+    ) -> list[ConversationMessage]:
         """Return chat history through the middle-layer boundary."""
 
         from services.memory import Memory
@@ -269,14 +283,18 @@ class BriApplicationService:
 
         settings = configure_sqlite_for_production()
         integrity = run_integrity_check()
-        return PersistenceReadiness(configured=True, integrity=integrity, production_settings=settings)
+        return PersistenceReadiness(
+            configured=True, integrity=integrity, production_settings=settings
+        )
 
     def create_database_backup(self) -> DatabaseBackupResult:
         """Create an online SQLite backup through the middle-layer boundary."""
 
         return create_sqlite_backup()
 
-    def send_message(self, video_id: str, message: str, *, timeout_seconds: float = 60.0) -> ChatResult:
+    def send_message(
+        self, video_id: str, message: str, *, timeout_seconds: float = 60.0
+    ) -> ChatResult:
         """Run a conversational exchange through Bri's agent layer."""
 
         from services.agent import GroqAgent
@@ -286,7 +304,9 @@ class BriApplicationService:
         if not clean_message:
             return ChatResult(ok=False, message="Please enter a message.")
         if len(clean_message) > 5000:
-            return ChatResult(ok=False, message="Message too long. Please keep it under 5,000 characters.")
+            return ChatResult(
+                ok=False, message="Message too long. Please keep it under 5,000 characters."
+            )
         if not self.get_video(video_id):
             return ChatResult(ok=False, message="Select a valid video before chatting.")
 
@@ -295,16 +315,24 @@ class BriApplicationService:
         asyncio.set_event_loop(loop)
         try:
             agent = GroqAgent()
-            response = loop.run_until_complete(asyncio.wait_for(agent.chat(clean_message, video_id), timeout=timeout_seconds))
+            response = loop.run_until_complete(
+                asyncio.wait_for(agent.chat(clean_message, video_id), timeout=timeout_seconds)
+            )
             elapsed_ms = int((time.perf_counter() - started) * 1000)
             if response and hasattr(response, "message"):
-                return ChatResult(ok=True, message=str(response.message), response=response, elapsed_ms=elapsed_ms)
-            return ChatResult(ok=False, message="Bri returned an invalid response. Please try again.")
+                return ChatResult(
+                    ok=True, message=str(response.message), response=response, elapsed_ms=elapsed_ms
+                )
+            return ChatResult(
+                ok=False, message="Bri returned an invalid response. Please try again."
+            )
         except asyncio.TimeoutError:
             return ChatResult(ok=False, message="Request timed out. Please try a simpler question.")
         except Exception as exc:
             logger.error("Conversation workflow failed: %s", exc, exc_info=True)
-            return ChatResult(ok=False, message=ErrorHandler.format_error_for_user(exc, {"query": clean_message}))
+            return ChatResult(
+                ok=False, message=ErrorHandler.format_error_for_user(exc, {"query": clean_message})
+            )
         finally:
             loop.close()
 
@@ -317,7 +345,9 @@ class BriApplicationService:
             duration=float(data.get("duration") or 0.0),
             processing_status=str(data.get("processing_status") or "unknown"),
             thumbnail_path=data.get("thumbnail_path"),
-            upload_timestamp=str(data.get("upload_timestamp")) if data.get("upload_timestamp") is not None else None,
+            upload_timestamp=str(data.get("upload_timestamp"))
+            if data.get("upload_timestamp") is not None
+            else None,
         )
 
     def _count_conversations(self) -> int:

@@ -22,7 +22,7 @@ components = {
     "Test Suite": "scripts/test_video_player.py",
     "Documentation": "docs/task_21_video_player.md",
     "Usage Guide": "docs/task_21_usage_guide.md",
-    "Summary": "docs/task_21_summary.md"
+    "Summary": "docs/task_21_summary.md",
 }
 
 all_exist = True
@@ -47,8 +47,9 @@ try:
         render_video_player_with_context,
         navigate_to_timestamp,
         get_current_playback_time,
-        extract_timestamps_from_conversation
+        extract_timestamps_from_conversation,
     )
+
     print("   ✓ All player functions imported successfully")
 except ImportError as e:
     print(f"   ✗ Import failed: {e}")
@@ -63,17 +64,17 @@ functions_to_check = {
     "render_video_player_with_context": ["video_path", "video_id", "conversation_timestamps"],
     "navigate_to_timestamp": ["video_id", "timestamp"],
     "get_current_playback_time": ["video_id"],
-    "extract_timestamps_from_conversation": ["conversation_history"]
+    "extract_timestamps_from_conversation": ["conversation_history"],
 }
 
 for func_name, expected_params in functions_to_check.items():
     func = locals()[func_name]
     sig = inspect.signature(func)
     actual_params = list(sig.parameters.keys())
-    
+
     # Check if expected params are present (may have additional params)
     missing = [p for p in expected_params if p not in actual_params]
-    
+
     if missing:
         print(f"   ✗ {func_name}: Missing parameters {missing}")
         sys.exit(1)
@@ -91,7 +92,7 @@ test_cases = [
     (125, "02:05"),
     (3600, "01:00:00"),
     (3665, "01:01:05"),
-    (7325, "02:02:05")
+    (7325, "02:02:05"),
 ]
 
 for seconds, expected in test_cases:
@@ -105,15 +106,17 @@ for seconds, expected in test_cases:
 # 5. Test timestamp extraction
 print("\n5. Testing timestamp extraction...")
 
+
 class MockMessage:
     def __init__(self, content, timestamps=None):
         self.content = content
         self.timestamps = timestamps or []
 
+
 conversation = [
     MockMessage("What happens at 1:23?"),
     MockMessage("Check 2:45", timestamps=[165.0]),
-    MockMessage("Also at 01:30:45")
+    MockMessage("Also at 01:30:45"),
 ]
 
 timestamps = extract_timestamps_from_conversation(conversation)
@@ -131,9 +134,12 @@ for ts in expected_timestamps:
 print("\n6. Testing navigation functions...")
 
 import streamlit as st
-if not hasattr(st, 'session_state'):
+
+if not hasattr(st, "session_state"):
+
     class MockSessionState(dict):
         pass
+
     st.session_state = MockSessionState()
 
 video_id = "test_video_123"
@@ -168,7 +174,7 @@ with open("app.py", "r", encoding="utf-8") as f:
     else:
         print("   ✗ Main app missing player import")
         sys.exit(1)
-    
+
     if "render_video_player" in app_content:
         print("   ✓ Main app uses player component")
     else:
@@ -181,7 +187,7 @@ print("\n8. Verifying documentation...")
 doc_files = [
     "docs/task_21_video_player.md",
     "docs/task_21_usage_guide.md",
-    "docs/task_21_summary.md"
+    "docs/task_21_summary.md",
 ]
 
 for doc_file in doc_files:

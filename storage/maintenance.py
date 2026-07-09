@@ -74,7 +74,9 @@ def configure_sqlite_for_production(db_path: str | None = None) -> dict[str, Any
     }
 
 
-def create_sqlite_backup(db_path: str | None = None, backup_dir: str | None = None) -> DatabaseBackupResult:
+def create_sqlite_backup(
+    db_path: str | None = None, backup_dir: str | None = None
+) -> DatabaseBackupResult:
     """Create an online backup using SQLite's backup API.
 
     This keeps the application usable while a backup is created and avoids copying

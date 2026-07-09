@@ -40,7 +40,9 @@ def test_configuration_masks_secrets_by_default(monkeypatch: pytest.MonkeyPatch)
     assert secret_config["groq_api_key"] == "gsk_secret_value"
 
 
-def test_production_requires_groq_key_unless_explicit_test_override(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_production_requires_groq_key_unless_explicit_test_override(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     reset_config(monkeypatch)
     monkeypatch.setenv("APP_ENV", "production")
     monkeypatch.setenv("DEBUG", "false")
@@ -65,7 +67,9 @@ def test_debug_mode_is_rejected_in_production(monkeypatch: pytest.MonkeyPatch) -
         Config.validate()
 
 
-def test_ensure_directories_creates_runtime_locations(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_ensure_directories_creates_runtime_locations(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     reset_config(monkeypatch)
     monkeypatch.setenv("DATABASE_PATH", str(tmp_path / "db" / "bri.sqlite3"))
     monkeypatch.setenv("VIDEO_STORAGE_PATH", str(tmp_path / "videos"))

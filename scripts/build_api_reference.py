@@ -53,10 +53,7 @@ PACKAGES: dict[str, list[str]] = {
 def _stub(package: str, module: str) -> str:
     """Return the mkdocstrings stub for one module."""
     return (
-        f"# `{package}.{module}`\n\n"
-        f"::: {package}.{module}\n"
-        "    options:\n"
-        "      show_source: true\n"
+        f"# `{package}.{module}`\n\n::: {package}.{module}\n    options:\n      show_source: true\n"
     )
 
 

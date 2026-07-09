@@ -35,13 +35,26 @@ class TestValidatorsProperty:
 
     @given(
         message=st.text(min_size=1, max_size=200),
-        code=st.one_of(st.none(), st.text(min_size=1, max_size=32, alphabet=st.characters(
-            whitelist_categories=("Lu", "Ll", "Nd"), max_codepoint=0x7E,
-        ))),
+        code=st.one_of(
+            st.none(),
+            st.text(
+                min_size=1,
+                max_size=32,
+                alphabet=st.characters(
+                    whitelist_categories=("Lu", "Ll", "Nd"),
+                    max_codepoint=0x7E,
+                ),
+            ),
+        ),
         extra_ctx=st.dictionaries(
-            keys=st.text(min_size=1, max_size=16, alphabet=st.characters(
-                whitelist_categories=("Lu", "Ll"), max_codepoint=0x7E,
-            )),
+            keys=st.text(
+                min_size=1,
+                max_size=16,
+                alphabet=st.characters(
+                    whitelist_categories=("Lu", "Ll"),
+                    max_codepoint=0x7E,
+                ),
+            ),
             values=st.integers(min_value=-1000, max_value=1000),
             max_size=4,
         ),
@@ -69,9 +82,7 @@ class TestValidatorsProperty:
         temperature=st.floats(min_value=0.0, max_value=2.0, allow_nan=False),
     )
     @settings(max_examples=30)
-    def test_pydantic_validation_round_trip(
-        self, count: int, temperature: float
-    ) -> None:
+    def test_pydantic_validation_round_trip(self, count: int, temperature: float) -> None:
         """Response models must round-trip through dict and back."""
         from models.responses import ToolExecutionResponse
 
@@ -125,9 +136,7 @@ class TestResponseEnvelopesSnapshot:
         envelope["bare"] = BriError("plain").to_dict()
         assert envelope == snapshot
 
-    def test_tool_execution_response_shape(
-        self, snapshot: SnapshotAssertion
-    ) -> None:
+    def test_tool_execution_response_shape(self, snapshot: SnapshotAssertion) -> None:
         """The standard tool-execution envelope serialises to a stable JSON."""
         from models.responses import ToolExecutionResponse
 
@@ -140,9 +149,7 @@ class TestResponseEnvelopesSnapshot:
         payload = response.model_dump()
         assert payload == snapshot
 
-    def test_assistant_message_response_shape(
-        self, snapshot: SnapshotAssertion
-    ) -> None:
+    def test_assistant_message_response_shape(self, snapshot: SnapshotAssertion) -> None:
         """The chat-panel assistant message shape is locked."""
         from models.responses import AssistantMessageResponse
 
@@ -196,9 +203,7 @@ class TestMCPContracts:
             assert "name" in tool
             assert "description" in tool
 
-    def test_validation_error_returns_400(
-        self, fastapi_client: TestClient
-    ) -> None:
+    def test_validation_error_returns_400(self, fastapi_client: TestClient) -> None:
         """POST /tools/{name}/execute with a bad payload returns 400 or 422."""
         # Pick the first tool name and submit a clearly invalid body.
         tools_resp = fastapi_client.get("/tools")
@@ -215,9 +220,7 @@ class TestMCPContracts:
         # 400 for ValidationError, 404/422 for unknown tool / pydantic.
         assert response.status_code in (400, 404, 422)
 
-    def test_bri_error_envelope_via_http(
-        self, fastapi_client: TestClient
-    ) -> None:
+    def test_bri_error_envelope_via_http(self, fastapi_client: TestClient) -> None:
         """BriError raised inside a handler becomes a structured JSON error."""
 
         from services.errors import NotFoundError, http_status_for

@@ -18,17 +18,17 @@ class MemoryError(StorageError):
 
 class Memory:
     """Memory Manager for storing and retrieving conversation history.
-    
+
     Manages conversation history in SQLite database with support for:
     - Inserting new conversation turns
     - Retrieving conversation history with limits
     - Resetting (wiping) conversation history per video
     - Performance-optimized queries with indexing
     """
-    
+
     def __init__(self, db: Database | None = None):
         """Initialize Memory Manager.
-        
+
         Args:
             db: Database instance. Creates new instance if not provided.
         """
@@ -36,16 +36,16 @@ class Memory:
         if not self.db._connection:
             self.db.connect()
         logger.info("Memory Manager initialized")
-    
+
     def insert(self, memory_record: MemoryRecord) -> None:
         """Store a conversation turn in memory.
-        
+
         Args:
             memory_record: MemoryRecord containing message details
-            
+
         Raises:
             MemoryError: If insertion fails
-            
+
         Example:
             memory.insert(MemoryRecord(
                 message_id="msg_123",
@@ -64,47 +64,48 @@ class Memory:
                 memory_record.video_id,
                 memory_record.role,
                 memory_record.content,
-                memory_record.timestamp.isoformat()
+                memory_record.timestamp.isoformat(),
             )
-            
+
             self.db.execute_update(query, parameters)
-            logger.debug("Inserted memory record: %s for video %s", (memory_record.message_id), (memory_record.video_id))
-            
+            logger.debug(
+                "Inserted memory record: %s for video %s",
+                (memory_record.message_id),
+                (memory_record.video_id),
+            )
+
         except DatabaseError as e:
             logger.error("Failed to insert memory record: %s", (e))
             raise MemoryError(f"Failed to store conversation turn: {e}")
-    
+
     def get_conversation_history(
-        self,
-        video_id: str,
-        limit: int | None = None,
-        offset: int = 0
+        self, video_id: str, limit: int | None = None, offset: int = 0
     ) -> list[MemoryRecord]:
         """Retrieve conversation history for a video with pagination support.
-        
+
         Args:
             video_id: Video identifier
             limit: Maximum number of messages to retrieve (most recent first).
                    Uses Config.MAX_CONVERSATION_HISTORY if not provided.
             offset: Number of messages to skip (for pagination)
-            
+
         Returns:
             List of MemoryRecord objects in chronological order (oldest first)
-            
+
         Raises:
             MemoryError: If retrieval fails
-            
+
         Example:
             # Get first page (most recent 10 messages)
             history = memory.get_conversation_history("vid_456", limit=10)
-            
+
             # Get second page (next 10 messages)
             history_page2 = memory.get_conversation_history("vid_456", limit=10, offset=10)
         """
         try:
             if limit is None:
                 limit = Config.MAX_CONVERSATION_HISTORY
-            
+
             # Query retrieves most recent messages with pagination support
             # Uses index on (video_id, timestamp DESC) for performance
             query = """
@@ -115,36 +116,43 @@ class Memory:
                 LIMIT ? OFFSET ?
             """
             parameters = (video_id, limit, offset)
-            
+
             rows = self.db.execute_query(query, parameters)
-            
+
             # Convert rows to MemoryRecord objects and reverse to chronological order
             memory_records = []
             for row in reversed(rows):
-                memory_records.append(MemoryRecord(
-                    message_id=row['message_id'],
-                    video_id=row['video_id'],
-                    role=row['role'],
-                    content=row['content'],
-                    timestamp=datetime.fromisoformat(row['timestamp'])
-                ))
-            
-            logger.debug("Retrieved %s memory records for video %s (offset: %s)", (len(memory_records)), (video_id), (offset))
+                memory_records.append(
+                    MemoryRecord(
+                        message_id=row["message_id"],
+                        video_id=row["video_id"],
+                        role=row["role"],
+                        content=row["content"],
+                        timestamp=datetime.fromisoformat(row["timestamp"]),
+                    )
+                )
+
+            logger.debug(
+                "Retrieved %s memory records for video %s (offset: %s)",
+                (len(memory_records)),
+                (video_id),
+                (offset),
+            )
             return memory_records
-            
+
         except DatabaseError as e:
             logger.error("Failed to retrieve conversation history: %s", (e))
             raise MemoryError(f"Failed to retrieve conversation history: {e}")
-    
+
     def get_by_message_id(self, message_id: str) -> MemoryRecord | None:
         """Retrieve a specific message by ID.
-        
+
         Args:
             message_id: Unique message identifier
-            
+
         Returns:
             MemoryRecord if found, None otherwise
-            
+
         Raises:
             MemoryError: If retrieval fails
         """
@@ -155,37 +163,37 @@ class Memory:
                 WHERE message_id = ?
             """
             parameters = (message_id,)
-            
+
             rows = self.db.execute_query(query, parameters)
-            
+
             if not rows:
                 return None
-            
+
             row = rows[0]
             return MemoryRecord(
-                message_id=row['message_id'],
-                video_id=row['video_id'],
-                role=row['role'],
-                content=row['content'],
-                timestamp=datetime.fromisoformat(row['timestamp'])
+                message_id=row["message_id"],
+                video_id=row["video_id"],
+                role=row["role"],
+                content=row["content"],
+                timestamp=datetime.fromisoformat(row["timestamp"]),
             )
-            
+
         except DatabaseError as e:
             logger.error("Failed to retrieve message %s: %s", (message_id), (e))
             raise MemoryError(f"Failed to retrieve message: {e}")
-    
+
     def reset_memory(self, video_id: str) -> int:
         """Clear all conversation history for a video (memory wipe).
-        
+
         Args:
             video_id: Video identifier
-            
+
         Returns:
             Number of deleted records
-            
+
         Raises:
             MemoryError: If deletion fails
-            
+
         Example:
             deleted_count = memory.reset_memory("vid_456")
             print(f"Deleted {deleted_count} messages")
@@ -196,24 +204,26 @@ class Memory:
                 WHERE video_id = ?
             """
             parameters = (video_id,)
-            
+
             deleted_count = self.db.execute_update(query, parameters)
-            logger.info("Reset memory for video %s: deleted %s records", (video_id), (deleted_count))
+            logger.info(
+                "Reset memory for video %s: deleted %s records", (video_id), (deleted_count)
+            )
             return deleted_count
-            
+
         except DatabaseError as e:
             logger.error("Failed to reset memory for video %s: %s", (video_id), (e))
             raise MemoryError(f"Failed to reset conversation history: {e}")
-    
+
     def count_messages(self, video_id: str) -> int:
         """Count total messages for a video.
-        
+
         Args:
             video_id: Video identifier
-            
+
         Returns:
             Number of messages
-            
+
         Raises:
             MemoryError: If count fails
         """
@@ -224,33 +234,30 @@ class Memory:
                 WHERE video_id = ?
             """
             parameters = (video_id,)
-            
+
             rows = self.db.execute_query(query, parameters)
-            return rows[0]['count'] if rows else 0
-            
+            return rows[0]["count"] if rows else 0
+
         except DatabaseError as e:
             logger.error("Failed to count messages for video %s: %s", (video_id), (e))
             raise MemoryError(f"Failed to count messages: {e}")
-    
+
     def add_memory_pair(
-        self,
-        video_id: str,
-        user_message: str,
-        assistant_message: str
+        self, video_id: str, user_message: str, assistant_message: str
     ) -> tuple[str, str]:
         """Convenience method to add a user-assistant message pair.
-        
+
         Args:
             video_id: Video identifier
             user_message: User's message content
             assistant_message: Assistant's response content
-            
+
         Returns:
             Tuple of (user_message_id, assistant_message_id)
-            
+
         Raises:
             MemoryError: If insertion fails
-            
+
         Example:
             user_id, assistant_id = memory.add_memory_pair(
                 "vid_456",
@@ -261,77 +268,77 @@ class Memory:
         try:
             user_id = f"msg_{uuid.uuid4().hex[:16]}"
             assistant_id = f"msg_{uuid.uuid4().hex[:16]}"
-            
+
             # Insert user message
-            self.insert(MemoryRecord(
-                message_id=user_id,
-                video_id=video_id,
-                role="user",
-                content=user_message,
-                timestamp=datetime.now()
-            ))
-            
+            self.insert(
+                MemoryRecord(
+                    message_id=user_id,
+                    video_id=video_id,
+                    role="user",
+                    content=user_message,
+                    timestamp=datetime.now(),
+                )
+            )
+
             # Insert assistant message
-            self.insert(MemoryRecord(
-                message_id=assistant_id,
-                video_id=video_id,
-                role="assistant",
-                content=assistant_message,
-                timestamp=datetime.now()
-            ))
-            
+            self.insert(
+                MemoryRecord(
+                    message_id=assistant_id,
+                    video_id=video_id,
+                    role="assistant",
+                    content=assistant_message,
+                    timestamp=datetime.now(),
+                )
+            )
+
             logger.debug("Added memory pair for video %s", (video_id))
             return user_id, assistant_id
-            
+
         except MemoryError as e:
             logger.error("Failed to add memory pair: %s", (e))
             raise
-    
-    def get_recent_context(
-        self,
-        video_id: str,
-        max_messages: int = 6
-    ) -> str:
+
+    def get_recent_context(self, video_id: str, max_messages: int = 6) -> str:
         """Get recent conversation history formatted as context string.
-        
+
         Args:
             video_id: Video identifier
             max_messages: Maximum number of recent messages to include
-            
+
         Returns:
             Formatted conversation history string
-            
+
         Example:
             context = memory.get_recent_context("vid_456", max_messages=4)
             # Returns: "User: What's in the video?\nAssistant: I see a park scene..."
         """
         try:
             history = self.get_conversation_history(video_id, limit=max_messages)
-            
+
             if not history:
                 return ""
-            
+
             context_lines = []
             for record in history:
                 role_label = "User" if record.role == "user" else "Assistant"
                 context_lines.append(f"{role_label}: {record.content}")
-            
+
             return "\n".join(context_lines)
-            
+
         except MemoryError as e:
             logger.warning("Failed to get recent context: %s", (e))
             return ""
-    
+
     def close(self) -> None:
         """Close database connection."""
         if self.db:
             self.db.close()
             logger.info("Memory Manager closed")
-    
+
     def __enter__(self):
         """Context manager entry."""
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         """Context manager exit."""
         self.close()

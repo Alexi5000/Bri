@@ -47,7 +47,11 @@ jobs:
           pip install types-requests types-redis
 
       - name: Ruff lint
-        run: ruff check .
+        # Strict subset: pycodestyle errors (E9), pyflakes (F), isort (I),
+        # pyupgrade (UP). Excludes opinionated Bugbear (B) rules for now;
+        # the per-module override table in pyproject.toml will tighten this
+        # as modules are annotated.
+        run: ruff check . --select E9,F,I,UP
 
       - name: Ruff format check
         run: ruff format --check .

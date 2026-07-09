@@ -13,16 +13,16 @@ logger = logging.getLogger(__name__)
 def render_welcome_screen():
     """
     Render the welcome screen with friendly greeting and upload prompt.
-    
+
     Features:
     - Friendly greeting with BRI introduction
     - Tagline: "Ask. Understand. Remember."
     - Upload prompt with drag-and-drop area
     - Friendly microcopy and emoji touches
-    
+
     Requirements: 1.2, 2.3
     """
-    
+
     # Hero section with greeting
     st.markdown(
         """
@@ -35,9 +35,9 @@ def render_welcome_screen():
             </p>
         </div>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
-    
+
     # Tagline
     st.markdown(
         """
@@ -52,14 +52,14 @@ def render_welcome_screen():
             </p>
         </div>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
-    
+
     # Introduction section
     st.markdown("---")
-    
+
     col1, col2, col3 = st.columns([1, 2, 1])
-    
+
     with col2:
         st.markdown(
             """
@@ -72,11 +72,11 @@ def render_welcome_screen():
                 </p>
             </div>
             """,
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
-    
+
     st.markdown("---")
-    
+
     # Upload section
     st.markdown(
         """
@@ -89,17 +89,17 @@ def render_welcome_screen():
             </p>
         </div>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
-    
+
     # File uploader with friendly microcopy
     uploaded_file = st.file_uploader(
         label="Choose a video file",
-        type=['mp4', 'avi', 'mov', 'mkv'],
+        type=["mp4", "avi", "mov", "mkv"],
         help="I work best with MP4, AVI, MOV, or MKV files 📹",
-        label_visibility="collapsed"
+        label_visibility="collapsed",
     )
-    
+
     # Friendly microcopy below uploader
     st.markdown(
         """
@@ -109,13 +109,13 @@ def render_welcome_screen():
             </p>
         </div>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
-    
+
     # Handle file upload
     if uploaded_file is not None:
         _handle_upload(uploaded_file)
-    
+
     # Feature highlights
     st.markdown("---")
     st.markdown(
@@ -126,32 +126,32 @@ def render_welcome_screen():
             </h3>
         </div>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
-    
+
     col1, col2, col3 = st.columns(3)
-    
+
     with col1:
         _render_feature_card(
             emoji="🔍",
             title="Find Moments",
-            description="Ask me to find specific scenes, objects, or people in your video"
+            description="Ask me to find specific scenes, objects, or people in your video",
         )
-    
+
     with col2:
         _render_feature_card(
             emoji="💬",
             title="Natural Chat",
-            description="Talk to me like a friend—I understand follow-up questions and context"
+            description="Talk to me like a friend—I understand follow-up questions and context",
         )
-    
+
     with col3:
         _render_feature_card(
             emoji="🧠",
             title="Remember Everything",
-            description="I keep track of our conversations so you never have to repeat yourself"
+            description="I keep track of our conversations so you never have to repeat yourself",
         )
-    
+
     # Footer with encouraging message
     st.markdown("---")
     st.markdown(
@@ -163,14 +163,14 @@ def render_welcome_screen():
             </p>
         </div>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
 
 
 def _render_feature_card(emoji: str, title: str, description: str):
     """
     Render a feature highlight card.
-    
+
     Args:
         emoji: Emoji icon for the feature
         title: Feature title
@@ -199,25 +199,25 @@ def _render_feature_card(emoji: str, title: str, description: str):
             </p>
         </div>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )
 
 
 def _handle_upload(uploaded_file):
     """
     Handle video file upload with friendly confirmation.
-    
+
     Validates the file, saves it to storage, creates database record,
     and displays friendly confirmation or error messages.
-    
+
     Args:
         uploaded_file: Streamlit UploadedFile object
-        
+
     Requirements: 2.1, 2.2, 2.3, 2.4, 2.6
     """
     from services.application import get_application_service
     from services.error_handler import ErrorHandler
-    
+
     try:
         # Show initial friendly message and route persistence through the production middle layer.
         with st.spinner("Got it! Let me take a look... 🔍"):
@@ -235,28 +235,30 @@ def _handle_upload(uploaded_file):
             duration = video.duration
 
             # Add to session state from the typed middle-layer result.
-            if 'uploaded_videos' not in st.session_state:
+            if "uploaded_videos" not in st.session_state:
                 st.session_state.uploaded_videos = []
 
-            st.session_state.uploaded_videos.append({
-                'video_id': video.video_id,
-                'filename': video.filename,
-                'file_path': video.file_path,
-                'duration': video.duration,
-                'processing_status': video.processing_status,
-                'thumbnail_path': video.thumbnail_path,
-                'upload_timestamp': video.upload_timestamp,
-            })
-        
+            st.session_state.uploaded_videos.append(
+                {
+                    "video_id": video.video_id,
+                    "filename": video.filename,
+                    "file_path": video.file_path,
+                    "duration": video.duration,
+                    "processing_status": video.processing_status,
+                    "thumbnail_path": video.thumbnail_path,
+                    "upload_timestamp": video.upload_timestamp,
+                }
+            )
+
         # Show friendly success message
-        st.success(
-            f"✨ Perfect! I've got **{uploaded_file.name}** saved and ready to go!"
-        )
-        
+        st.success(f"✨ Perfect! I've got **{uploaded_file.name}** saved and ready to go!")
+
         # Show file details in a friendly way
         file_size_mb = uploaded_file.size / (1024 * 1024)
-        duration_str = f"{int(duration // 60)}:{int(duration % 60):02d}" if duration > 0 else "Unknown"
-        
+        duration_str = (
+            f"{int(duration // 60)}:{int(duration % 60):02d}" if duration > 0 else "Unknown"
+        )
+
         st.markdown(
             f"""
             <div style='
@@ -274,9 +276,9 @@ def _handle_upload(uploaded_file):
                 </p>
             </div>
             """,
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
-        
+
         # Start video processing
         st.markdown("---")
         st.markdown(
@@ -290,27 +292,26 @@ def _handle_upload(uploaded_file):
                 </p>
             </div>
             """,
-            unsafe_allow_html=True
+            unsafe_allow_html=True,
         )
-        
+
         # Trigger video processing through the production middle layer.
         _process_video_with_progress(video_id)
-        
+
         # Show button to view in library
         st.markdown("---")
         col1, col2, col3 = st.columns([1, 1, 1])
         with col2:
             if st.button("📚 View in Library", type="primary", use_container_width=True):
-                st.session_state.current_view = 'library'
+                st.session_state.current_view = "library"
                 st.rerun()
-    
+
     except Exception as e:
         # Catch-all error handler
         logger.error(f"Unexpected error during upload: {e}")
-        
+
         error_msg = ErrorHandler.format_error_for_user(
-            e,
-            {'upload': True, 'filename': uploaded_file.name}
+            e, {"upload": True, "filename": uploaded_file.name}
         )
         st.error(f"😅 {error_msg}")
 
@@ -318,16 +319,16 @@ def _handle_upload(uploaded_file):
 def _process_video_with_progress(video_id: str):
     """
     Process video progressively with stage-based progress indicators.
-    
+
     Uses progressive processing (3 stages) so user can start chatting quickly.
-    
+
     Args:
         video_id: Video identifier to process
-        
+
     Requirements: 1.3, 3.6, 3.7
     """
     from services.application import get_application_service
-    
+
     try:
         service = get_application_service()
         video = service.get_video(video_id)
@@ -352,12 +353,10 @@ def _process_video_with_progress(video_id: str):
             logger.error(f"Failed to start progressive processing: {e}")
             st.error(f"😅 Couldn't start processing: {str(e)}")
             return
-        
+
         # Show immediate success message
-        st.success(
-            "✨ **Processing started!** I'm analyzing your video in the background."
-        )
-        
+        st.success("✨ **Processing started!** I'm analyzing your video in the background.")
+
         # Show stage information
         st.info(
             """
@@ -370,7 +369,7 @@ def _process_video_with_progress(video_id: str):
             💬 **You can start chatting as soon as Stage 1 completes!**
             """
         )
-        
+
         # Show progress tracking option
         with st.expander("📈 Track Processing Progress"):
             st.markdown(
@@ -383,7 +382,7 @@ def _process_video_with_progress(video_id: str):
                 I'll let you know when each stage completes! 🎉
                 """
             )
-    
+
     except Exception as e:
         logger.error(f"Video processing failed: {e}")
         st.error(f"😅 Couldn't process video: {str(e)}")
@@ -408,5 +407,5 @@ def render_empty_state():
             </p>
         </div>
         """,
-        unsafe_allow_html=True
+        unsafe_allow_html=True,
     )

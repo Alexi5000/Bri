@@ -31,7 +31,11 @@ print("\nTesting Config class...")
 from config import Config
 
 if Config.GROQ_API_KEY:
-    masked_key = Config.GROQ_API_KEY[:10] + "..." + Config.GROQ_API_KEY[-4:] if len(Config.GROQ_API_KEY) > 14 else "***"
+    masked_key = (
+        Config.GROQ_API_KEY[:10] + "..." + Config.GROQ_API_KEY[-4:]
+        if len(Config.GROQ_API_KEY) > 14
+        else "***"
+    )
     print(f"✅ Config.GROQ_API_KEY loaded: {masked_key}")
 else:
     print("❌ Config.GROQ_API_KEY is empty!")

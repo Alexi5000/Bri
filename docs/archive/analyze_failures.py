@@ -1,10 +1,10 @@
 import json
 
-data = json.load(open('eval_report_75befeed.json'))
-failed = [t for t in data['detailed_results'] if not t['passed']]
+data = json.load(open("eval_report_75befeed.json"))
+failed = [t for t in data["detailed_results"] if not t["passed"]]
 
-print(f'Failed tests: {len(failed)}/50\n')
-print('='*80)
+print(f"Failed tests: {len(failed)}/50\n")
+print("=" * 80)
 
 for t in failed:
     print(f"\nTest {t['test_id']}: {t['question']}")

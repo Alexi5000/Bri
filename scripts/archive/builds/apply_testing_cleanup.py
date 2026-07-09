@@ -69,7 +69,7 @@ def __getattr__(name: str) -> Any:
 
 write(
     "tests/production/test_config_validation.py",
-    '''from __future__ import annotations
+    """from __future__ import annotations
 
 from pathlib import Path
 
@@ -149,12 +149,12 @@ def test_ensure_directories_creates_runtime_locations(tmp_path: Path, monkeypatc
 
     for directory in ["db", "videos", "frames", "cache", "logs"]:
         assert (tmp_path / directory).is_dir()
-''',
+""",
 )
 
 write(
     "tests/production/test_api_contract.py",
-    '''from __future__ import annotations
+    """from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
@@ -208,12 +208,12 @@ def test_tool_execution_rejects_path_traversal_payload() -> None:
     )
 
     assert response.status_code == 422
-''',
+""",
 )
 
 write(
     "tests/production/test_storage_contract.py",
-    '''from __future__ import annotations
+    """from __future__ import annotations
 
 from pathlib import Path
 
@@ -241,12 +241,12 @@ def test_database_records_processing_status(tmp_path: Path) -> None:
     database.update_video_status(video_id, "completed")
 
     assert database.get_video(video_id)["status"] == "completed"
-''',
+""",
 )
 
 write(
     "tests/production/test_agent_contract.py",
-    '''from __future__ import annotations
+    """from __future__ import annotations
 
 from services.agent import AgentService
 
@@ -281,12 +281,12 @@ def test_agent_service_builds_prompt_with_context() -> None:
     assert "Summarize" in prompt
     assert "person" in prompt
     assert "hello" in prompt
-''',
+""",
 )
 
 write(
     "tests/README.md",
-    '''# Bri Test Strategy
+    """# Bri Test Strategy
 
 Bri uses a tiered test strategy so the default suite is reliable in CI while the
 media and model workflows can still be exercised in fully provisioned developer
@@ -302,12 +302,12 @@ environments.
 The default `pytest` command intentionally points at `tests/production`. Legacy
 media tests remain available, but they are not part of the release gate because
 they require large optional dependencies and local model downloads.
-''',
+""",
 )
 
 write(
     ".github/workflows/ci.yml",
-    '''name: Bri CI
+    """name: Bri CI
 
 on:
   push:
@@ -340,7 +340,7 @@ jobs:
           python scripts/validate_production.py
           python scripts/smoke_api.py
           pytest
-''',
+""",
 )
 
 # Update production validation to the new default suite location.
@@ -348,7 +348,9 @@ validation_path = ROOT / "scripts" / "validate_production.py"
 if validation_path.exists():
     text = validation_path.read_text(encoding="utf-8")
     text = text.replace("pytest tests/test_production_contract.py", "pytest tests/production")
-    text = text.replace('"pytest", "tests/test_production_contract.py"', '"pytest", "tests/production"')
+    text = text.replace(
+        '"pytest", "tests/test_production_contract.py"', '"pytest", "tests/production"'
+    )
     validation_path.write_text(text, encoding="utf-8")
 
 # Patch pyproject test collection to the stable production suite and add markers.

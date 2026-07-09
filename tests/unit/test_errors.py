@@ -1,4 +1,5 @@
 """Unit tests for the BriError hierarchy and the API-boundary exception handler."""
+
 from __future__ import annotations
 
 import importlib
@@ -77,7 +78,9 @@ def bri_classes() -> list[type[Exception]]:
     safe: list[type[Exception]] = []
     for name, module_name in _DOMAIN_ERRORS.items():
         try:
-            cls = _import_error_class(module_name, name if name != "DBValidationError" else "ValidationError")
+            cls = _import_error_class(
+                module_name, name if name != "DBValidationError" else "ValidationError"
+            )
         except ImportError:
             continue
         safe.append(cls)

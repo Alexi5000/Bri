@@ -24,11 +24,14 @@ def _get_logger():
 
     return get_logger(__name__)
 
+
 try:
     from dotenv import load_dotenv
 except ModuleNotFoundError:  # pragma: no cover - minimal validation environments
+
     def load_dotenv(*_args: object, **_kwargs: object) -> bool:
         return False
+
 
 load_dotenv()
 
@@ -108,8 +111,16 @@ class ConfigMeta(type):
             "APP_VERSION": ("APP_VERSION", "1.0.0", str),
             "GROQ_API_KEY": ("GROQ_API_KEY", "", str),
             "GROQ_MODEL": ("GROQ_MODEL", "llama-3.1-70b-versatile", str),
-            "GROQ_TEMPERATURE": ("GROQ_TEMPERATURE", "0.7", lambda value: float(_strip_inline_comment(value))),
-            "GROQ_MAX_TOKENS": ("GROQ_MAX_TOKENS", "1024", lambda value: int(_strip_inline_comment(value))),
+            "GROQ_TEMPERATURE": (
+                "GROQ_TEMPERATURE",
+                "0.7",
+                lambda value: float(_strip_inline_comment(value)),
+            ),
+            "GROQ_MAX_TOKENS": (
+                "GROQ_MAX_TOKENS",
+                "1024",
+                lambda value: int(_strip_inline_comment(value)),
+            ),
             "REDIS_URL": ("REDIS_URL", "redis://localhost:6379", str),
             "REDIS_ENABLED": ("REDIS_ENABLED", "false", _to_bool),
             "DATABASE_PATH": ("DATABASE_PATH", "data/bri.db", str),
@@ -117,17 +128,57 @@ class ConfigMeta(type):
             "FRAME_STORAGE_PATH": ("FRAME_STORAGE_PATH", "data/frames", str),
             "CACHE_STORAGE_PATH": ("CACHE_STORAGE_PATH", "data/cache", str),
             "MCP_SERVER_HOST": ("MCP_SERVER_HOST", "localhost", str),
-            "MCP_SERVER_PORT": ("MCP_SERVER_PORT", "8000", lambda value: int(_strip_inline_comment(value))),
+            "MCP_SERVER_PORT": (
+                "MCP_SERVER_PORT",
+                "8000",
+                lambda value: int(_strip_inline_comment(value)),
+            ),
             "MCP_SERVER_URL": ("MCP_SERVER_URL", "", str),
-            "ALLOWED_ORIGINS": ("ALLOWED_ORIGINS", "http://localhost:8501,http://127.0.0.1:8501", _split_csv),
-            "MAX_UPLOAD_MB": ("MAX_UPLOAD_MB", "500", lambda value: int(_strip_inline_comment(value))),
-            "MAX_FRAMES_PER_VIDEO": ("MAX_FRAMES_PER_VIDEO", "20", lambda value: int(_strip_inline_comment(value))),
-            "FRAME_EXTRACTION_INTERVAL": ("FRAME_EXTRACTION_INTERVAL", "2.0", lambda value: float(_strip_inline_comment(value))),
-            "CACHE_TTL_HOURS": ("CACHE_TTL_HOURS", "24", lambda value: int(_strip_inline_comment(value))),
-            "MAX_CONVERSATION_HISTORY": ("MAX_CONVERSATION_HISTORY", "10", lambda value: int(_strip_inline_comment(value))),
-            "TOOL_EXECUTION_TIMEOUT": ("TOOL_EXECUTION_TIMEOUT", "120", lambda value: int(_strip_inline_comment(value))),
-            "REQUEST_TIMEOUT": ("REQUEST_TIMEOUT", "30", lambda value: int(_strip_inline_comment(value))),
-            "LAZY_LOAD_BATCH_SIZE": ("LAZY_LOAD_BATCH_SIZE", "3", lambda value: int(_strip_inline_comment(value))),
+            "ALLOWED_ORIGINS": (
+                "ALLOWED_ORIGINS",
+                "http://localhost:8501,http://127.0.0.1:8501",
+                _split_csv,
+            ),
+            "MAX_UPLOAD_MB": (
+                "MAX_UPLOAD_MB",
+                "500",
+                lambda value: int(_strip_inline_comment(value)),
+            ),
+            "MAX_FRAMES_PER_VIDEO": (
+                "MAX_FRAMES_PER_VIDEO",
+                "20",
+                lambda value: int(_strip_inline_comment(value)),
+            ),
+            "FRAME_EXTRACTION_INTERVAL": (
+                "FRAME_EXTRACTION_INTERVAL",
+                "2.0",
+                lambda value: float(_strip_inline_comment(value)),
+            ),
+            "CACHE_TTL_HOURS": (
+                "CACHE_TTL_HOURS",
+                "24",
+                lambda value: int(_strip_inline_comment(value)),
+            ),
+            "MAX_CONVERSATION_HISTORY": (
+                "MAX_CONVERSATION_HISTORY",
+                "10",
+                lambda value: int(_strip_inline_comment(value)),
+            ),
+            "TOOL_EXECUTION_TIMEOUT": (
+                "TOOL_EXECUTION_TIMEOUT",
+                "120",
+                lambda value: int(_strip_inline_comment(value)),
+            ),
+            "REQUEST_TIMEOUT": (
+                "REQUEST_TIMEOUT",
+                "30",
+                lambda value: int(_strip_inline_comment(value)),
+            ),
+            "LAZY_LOAD_BATCH_SIZE": (
+                "LAZY_LOAD_BATCH_SIZE",
+                "3",
+                lambda value: int(_strip_inline_comment(value)),
+            ),
             "DEBUG": ("DEBUG", "false", _to_bool),
             "LOG_LEVEL": ("LOG_LEVEL", "INFO", str),
             "LOG_DIR": ("LOG_DIR", "logs", str),
@@ -175,7 +226,9 @@ class Config(metaclass=ConfigMeta):
         warnings: list[str] = []
         require_key = cls.is_production() if require_groq is None else require_groq
         if require_key and not cls.GROQ_API_KEY and not cls.ALLOW_MISSING_GROQ_FOR_TESTS:
-            errors.append("GROQ_API_KEY is required in production. Set it in .env, Streamlit secrets, or the deployment secret manager.")
+            errors.append(
+                "GROQ_API_KEY is required in production. Set it in .env, Streamlit secrets, or the deployment secret manager."
+            )
         if not 0 <= cls.GROQ_TEMPERATURE <= 2:
             errors.append(f"GROQ_TEMPERATURE must be between 0 and 2; got {cls.GROQ_TEMPERATURE}.")
         if cls.GROQ_MAX_TOKENS < 1:
@@ -189,11 +242,15 @@ class Config(metaclass=ConfigMeta):
         if cls.MAX_CONVERSATION_HISTORY < 1:
             errors.append("MAX_CONVERSATION_HISTORY must be positive.")
         if not cls.REDIS_ENABLED:
-            warnings.append("Redis caching is disabled; this is acceptable for local development but not ideal for production.")
+            warnings.append(
+                "Redis caching is disabled; this is acceptable for local development but not ideal for production."
+            )
         if cls.DEBUG and cls.is_production():
             errors.append("DEBUG must be false when APP_ENV=production.")
         if errors:
-            raise ValueError("Configuration validation failed:\n" + "\n".join(f"- {error}" for error in errors))
+            raise ValueError(
+                "Configuration validation failed:\n" + "\n".join(f"- {error}" for error in errors)
+            )
         if warnings and cls.DEBUG:
             logger = _get_logger()
             for warning in warnings:

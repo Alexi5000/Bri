@@ -18,67 +18,63 @@ def test_complete_upload_flow():
     print("=" * 60)
     print("TESTING COMPLETE UPLOAD FLOW")
     print("=" * 60)
-    
+
     # Ensure directories exist
     Config.ensure_directories()
-    
+
     # Initialize database
     db = get_database()
     db.initialize_schema()
-    
+
     # Create a test video file
     test_video_path = Path("data/test_upload_flow.mp4")
     print(f"\n1. Creating test video file: {test_video_path}")
-    
+
     # Create a minimal valid video file using OpenCV
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     out = cv2.VideoWriter(str(test_video_path), fourcc, 30.0, (640, 480))
-    
+
     # Write 90 frames (3 seconds at 30fps)
     import numpy as np
+
     for i in range(90):
         frame = np.zeros((480, 640, 3), dtype=np.uint8)
         # Add some color variation
         frame[:, :] = [i % 255, (i * 2) % 255, (i * 3) % 255]
         out.write(frame)
-    
+
     out.release()
     print(f"   ✓ Created test video: {test_video_path.stat().st_size} bytes")
-    
+
     try:
         # Simulate upload process
         print("\n2. Simulating upload process...")
-        
+
         file_store = get_file_store()
-        
+
         # Step 1: Validate file
         print("   a) Validating file...")
         file_size = test_video_path.stat().st_size
-        is_valid, error_msg = file_store.validate_video_file(
-            test_video_path.name,
-            file_size
-        )
+        is_valid, error_msg = file_store.validate_video_file(test_video_path.name, file_size)
         print(f"      Valid: {is_valid}")
         if not is_valid:
             print(f"      Error: {error_msg}")
             return False
-        
+
         # Step 2: Generate video ID
         print("   b) Generating video ID...")
         video_id = str(uuid.uuid4())
         print(f"      Video ID: {video_id}")
-        
+
         # Step 3: Save video
         print("   c) Saving video to storage...")
-        with open(test_video_path, 'rb') as f:
+        with open(test_video_path, "rb") as f:
             saved_video_id, file_path = file_store.save_uploaded_video(
-                f,
-                test_video_path.name,
-                video_id
+                f, test_video_path.name, video_id
             )
         print(f"      Saved to: {file_path}")
         assert saved_video_id == video_id
-        
+
         # Step 4: Extract metadata
         print("   d) Extracting video metadata...")
         cap = cv2.VideoCapture(file_path)
@@ -88,69 +84,66 @@ def test_complete_upload_flow():
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         cap.release()
-        
+
         print(f"      Duration: {duration:.2f}s")
         print(f"      Resolution: {width}x{height}")
         print(f"      FPS: {fps}")
-        
+
         # Step 5: Create database record
         print("   e) Creating database record...")
         insert_video(
-            video_id=video_id,
-            filename=test_video_path.name,
-            file_path=file_path,
-            duration=duration
+            video_id=video_id, filename=test_video_path.name, file_path=file_path, duration=duration
         )
         print(f"      ✓ Database record created")
-        
+
         # Step 6: Verify database record
         print("   f) Verifying database record...")
         video = get_video(video_id)
         assert video is not None
-        assert video['video_id'] == video_id
-        assert video['filename'] == test_video_path.name
-        assert video['processing_status'] == 'pending'
+        assert video["video_id"] == video_id
+        assert video["filename"] == test_video_path.name
+        assert video["processing_status"] == "pending"
         print(f"      ✓ Record verified")
-        
+
         # Step 7: Verify file exists
         print("   g) Verifying file exists...")
         exists = file_store.video_exists(video_id)
         assert exists
         print(f"      ✓ File exists in storage")
-        
+
         # Step 8: Test retrieval
         print("\n3. Testing video retrieval...")
         all_videos = get_all_videos()
         print(f"   Total videos in database: {len(all_videos)}")
-        
+
         found = False
         for v in all_videos:
-            if v['video_id'] == video_id:
+            if v["video_id"] == video_id:
                 found = True
                 print(f"   ✓ Found uploaded video: {v['filename']}")
                 break
-        
+
         assert found, "Should find uploaded video in database"
-        
+
         # Step 9: Cleanup
         print("\n4. Cleaning up...")
         from storage.database import delete_video as db_delete_video
-        
+
         # Delete from database
         db_delete_video(video_id)
         print("   ✓ Deleted from database")
-        
+
         # Delete from file system
         file_store.delete_video(video_id)
         print("   ✓ Deleted from file system")
-        
+
         # Verify deletion
         video = get_video(video_id)
         assert video is None
         exists = file_store.video_exists(video_id)
         assert not exists
         print("   ✓ Cleanup verified")
-        
+
         print("\n" + "=" * 60)
         print("✅ COMPLETE UPLOAD FLOW TEST PASSED!")
         print("=" * 60)
@@ -161,9 +154,9 @@ def test_complete_upload_flow():
         print("  ✓ Database integration")
         print("  ✓ File retrieval")
         print("  ✓ Cleanup operations")
-        
+
         return True
-        
+
     finally:
         # Cleanup test file
         if test_video_path.exists():
@@ -181,6 +174,7 @@ def main():
     except Exception as e:
         print(f"\n❌ Test failed with error: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 

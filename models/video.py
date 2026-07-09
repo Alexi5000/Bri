@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 class VideoMetadata(BaseModel):
     """Metadata about a video file."""
+
     duration: float = Field(..., description="Video duration in seconds")
     fps: float = Field(..., description="Frames per second")
     width: int = Field(..., description="Video width in pixels")
@@ -17,17 +18,21 @@ class VideoMetadata(BaseModel):
 
 class Video(BaseModel):
     """Video record model."""
+
     video_id: str = Field(..., description="Unique video identifier")
     filename: str = Field(..., description="Original filename")
     file_path: str = Field(..., description="Path to video file")
     duration: float = Field(..., description="Video duration in seconds")
     upload_timestamp: datetime = Field(default_factory=datetime.now, description="Upload timestamp")
-    processing_status: str = Field(default="pending", description="Processing status: pending, processing, complete, error")
+    processing_status: str = Field(
+        default="pending", description="Processing status: pending, processing, complete, error"
+    )
     thumbnail_path: str | None = Field(None, description="Path to thumbnail image")
 
 
 class Frame(BaseModel):
     """Extracted video frame."""
+
     timestamp: float = Field(..., description="Frame timestamp in seconds")
     image_path: str = Field(..., description="Path to frame image file")
     image_base64: str | None = Field(None, description="Base64-encoded image data")
