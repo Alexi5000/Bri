@@ -1,7 +1,8 @@
 """Unit tests for Tool Router."""
 
 import pytest
-from services.router import ToolRouter, ToolPlan
+
+from services.router import ToolPlan, ToolRouter
 
 
 @pytest.fixture

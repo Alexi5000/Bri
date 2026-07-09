@@ -23,6 +23,7 @@ def smoke_in_process() -> int:
     os.environ.setdefault("APP_ENV", "test")
     try:
         from fastapi.testclient import TestClient
+
         from mcp_server.main import app
     except Exception as exc:  # pragma: no cover - dependency/environment guard
         print(f"In-process API smoke could not start: {exc}", file=sys.stderr)

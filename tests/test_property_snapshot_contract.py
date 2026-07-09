@@ -11,14 +11,13 @@
 
 from __future__ import annotations
 
-import asyncio
 import json
-from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
-from hypothesis import HealthCheck, given, settings, strategies as st
+from hypothesis import given, settings
+from hypothesis import strategies as st
 from syrupy.assertion import SnapshotAssertion
 
 # ---------------------------------------------------------------------------
@@ -220,7 +219,6 @@ class TestMCPContracts:
         self, fastapi_client: TestClient
     ) -> None:
         """BriError raised inside a handler becomes a structured JSON error."""
-        from fastapi import FastAPI
 
         from services.errors import NotFoundError, http_status_for
 

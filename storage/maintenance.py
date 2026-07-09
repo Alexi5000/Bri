@@ -8,10 +8,10 @@ surfaces to low-level sqlite3 details.
 
 from __future__ import annotations
 
+import sqlite3
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-import sqlite3
 from typing import Any
 
 from config import Config

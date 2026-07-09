@@ -4,8 +4,9 @@ Tracks data completeness, freshness, accuracy, and volume
 """
 
 import json
-from typing import Dict, Any, List, Optional
 from datetime import datetime
+from typing import Any
+
 from storage.database import Database
 from utils.logging_config import get_logger
 
@@ -29,7 +30,7 @@ class DataQualityMetrics:
     FRESHNESS_THRESHOLD_HOURS = 24  # Data should be < 24 hours old
     ACCURACY_THRESHOLD = 0.7  # 70% average confidence required
     
-    def __init__(self, db: Optional[Database] = None):
+    def __init__(self, db: Database | None = None):
         """
         Initialize DataQualityMetrics.
         
@@ -41,7 +42,7 @@ class DataQualityMetrics:
             self.db.connect()
         logger.info("DataQualityMetrics initialized")
     
-    def calculate_completeness(self, video_id: str) -> Dict[str, Any]:
+    def calculate_completeness(self, video_id: str) -> dict[str, Any]:
         """
         Calculate data completeness for a video.
         
@@ -148,7 +149,7 @@ class DataQualityMetrics:
                 'error': str(e)
             }
     
-    def calculate_freshness(self, video_id: str) -> Dict[str, Any]:
+    def calculate_freshness(self, video_id: str) -> dict[str, Any]:
         """
         Calculate data freshness (time since last update).
         
@@ -222,7 +223,7 @@ class DataQualityMetrics:
                 'error': str(e)
             }
     
-    def calculate_accuracy(self, video_id: str) -> Dict[str, Any]:
+    def calculate_accuracy(self, video_id: str) -> dict[str, Any]:
         """
         Calculate data accuracy based on confidence scores.
         
@@ -311,7 +312,7 @@ class DataQualityMetrics:
                 'error': str(e)
             }
     
-    def calculate_volume_metrics(self) -> Dict[str, Any]:
+    def calculate_volume_metrics(self) -> dict[str, Any]:
         """
         Calculate data volume and growth rate metrics.
         
@@ -379,7 +380,7 @@ class DataQualityMetrics:
             logger.error(f"Failed to calculate volume metrics: {e}")
             return {'error': str(e)}
     
-    def check_quality_degradation(self, video_id: str) -> Dict[str, Any]:
+    def check_quality_degradation(self, video_id: str) -> dict[str, Any]:
         """
         Check for quality degradation and generate alerts.
         
@@ -463,7 +464,7 @@ class DataQualityMetrics:
                 'error': str(e)
             }
     
-    def get_quality_report(self, video_id: str) -> Dict[str, Any]:
+    def get_quality_report(self, video_id: str) -> dict[str, Any]:
         """
         Generate comprehensive quality report for a video.
         
@@ -505,7 +506,7 @@ class DataQualityMetrics:
         logger.info(f"Quality report for {video_id}: {report['quality_status']} ({score}/100)")
         return report
     
-    def get_system_quality_report(self) -> Dict[str, Any]:
+    def get_system_quality_report(self) -> dict[str, Any]:
         """
         Generate system-wide quality report.
         
@@ -585,7 +586,7 @@ class DataQualityMetrics:
         rows = self.db.execute_query(query, (context_type,))
         return rows[0]['count'] if rows else 0
     
-    def _get_confidence_scores(self, video_id: str, context_type: str, field: str) -> List[float]:
+    def _get_confidence_scores(self, video_id: str, context_type: str, field: str) -> list[float]:
         """Extract confidence scores from context data."""
         query = """
             SELECT data FROM video_context
@@ -604,7 +605,7 @@ class DataQualityMetrics:
         
         return confidences
     
-    def _get_object_confidence_scores(self, video_id: str) -> List[float]:
+    def _get_object_confidence_scores(self, video_id: str) -> list[float]:
         """Extract object detection confidence scores."""
         query = """
             SELECT data FROM video_context
@@ -627,7 +628,7 @@ class DataQualityMetrics:
 
 
 # Global metrics instance
-_metrics_instance: Optional[DataQualityMetrics] = None
+_metrics_instance: DataQualityMetrics | None = None
 
 
 def get_quality_metrics(db=None) -> DataQualityMetrics:

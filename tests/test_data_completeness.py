@@ -3,10 +3,12 @@ Data Completeness Tests
 Task 44.2: Verify all expected data is stored after video processing
 """
 
-import pytest
 import json
-from storage.database import Database
+
+import pytest
+
 from services.video_processing_service import VideoProcessingService
+from storage.database import Database
 
 
 def _audio_transcriber_available() -> bool:
@@ -300,7 +302,7 @@ class TestDataCompleteness:
                 missing_class_count += 1
         
         assert missing_class_count == 0, f"Found {missing_class_count} objects without class names"
-        print(f"\n✓ All object detections have class names")
+        print("\n✓ All object detections have class names")
     
     def test_no_missing_data_after_processing(self, db, video_service, processed_video_id):
         """Test comprehensive data completeness check."""

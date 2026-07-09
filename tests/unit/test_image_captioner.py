@@ -1,12 +1,14 @@
 """Unit tests for ImageCaptioner."""
 
-import pytest
-import tempfile
 import os
+import tempfile
+from unittest.mock import MagicMock, patch
+
+import pytest
 from PIL import Image
-from unittest.mock import patch, MagicMock
-from tools.image_captioner import ImageCaptioner
+
 from models.tools import Caption
+from tools.image_captioner import ImageCaptioner
 
 
 @pytest.fixture

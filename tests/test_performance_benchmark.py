@@ -3,13 +3,14 @@ Video Processing Performance Benchmark
 Task 44.3: Measure processing times and validate performance targets
 """
 
-import pytest
 import time
-import asyncio
 from pathlib import Path
-from storage.database import Database
-from services.video_processing_service import VideoProcessingService
+
+import pytest
+
 from services.progressive_processor import ProgressiveProcessor
+from services.video_processing_service import VideoProcessingService
+from storage.database import Database
 
 
 class TestPerformanceBenchmark:
@@ -48,7 +49,7 @@ class TestPerformanceBenchmark:
             pytest.skip("No test video available")
         
         print(f"\n{'='*60}")
-        print(f"Stage 1 Performance Test: Frame Extraction")
+        print("Stage 1 Performance Test: Frame Extraction")
         print(f"{'='*60}")
         print(f"Video: {Path(test_video_path).name}")
         
@@ -78,7 +79,7 @@ class TestPerformanceBenchmark:
         print(f"Duration: {duration:.1f}s")
         print(f"Frames: {frame_count}")
         print(f"Time: {elapsed:.2f}s")
-        print(f"Target: < 10s")
+        print("Target: < 10s")
         print(f"Status: {'✓ PASS' if elapsed < 10 else '✗ FAIL'}")
         print(f"{'='*60}\n")
         
@@ -94,7 +95,7 @@ class TestPerformanceBenchmark:
             pytest.skip("No test video available")
         
         print(f"\n{'='*60}")
-        print(f"Stage 2 Performance Test: Caption Generation")
+        print("Stage 2 Performance Test: Caption Generation")
         print(f"{'='*60}")
         
         query = "SELECT video_id, duration FROM videos WHERE file_path = ?"
@@ -120,7 +121,7 @@ class TestPerformanceBenchmark:
         print(f"Duration: {duration:.1f}s")
         print(f"Captions: {caption_count}")
         print(f"Time: {elapsed:.2f}s")
-        print(f"Target: < 60s")
+        print("Target: < 60s")
         print(f"Status: {'✓ PASS' if elapsed < 60 else '✗ FAIL'}")
         print(f"{'='*60}\n")
         
@@ -133,7 +134,7 @@ class TestPerformanceBenchmark:
             pytest.skip("No test video available")
         
         print(f"\n{'='*60}")
-        print(f"Stage 3 Performance Test: Full Processing")
+        print("Stage 3 Performance Test: Full Processing")
         print(f"{'='*60}")
         
         query = "SELECT video_id, duration FROM videos WHERE file_path = ?"
@@ -166,7 +167,7 @@ class TestPerformanceBenchmark:
         print(f"Transcripts: {data_summary.get('transcript', 0)}")
         print(f"Objects: {data_summary.get('object', 0)}")
         print(f"Time: {elapsed:.2f}s")
-        print(f"Target: < 120s")
+        print("Target: < 120s")
         print(f"Status: {'✓ PASS' if elapsed < 120 else '✗ FAIL'}")
         print(f"{'='*60}\n")
         
@@ -177,7 +178,7 @@ class TestPerformanceBenchmark:
     def test_processing_time_scales_with_duration(self, db):
         """Test that processing time scales reasonably with video duration."""
         print(f"\n{'='*60}")
-        print(f"Processing Time Scaling Analysis")
+        print("Processing Time Scaling Analysis")
         print(f"{'='*60}\n")
         
         # Get multiple processed videos
@@ -229,7 +230,7 @@ class TestPerformanceBenchmark:
     def test_query_response_time(self, db):
         """Test that database queries are fast."""
         print(f"\n{'='*60}")
-        print(f"Query Performance Test")
+        print("Query Performance Test")
         print(f"{'='*60}\n")
         
         # Get a video
@@ -264,7 +265,7 @@ class TestPerformanceBenchmark:
     def test_memory_usage_reasonable(self, db):
         """Test that memory usage is reasonable for processed videos."""
         print(f"\n{'='*60}")
-        print(f"Memory Usage Analysis")
+        print("Memory Usage Analysis")
         print(f"{'='*60}\n")
         
         # Get database size
@@ -305,7 +306,7 @@ class TestPerformanceBenchmark:
     def test_performance_regression_check(self, db):
         """Check for performance regressions."""
         print(f"\n{'='*60}")
-        print(f"Performance Regression Check")
+        print("Performance Regression Check")
         print(f"{'='*60}\n")
         
         # Define performance targets

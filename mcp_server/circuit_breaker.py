@@ -1,12 +1,14 @@
 """Circuit breaker pattern implementation for fault tolerance."""
 
 import time
+from collections.abc import Callable
 from enum import Enum
-from typing import Callable, Any, Optional, Dict
-from threading import Lock
 from functools import wraps
-from utils.logging_config import get_logger
+from threading import Lock
+from typing import Any
+
 from services.errors import UpstreamError
+from utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -51,7 +53,7 @@ class CircuitBreaker:
         
         self.failure_count = 0
         self.success_count = 0
-        self.last_failure_time: Optional[float] = None
+        self.last_failure_time: float | None = None
         self.state = CircuitState.CLOSED
         self.lock = Lock()
         
@@ -94,7 +96,7 @@ class CircuitBreaker:
             result = func(*args, **kwargs)
             self._on_success()
             return result
-        except self.expected_exception as e:
+        except self.expected_exception:
             self._on_failure()
             raise
     
@@ -132,7 +134,7 @@ class CircuitBreaker:
             result = await func(*args, **kwargs)
             self._on_success()
             return result
-        except self.expected_exception as e:
+        except self.expected_exception:
             self._on_failure()
             raise
     
@@ -182,7 +184,7 @@ class CircuitBreaker:
         elapsed = time.time() - self.last_failure_time
         return max(0.0, self.recovery_timeout - elapsed)
     
-    def get_state(self) -> Dict[str, Any]:
+    def get_state(self) -> dict[str, Any]:
         """
         Get current circuit breaker state.
         

@@ -8,15 +8,17 @@ Features:
 - N+1 query optimization
 """
 
-import time
 import asyncio
-from typing import Any, Optional, List, Dict, AsyncIterator
+import time
 from collections import defaultdict, deque
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from datetime import datetime
-from utils.logging_config import get_logger, get_performance_logger
+from typing import Any
+
 from storage.multi_tier_cache import get_multi_tier_cache
 from storage.query_optimizer import get_query_optimizer
+from utils.logging_config import get_logger, get_performance_logger
 
 logger = get_logger(__name__)
 perf_logger = get_performance_logger(__name__)
@@ -26,7 +28,7 @@ perf_logger = get_performance_logger(__name__)
 class AccessPattern:
     """User access pattern for predictive prefetching."""
     video_id: str
-    data_types: List[str]  # e.g., ['frames', 'captions', 'transcript']
+    data_types: list[str]  # e.g., ['frames', 'captions', 'transcript']
     timestamp: datetime
     frequency: int = 1
 
@@ -61,7 +63,7 @@ class RelatedDataStrategy(PrefetchStrategy):
         """Always prefetch related data."""
         return True
     
-    def get_related_types(self, data_type: str) -> List[str]:
+    def get_related_types(self, data_type: str) -> list[str]:
         """Get related data types for a given type.
         
         Args:
@@ -83,7 +85,7 @@ class PredictiveStrategy(PrefetchStrategy):
             pattern_window: Number of recent accesses to track
         """
         self.access_history: deque = deque(maxlen=pattern_window)
-        self.pattern_frequency: Dict[str, int] = defaultdict(int)
+        self.pattern_frequency: dict[str, int] = defaultdict(int)
         self.prefetch_threshold = 3  # Prefetch if accessed 3+ times
     
     def record_access(self, video_id: str, data_type: str) -> None:
@@ -110,7 +112,7 @@ class PredictiveStrategy(PrefetchStrategy):
         pattern_key = f"{video_id}:{data_type}"
         return self.pattern_frequency.get(pattern_key, 0) >= self.prefetch_threshold
     
-    def get_likely_next_access(self, video_id: str) -> List[str]:
+    def get_likely_next_access(self, video_id: str) -> list[str]:
         """Predict likely next data types to be accessed.
         
         Args:
@@ -158,7 +160,7 @@ class DataPrefetcher:
         self.prefetch_worker_running = False
         
         # Lazy loading state
-        self.lazy_load_cache: Dict[str, Any] = {}
+        self.lazy_load_cache: dict[str, Any] = {}
         
         logger.info("Data prefetcher initialized")
     
@@ -251,7 +253,7 @@ class DataPrefetcher:
         """
         self.predictive_strategy.record_access(video_id, data_type)
     
-    async def _load_data(self, video_id: str, data_type: str) -> Optional[Any]:
+    async def _load_data(self, video_id: str, data_type: str) -> Any | None:
         """Load data from database.
         
         Args:
@@ -277,7 +279,7 @@ class DataPrefetcher:
             logger.error(f"Failed to load {data_type} for video {video_id}: {e}")
             return None
     
-    async def _load_frames(self, video_id: str) -> List[Dict]:
+    async def _load_frames(self, video_id: str) -> list[dict]:
         """Load frames from database."""
         query = """
             SELECT data, timestamp
@@ -291,7 +293,7 @@ class DataPrefetcher:
             cache_key=f"frames:{video_id}"
         )
     
-    async def _load_captions(self, video_id: str) -> List[Dict]:
+    async def _load_captions(self, video_id: str) -> list[dict]:
         """Load captions from database."""
         query = """
             SELECT data, timestamp
@@ -305,7 +307,7 @@ class DataPrefetcher:
             cache_key=f"captions:{video_id}"
         )
     
-    async def _load_transcript(self, video_id: str) -> Optional[Dict]:
+    async def _load_transcript(self, video_id: str) -> dict | None:
         """Load transcript from database."""
         query = """
             SELECT data
@@ -321,7 +323,7 @@ class DataPrefetcher:
         )
         return results[0] if results else None
     
-    async def _load_objects(self, video_id: str) -> List[Dict]:
+    async def _load_objects(self, video_id: str) -> list[dict]:
         """Load object detections from database."""
         query = """
             SELECT data, timestamp
@@ -341,7 +343,7 @@ class DataPrefetcher:
         data_type: str,
         page_size: int = 10,
         page: int = 0
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Lazy load data with pagination.
         
         Args:
@@ -397,7 +399,7 @@ class DataPrefetcher:
         video_id: str,
         data_type: str,
         chunk_size: int = 100
-    ) -> AsyncIterator[List[Dict]]:
+    ) -> AsyncIterator[list[dict]]:
         """Stream large dataset in chunks.
         
         Args:
@@ -437,9 +439,9 @@ class DataPrefetcher:
     
     def optimize_n_plus_one(
         self,
-        video_ids: List[str],
+        video_ids: list[str],
         data_type: str
-    ) -> Dict[str, List[Dict]]:
+    ) -> dict[str, list[dict]]:
         """Optimize N+1 query problem by batching.
         
         Instead of querying each video separately (N+1 queries),
@@ -522,7 +524,7 @@ class DataPrefetcher:
         self.prefetch_worker_running = False
         logger.info("Prefetch worker stopped")
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get prefetcher statistics.
         
         Returns:
@@ -537,7 +539,7 @@ class DataPrefetcher:
 
 
 # Global data prefetcher instance
-_data_prefetcher: Optional[DataPrefetcher] = None
+_data_prefetcher: DataPrefetcher | None = None
 
 
 def get_data_prefetcher() -> DataPrefetcher:

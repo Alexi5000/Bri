@@ -10,14 +10,13 @@ Logs detailed metrics for:
 """
 
 import logging
-import time
-import psutil
 import os
-from typing import Optional, Dict, Any
-from datetime import datetime
+import time
 from functools import wraps
 
-from utils.logging_config import get_logger, get_performance_logger, LogContext
+import psutil
+
+from utils.logging_config import LogContext, get_logger, get_performance_logger
 
 logger = get_logger(__name__)
 perf_logger = get_performance_logger(__name__)
@@ -31,10 +30,10 @@ class MetricsLogger:
         query_type: str,
         table: str,
         execution_time: float,
-        rows_affected: Optional[int] = None,
-        video_id: Optional[str] = None,
+        rows_affected: int | None = None,
+        video_id: str | None = None,
         success: bool = True,
-        error: Optional[str] = None
+        error: str | None = None
     ):
         """Log database query metrics.
         
@@ -86,12 +85,12 @@ class MetricsLogger:
         api_name: str,
         endpoint: str,
         method: str,
-        status_code: Optional[int],
+        status_code: int | None,
         execution_time: float,
-        request_size: Optional[int] = None,
-        response_size: Optional[int] = None,
-        video_id: Optional[str] = None,
-        error: Optional[str] = None
+        request_size: int | None = None,
+        response_size: int | None = None,
+        video_id: str | None = None,
+        error: str | None = None
     ):
         """Log API call metrics.
         
@@ -156,9 +155,9 @@ class MetricsLogger:
         video_id: str,
         status: str,
         execution_time: float,
-        items_processed: Optional[int] = None,
-        success_rate: Optional[float] = None,
-        error: Optional[str] = None
+        items_processed: int | None = None,
+        success_rate: float | None = None,
+        error: str | None = None
     ):
         """Log pipeline stage metrics.
         
@@ -213,7 +212,7 @@ class MetricsLogger:
     @staticmethod
     def log_resource_usage(
         component: str,
-        video_id: Optional[str] = None
+        video_id: str | None = None
     ):
         """Log current resource usage.
         
@@ -268,8 +267,8 @@ class MetricsLogger:
         operation: str,
         cache_key: str,
         hit: bool,
-        cache_size: Optional[int] = None,
-        video_id: Optional[str] = None
+        cache_size: int | None = None,
+        video_id: str | None = None
     ):
         """Log cache operation metrics.
         
@@ -312,11 +311,11 @@ class MetricsLogger:
         model_name: str,
         operation: str,
         execution_time: float,
-        input_size: Optional[int] = None,
-        output_size: Optional[int] = None,
-        video_id: Optional[str] = None,
+        input_size: int | None = None,
+        output_size: int | None = None,
+        video_id: str | None = None,
         success: bool = True,
-        error: Optional[str] = None
+        error: str | None = None
     ):
         """Log model inference metrics.
         

@@ -1,8 +1,8 @@
 """Error Handler for friendly error messages and graceful degradation."""
 
 import logging
-from typing import Optional, List, Dict, Any
 from enum import Enum
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ class ErrorHandler:
     def handle_tool_error(
         tool_name: str,
         error: Exception,
-        available_tools: Optional[List[str]] = None
+        available_tools: list[str] | None = None
     ) -> str:
         """
         Generate friendly error message for tool-specific failures.
@@ -135,8 +135,8 @@ class ErrorHandler:
     @staticmethod
     def suggest_fallback(
         original_query: str,
-        available_data: List[str],
-        failed_tools: Optional[List[str]] = None
+        available_data: list[str],
+        failed_tools: list[str] | None = None
     ) -> str:
         """
         Suggest alternative approaches when primary method fails.
@@ -186,10 +186,10 @@ class ErrorHandler:
     
     @staticmethod
     def handle_graceful_degradation(
-        requested_tools: List[str],
-        available_tools: List[str],
+        requested_tools: list[str],
+        available_tools: list[str],
         query: str
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Implement graceful degradation when tools are unavailable.
         
@@ -274,7 +274,7 @@ class ErrorHandler:
     def handle_processing_error(
         video_id: str,
         error: Exception,
-        completed_steps: Optional[List[str]] = None
+        completed_steps: list[str] | None = None
     ) -> str:
         """
         Handle video processing errors with context about what succeeded.
@@ -343,8 +343,8 @@ class ErrorHandler:
     @staticmethod
     def _suggest_tool_fallback(
         failed_tool: str,
-        available_tools: List[str]
-    ) -> Optional[str]:
+        available_tools: list[str]
+    ) -> str | None:
         """
         Suggest alternative tools when one fails.
         
@@ -431,7 +431,7 @@ class ErrorHandler:
     @staticmethod
     def format_error_for_user(
         error: Exception,
-        context: Optional[Dict[str, Any]] = None
+        context: dict[str, Any] | None = None
     ) -> str:
         """
         Format any error into a user-friendly message.

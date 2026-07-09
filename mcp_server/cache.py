@@ -1,9 +1,9 @@
 """Redis caching layer for tool results."""
 
-import json
 import hashlib
-from typing import Any, Optional, Dict
+import json
 from datetime import timedelta
+from typing import Any
 
 from config import Config
 from utils.logging_config import get_logger, get_performance_logger
@@ -44,7 +44,7 @@ class CacheManager:
         self,
         tool_name: str,
         video_id: str,
-        parameters: Dict[str, Any]
+        parameters: dict[str, Any]
     ) -> str:
         """
         Generate a unique cache key for tool execution.
@@ -68,7 +68,7 @@ class CacheManager:
         
         return cache_key
     
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """
         Retrieve value from cache.
         
@@ -202,7 +202,7 @@ class CacheManager:
             logger.error("Failed to clear all cache: %s", str(e))
             return False
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """
         Get cache statistics.
         

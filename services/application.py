@@ -17,8 +17,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, BinaryIO
 
-from config import Config
-from services.mcp_client import MCPClient, MCPHealth, MCPToolSummary, ProcessingStartResult, VideoProgress
+from services.mcp_client import (
+    MCPClient,
+    MCPHealth,
+    MCPToolSummary,
+    ProcessingStartResult,
+    VideoProgress,
+)
 from storage import database
 from storage.file_store import get_file_store
 from storage.maintenance import (

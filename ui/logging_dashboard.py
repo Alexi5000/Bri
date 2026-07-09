@@ -1,13 +1,11 @@
 """Logging dashboard for BRI - Real-time log viewer and analytics."""
 
-import streamlit as st
 import os
-import json
-from pathlib import Path
-from datetime import datetime, timedelta
-from typing import List, Dict, Any
 import re
 from collections import Counter
+from datetime import datetime, timedelta
+
+import streamlit as st
 
 from config import Config
 
@@ -94,7 +92,7 @@ class LogDashboard:
     def _render_log_viewer(
         self,
         log_type: str,
-        log_levels: List[str],
+        log_levels: list[str],
         time_range: str,
         search_query: str,
         component_filter: str
@@ -368,7 +366,7 @@ class LogDashboard:
                     st.markdown(f"**First seen:** {info['timestamps'][0]}")
                     st.markdown(f"**Last seen:** {info['timestamps'][-1]}")
     
-    def _read_logs(self, log_file: str, time_range: str) -> List[str]:
+    def _read_logs(self, log_file: str, time_range: str) -> list[str]:
         """Read logs from file with time filtering.
         
         Args:
@@ -394,7 +392,7 @@ class LogDashboard:
         
         # Read file
         try:
-            with open(log_file, 'r', encoding='utf-8', errors='ignore') as f:
+            with open(log_file, encoding='utf-8', errors='ignore') as f:
                 lines = f.readlines()
             
             # Filter by time if needed
@@ -424,11 +422,11 @@ class LogDashboard:
     
     def _filter_logs(
         self,
-        logs: List[str],
-        log_levels: List[str],
+        logs: list[str],
+        log_levels: list[str],
         search_query: str,
         component_filter: str
-    ) -> List[str]:
+    ) -> list[str]:
         """Filter logs based on criteria.
         
         Args:

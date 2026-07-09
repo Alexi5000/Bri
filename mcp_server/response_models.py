@@ -1,9 +1,9 @@
 """Standardized API response models."""
 
-import time
 import uuid
-from typing import Any, Optional, List, Dict
 from datetime import datetime
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -20,8 +20,8 @@ class StandardResponse(BaseModel):
     """Standard response wrapper for all API endpoints."""
     
     success: bool = Field(..., description="Whether the request was successful")
-    data: Optional[Any] = Field(None, description="Response data")
-    error: Optional[Dict[str, Any]] = Field(None, description="Error information if failed")
+    data: Any | None = Field(None, description="Response data")
+    error: dict[str, Any] | None = Field(None, description="Error information if failed")
     metadata: ResponseMetadata = Field(..., description="Response metadata")
 
 
@@ -29,8 +29,8 @@ class PaginatedResponse(BaseModel):
     """Paginated response for list endpoints."""
     
     success: bool = Field(True, description="Whether the request was successful")
-    data: List[Any] = Field(..., description="List of items")
-    pagination: Dict[str, Any] = Field(..., description="Pagination information")
+    data: list[Any] = Field(..., description="List of items")
+    pagination: dict[str, Any] = Field(..., description="Pagination information")
     metadata: ResponseMetadata = Field(..., description="Response metadata")
 
 
@@ -39,15 +39,15 @@ class ErrorDetail(BaseModel):
     
     code: str = Field(..., description="Error code")
     message: str = Field(..., description="Human-readable error message")
-    details: Optional[Dict[str, Any]] = Field(None, description="Additional error details")
-    suggestion: Optional[str] = Field(None, description="Suggested action to resolve error")
+    details: dict[str, Any] | None = Field(None, description="Additional error details")
+    suggestion: str | None = Field(None, description="Suggested action to resolve error")
 
 
 def create_standard_response(
     data: Any = None,
-    error: Optional[ErrorDetail] = None,
-    execution_time: Optional[float] = None,
-    request_id: Optional[str] = None
+    error: ErrorDetail | None = None,
+    execution_time: float | None = None,
+    request_id: str | None = None
 ) -> StandardResponse:
     """
     Create a standardized API response.
@@ -83,12 +83,12 @@ def create_standard_response(
 
 
 def create_paginated_response(
-    items: List[Any],
+    items: list[Any],
     page: int,
     page_size: int,
     total_items: int,
-    execution_time: Optional[float] = None,
-    request_id: Optional[str] = None
+    execution_time: float | None = None,
+    request_id: str | None = None
 ) -> PaginatedResponse:
     """
     Create a paginated API response.
@@ -144,14 +144,14 @@ class HealthCheckResponse(BaseModel):
     status: str = Field(..., description="Service status: healthy, degraded, unhealthy")
     version: str = Field(..., description="API version")
     timestamp: str = Field(..., description="ISO 8601 timestamp")
-    checks: Dict[str, Any] = Field(..., description="Individual component health checks")
+    checks: dict[str, Any] = Field(..., description="Individual component health checks")
 
 
 class ToolListResponse(BaseModel):
     """Response for listing available tools."""
     
     success: bool = Field(True, description="Whether the request was successful")
-    data: Dict[str, Any] = Field(..., description="Tools data")
+    data: dict[str, Any] = Field(..., description="Tools data")
     metadata: ResponseMetadata = Field(..., description="Response metadata")
 
 
@@ -159,7 +159,7 @@ class ToolExecutionResponseV1(BaseModel):
     """Standardized tool execution response."""
     
     success: bool = Field(..., description="Whether execution was successful")
-    data: Dict[str, Any] = Field(..., description="Execution result data")
+    data: dict[str, Any] = Field(..., description="Execution result data")
     metadata: ResponseMetadata = Field(..., description="Response metadata")
 
 
@@ -167,7 +167,7 @@ class VideoProcessingResponse(BaseModel):
     """Response for video processing operations."""
     
     success: bool = Field(..., description="Whether processing was successful")
-    data: Dict[str, Any] = Field(..., description="Processing results")
+    data: dict[str, Any] = Field(..., description="Processing results")
     metadata: ResponseMetadata = Field(..., description="Response metadata")
 
 
@@ -175,7 +175,7 @@ class VideoStatusResponse(BaseModel):
     """Response for video status check."""
     
     success: bool = Field(True, description="Whether the request was successful")
-    data: Dict[str, Any] = Field(..., description="Video status data")
+    data: dict[str, Any] = Field(..., description="Video status data")
     metadata: ResponseMetadata = Field(..., description="Response metadata")
 
 
@@ -183,7 +183,7 @@ class QueueStatusResponse(BaseModel):
     """Response for queue status."""
     
     success: bool = Field(True, description="Whether the request was successful")
-    data: Dict[str, Any] = Field(..., description="Queue status data")
+    data: dict[str, Any] = Field(..., description="Queue status data")
     metadata: ResponseMetadata = Field(..., description="Response metadata")
 
 
@@ -191,7 +191,7 @@ class CacheStatsResponse(BaseModel):
     """Response for cache statistics."""
     
     success: bool = Field(True, description="Whether the request was successful")
-    data: Dict[str, Any] = Field(..., description="Cache statistics")
+    data: dict[str, Any] = Field(..., description="Cache statistics")
     metadata: ResponseMetadata = Field(..., description="Response metadata")
 
 
@@ -199,5 +199,5 @@ class CacheClearResponse(BaseModel):
     """Response for cache clear operations."""
     
     success: bool = Field(True, description="Whether operation was successful")
-    data: Dict[str, Any] = Field(..., description="Clear operation results")
+    data: dict[str, Any] = Field(..., description="Clear operation results")
     metadata: ResponseMetadata = Field(..., description="Response metadata")

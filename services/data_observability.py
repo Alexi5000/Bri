@@ -5,9 +5,10 @@ Logs all data mutations, tracks lineage, monitors pipeline latency, and visualiz
 
 import json
 import time
-from typing import Dict, Any, List, Optional
-from datetime import datetime
 from contextlib import contextmanager
+from datetime import datetime
+from typing import Any
+
 from storage.database import Database
 from utils.logging_config import get_logger
 
@@ -19,7 +20,7 @@ class DataMutationLogger:
     Log all data mutations (insert/update/delete) for audit trail.
     """
     
-    def __init__(self, db: Optional[Database] = None):
+    def __init__(self, db: Database | None = None):
         """
         Initialize DataMutationLogger.
         
@@ -35,8 +36,8 @@ class DataMutationLogger:
         self,
         table: str,
         record_id: str,
-        data: Dict[str, Any],
-        user_id: Optional[str] = None
+        data: dict[str, Any],
+        user_id: str | None = None
     ) -> None:
         """
         Log an insert operation.
@@ -69,9 +70,9 @@ class DataMutationLogger:
         self,
         table: str,
         record_id: str,
-        old_data: Optional[Dict[str, Any]],
-        new_data: Dict[str, Any],
-        user_id: Optional[str] = None
+        old_data: dict[str, Any] | None,
+        new_data: dict[str, Any],
+        user_id: str | None = None
     ) -> None:
         """
         Log an update operation.
@@ -106,8 +107,8 @@ class DataMutationLogger:
         self,
         table: str,
         record_id: str,
-        data: Optional[Dict[str, Any]] = None,
-        user_id: Optional[str] = None
+        data: dict[str, Any] | None = None,
+        user_id: str | None = None
     ) -> None:
         """
         Log a delete operation.
@@ -136,7 +137,7 @@ class DataMutationLogger:
         except Exception as e:
             logger.error(f"Failed to log delete: {e}")
     
-    def _store_audit_log(self, mutation_data: Dict[str, Any]) -> None:
+    def _store_audit_log(self, mutation_data: dict[str, Any]) -> None:
         """Store mutation in audit log table."""
         try:
             # Check if audit_log table exists
@@ -182,10 +183,10 @@ class DataMutationLogger:
     
     def get_mutation_history(
         self,
-        table: Optional[str] = None,
-        record_id: Optional[str] = None,
+        table: str | None = None,
+        record_id: str | None = None,
         limit: int = 100
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get mutation history.
         
@@ -238,7 +239,7 @@ class PipelineLatencyMonitor:
     
     def __init__(self):
         """Initialize PipelineLatencyMonitor."""
-        self.stage_timings: Dict[str, List[float]] = {}
+        self.stage_timings: dict[str, list[float]] = {}
         logger.info("PipelineLatencyMonitor initialized")
     
     @contextmanager
@@ -279,7 +280,7 @@ class PipelineLatencyMonitor:
                 }
             )
     
-    def get_stage_statistics(self, stage_name: str) -> Dict[str, float]:
+    def get_stage_statistics(self, stage_name: str) -> dict[str, float]:
         """
         Get statistics for a pipeline stage.
         
@@ -307,7 +308,7 @@ class PipelineLatencyMonitor:
             'p99': round(sorted_timings[int(count * 0.99)], 2) if count > 100 else None
         }
     
-    def get_all_statistics(self) -> Dict[str, Dict[str, float]]:
+    def get_all_statistics(self) -> dict[str, dict[str, float]]:
         """
         Get statistics for all pipeline stages.
         
@@ -330,7 +331,7 @@ class DataFlowVisualizer:
     Visualize data flow through the system.
     """
     
-    def __init__(self, db: Optional[Database] = None):
+    def __init__(self, db: Database | None = None):
         """
         Initialize DataFlowVisualizer.
         
@@ -342,7 +343,7 @@ class DataFlowVisualizer:
             self.db.connect()
         logger.info("DataFlowVisualizer initialized")
     
-    def get_video_data_flow(self, video_id: str) -> Dict[str, Any]:
+    def get_video_data_flow(self, video_id: str) -> dict[str, Any]:
         """
         Get data flow for a specific video.
         
@@ -453,7 +454,7 @@ class DataFlowVisualizer:
             logger.error(f"Failed to get video data flow: {e}")
             return {'video_id': video_id, 'error': str(e)}
     
-    def get_system_data_flow(self) -> Dict[str, Any]:
+    def get_system_data_flow(self) -> dict[str, Any]:
         """
         Get system-wide data flow statistics.
         
@@ -548,7 +549,7 @@ class DataFlowVisualizer:
         rows = self.db.execute_query(query, (video_id, context_type))
         return rows[0]['count'] if rows else 0
     
-    def _get_earliest_context_time(self, video_id: str, context_type: str) -> Optional[str]:
+    def _get_earliest_context_time(self, video_id: str, context_type: str) -> str | None:
         """Get earliest timestamp for a context type."""
         query = """
             SELECT MIN(created_at) as earliest FROM video_context
@@ -563,7 +564,7 @@ class DataObservability:
     Unified data observability interface.
     """
     
-    def __init__(self, db: Optional[Database] = None):
+    def __init__(self, db: Database | None = None):
         """
         Initialize DataObservability.
         
@@ -580,7 +581,7 @@ class DataObservability:
         
         logger.info("DataObservability initialized")
     
-    def get_observability_dashboard(self, video_id: Optional[str] = None) -> Dict[str, Any]:
+    def get_observability_dashboard(self, video_id: str | None = None) -> dict[str, Any]:
         """
         Get comprehensive observability dashboard.
         
@@ -607,7 +608,7 @@ class DataObservability:
 
 
 # Global observability instance
-_observability_instance: Optional[DataObservability] = None
+_observability_instance: DataObservability | None = None
 
 
 def get_data_observability(db=None) -> DataObservability:

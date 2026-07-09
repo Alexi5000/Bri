@@ -3,10 +3,10 @@ Chat Window Component for BRI
 Provides conversational interface with message history and input
 """
 
-import streamlit as st
-from datetime import datetime
-from typing import List
 import logging
+from datetime import datetime
+
+import streamlit as st
 
 from models.memory import MemoryRecord
 from models.responses import AssistantMessageResponse
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 def render_chat_window(
     video_id: str,
-    conversation_history: List[MemoryRecord],
+    conversation_history: list[MemoryRecord],
     on_send_message: callable
 ) -> None:
     """Render the chat window interface with message history and input.
@@ -133,7 +133,7 @@ def render_chat_window(
     _render_message_input(video_id, on_send_message)
 
 
-def _render_message_history(conversation_history: List[MemoryRecord]) -> None:
+def _render_message_history(conversation_history: list[MemoryRecord]) -> None:
     """Render the message history with proper styling."""
     
     chat_container = st.container()
@@ -322,7 +322,7 @@ def render_assistant_response(response: AssistantMessageResponse) -> None:
         _render_suggestions(response.suggestions)
 
 
-def _render_response_frames(frames: List[str], timestamps: List[float]) -> None:
+def _render_response_frames(frames: list[str], timestamps: list[float]) -> None:
     """Render frame thumbnails with clickable timestamps.
     
     Args:
@@ -356,7 +356,7 @@ def _render_response_frames(frames: List[str], timestamps: List[float]) -> None:
                 st.caption(f"⏱️ {_format_video_timestamp(timestamp)}")
 
 
-def _render_suggestions(suggestions: List[str]) -> None:
+def _render_suggestions(suggestions: list[str]) -> None:
     """Render follow-up question suggestions.
     
     Args:

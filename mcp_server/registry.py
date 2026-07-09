@@ -2,11 +2,11 @@
 
 import importlib
 import logging
-from typing import Dict, List, Optional, Any
 from abc import ABC, abstractmethod
+from typing import Any
 
-from storage.database import get_database
 from config import Config
+from storage.database import get_database
 
 logger = logging.getLogger(__name__)
 
@@ -45,12 +45,12 @@ class Tool(ABC):
     
     @property
     @abstractmethod
-    def parameters_schema(self) -> Dict[str, Any]:
+    def parameters_schema(self) -> dict[str, Any]:
         """JSON Schema for tool parameters."""
         pass
     
     @abstractmethod
-    async def execute(self, video_id: str, parameters: Dict[str, Any]) -> Any:
+    async def execute(self, video_id: str, parameters: dict[str, Any]) -> Any:
         """Execute the tool with given parameters."""
         pass
 
@@ -75,7 +75,7 @@ class FrameExtractionTool(Tool):
         return "Extract frames from video at regular intervals or specific timestamps"
     
     @property
-    def parameters_schema(self) -> Dict[str, Any]:
+    def parameters_schema(self) -> dict[str, Any]:
         return {
             "type": "object",
             "properties": {
@@ -96,7 +96,7 @@ class FrameExtractionTool(Tool):
             }
         }
     
-    async def execute(self, video_id: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute(self, video_id: str, parameters: dict[str, Any]) -> dict[str, Any]:
         """Extract frames from video."""
         try:
             # Get video path from database
@@ -166,7 +166,7 @@ class ImageCaptioningTool(Tool):
         return "Generate natural language captions for video frames using BLIP"
     
     @property
-    def parameters_schema(self) -> Dict[str, Any]:
+    def parameters_schema(self) -> dict[str, Any]:
         return {
             "type": "object",
             "properties": {
@@ -184,7 +184,7 @@ class ImageCaptioningTool(Tool):
             "required": ["frame_paths", "timestamps"]
         }
     
-    async def execute(self, video_id: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute(self, video_id: str, parameters: dict[str, Any]) -> dict[str, Any]:
         """Generate captions for frames."""
         try:
             # If no frame paths provided, get all frames for video
@@ -207,7 +207,7 @@ class ImageCaptioningTool(Tool):
             logger.error(f"Image captioning failed: {str(e)}")
             raise
     
-    async def _get_video_frames(self, video_id: str) -> List[Dict[str, Any]]:
+    async def _get_video_frames(self, video_id: str) -> list[dict[str, Any]]:
         """Get all frames for a video from database."""
         db = get_database()
         results = db.execute_query(
@@ -248,7 +248,7 @@ class AudioTranscriptionTool(Tool):
         return "Transcribe audio from video using Whisper with timestamps"
     
     @property
-    def parameters_schema(self) -> Dict[str, Any]:
+    def parameters_schema(self) -> dict[str, Any]:
         return {
             "type": "object",
             "properties": {
@@ -267,7 +267,7 @@ class AudioTranscriptionTool(Tool):
             }
         }
     
-    async def execute(self, video_id: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute(self, video_id: str, parameters: dict[str, Any]) -> dict[str, Any]:
         """Transcribe video audio."""
         try:
             # Get video path from database
@@ -330,7 +330,7 @@ class ObjectDetectionTool(Tool):
         return "Detect objects in video frames using YOLOv8"
     
     @property
-    def parameters_schema(self) -> Dict[str, Any]:
+    def parameters_schema(self) -> dict[str, Any]:
         return {
             "type": "object",
             "properties": {
@@ -356,7 +356,7 @@ class ObjectDetectionTool(Tool):
             }
         }
     
-    async def execute(self, video_id: str, parameters: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute(self, video_id: str, parameters: dict[str, Any]) -> dict[str, Any]:
         """Detect objects in frames."""
         try:
             # If no frame paths provided, get all frames for video
@@ -396,7 +396,7 @@ class ObjectDetectionTool(Tool):
             logger.error(f"Object detection failed: {str(e)}")
             raise
     
-    async def _get_video_frames(self, video_id: str) -> List[Dict[str, Any]]:
+    async def _get_video_frames(self, video_id: str) -> list[dict[str, Any]]:
         """Get all frames for a video from database."""
         db = get_database()
         results = db.execute_query(
@@ -421,7 +421,7 @@ class ToolRegistry:
     """Registry for managing and discovering video processing tools."""
     
     def __init__(self):
-        self.tools: Dict[str, Tool] = {}
+        self.tools: dict[str, Tool] = {}
         logger.info("Tool registry initialized")
     
     def register_tool(self, tool: Tool) -> None:
@@ -434,7 +434,7 @@ class ToolRegistry:
         self.tools[tool.name] = tool
         logger.info(f"Registered tool: {tool.name}")
     
-    def get_tool(self, name: str) -> Optional[Tool]:
+    def get_tool(self, name: str) -> Tool | None:
         """
         Retrieve tool by name.
         
@@ -446,7 +446,7 @@ class ToolRegistry:
         """
         return self.tools.get(name)
     
-    def list_tools(self) -> List[Dict[str, Any]]:
+    def list_tools(self) -> list[dict[str, Any]]:
         """
         List all available tools with their definitions.
         

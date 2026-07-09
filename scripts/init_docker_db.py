@@ -4,7 +4,6 @@ Database initialization script for Docker deployment.
 Creates the SQLite database and tables if they don't exist.
 """
 
-import os
 import sqlite3
 import sys
 from pathlib import Path
@@ -38,7 +37,7 @@ def init_database():
 
     if schema_path.exists():
         logger.info("Loading schema from: %s", schema_path)
-        with open(schema_path, 'r') as f:
+        with open(schema_path) as f:
             schema_sql = f.read()
 
         # Execute schema

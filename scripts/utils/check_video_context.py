@@ -1,5 +1,6 @@
-from storage.database import Database
 import json
+
+from storage.database import Database
 
 db = Database()
 db.connect()
@@ -14,7 +15,6 @@ sample_captions = db.execute_query(
        LIMIT 3""",
     (video_id,)
 )
-import json
 for cap in sample_captions:
     data = json.loads(cap['data'])
     print(f"  [{data.get('timestamp', 0):.1f}s] {data.get('text', 'N/A')[:50]}")

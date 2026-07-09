@@ -1,10 +1,10 @@
 """Image captioning tool using Hugging Face BLIP model."""
 
 import os
-from typing import List
-from PIL import Image
-from transformers import BlipProcessor, BlipForConditionalGeneration
+
 import torch
+from PIL import Image
+from transformers import BlipForConditionalGeneration, BlipProcessor
 
 from models.tools import Caption
 from utils.logging_config import get_logger
@@ -81,9 +81,9 @@ class ImageCaptioner:
     
     def caption_frames_batch(
         self,
-        image_paths: List[str],
-        timestamps: List[float]
-    ) -> List[Caption]:
+        image_paths: list[str],
+        timestamps: list[float]
+    ) -> list[Caption]:
         """
         Generate captions for multiple frames efficiently using batch processing.
         
@@ -134,9 +134,9 @@ class ImageCaptioner:
     
     def _process_batch(
         self,
-        image_paths: List[str],
-        timestamps: List[float]
-    ) -> List[Caption]:
+        image_paths: list[str],
+        timestamps: list[float]
+    ) -> list[Caption]:
         """
         Process a batch of images.
         

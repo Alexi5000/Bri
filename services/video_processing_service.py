@@ -6,11 +6,12 @@ Handles all video data persistence with transactions, validation, and retry logi
 import json
 import time
 import uuid
-from typing import Dict, Any, List, Optional
-from storage.database import Database
-from services.data_validator import ValidationError, get_data_validator
+from typing import Any
+
 from services.data_lineage_tracker import get_lineage_tracker
+from services.data_validator import ValidationError, get_data_validator
 from services.errors import ProcessingError
+from storage.database import Database
 from utils.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -31,7 +32,7 @@ class VideoProcessingService:
     - Comprehensive logging and metrics
     """
     
-    def __init__(self, db: Optional[Database] = None, max_retries: int = 3):
+    def __init__(self, db: Database | None = None, max_retries: int = 3):
         """
         Initialize Video Processing Service.
         
@@ -51,9 +52,9 @@ class VideoProcessingService:
         self,
         video_id: str,
         tool_name: str,
-        results: Dict[str, Any],
-        idempotency_key: Optional[str] = None
-    ) -> Dict[str, int]:
+        results: dict[str, Any],
+        idempotency_key: str | None = None
+    ) -> dict[str, int]:
         """
         Store tool execution results in database with transaction support and idempotency.
         
@@ -101,7 +102,7 @@ class VideoProcessingService:
         
         return result
     
-    def _store_frames(self, video_id: str, results: Dict[str, Any]) -> Dict[str, int]:
+    def _store_frames(self, video_id: str, results: dict[str, Any]) -> dict[str, int]:
         """
         Store frame extraction results with validation.
         
@@ -157,7 +158,7 @@ class VideoProcessingService:
         logger.info(f"Stored {stored_count} frames for video {video_id}")
         return {'frames': stored_count}
     
-    def _store_captions(self, video_id: str, results: Dict[str, Any]) -> Dict[str, int]:
+    def _store_captions(self, video_id: str, results: dict[str, Any]) -> dict[str, int]:
         """
         Store caption generation results with validation.
         
@@ -214,7 +215,7 @@ class VideoProcessingService:
         logger.info(f"Stored {stored_count} captions for video {video_id}")
         return {'captions': stored_count}
     
-    def _store_transcript(self, video_id: str, results: Dict[str, Any]) -> Dict[str, int]:
+    def _store_transcript(self, video_id: str, results: dict[str, Any]) -> dict[str, int]:
         """
         Store audio transcription results with validation.
         
@@ -271,7 +272,7 @@ class VideoProcessingService:
         logger.info(f"Stored {stored_count} transcript segments for video {video_id}")
         return {'transcript_segments': stored_count}
     
-    def _store_objects(self, video_id: str, results: Dict[str, Any]) -> Dict[str, int]:
+    def _store_objects(self, video_id: str, results: dict[str, Any]) -> dict[str, int]:
         """
         Store object detection results with validation.
         
@@ -332,7 +333,7 @@ class VideoProcessingService:
         self,
         video_id: str,
         context_type: str,
-        insert_data: List[tuple],
+        insert_data: list[tuple],
         with_lineage: bool = False
     ) -> int:
         """
@@ -483,7 +484,7 @@ class VideoProcessingService:
         except Exception as e:
             logger.warning(f"Failed to record idempotency: {e}")
     
-    def _get_existing_counts(self, video_id: str, tool_name: str) -> Dict[str, int]:
+    def _get_existing_counts(self, video_id: str, tool_name: str) -> dict[str, int]:
         """
         Get counts of existing data for a tool (used when operation is idempotent).
         
@@ -517,7 +518,7 @@ class VideoProcessingService:
         result_key = result_key_map.get(context_type, context_type)
         return {result_key: count}
     
-    def verify_video_data_completeness(self, video_id: str) -> Dict[str, Any]:
+    def verify_video_data_completeness(self, video_id: str) -> dict[str, Any]:
         """
         Verify that all expected data has been stored for a video.
 
@@ -592,7 +593,7 @@ class VideoProcessingService:
         return status
 
     # Backwards-compatible alias used by tests and external callers.
-    def verify_video_data(self, video_id: str) -> Dict[str, Any]:
+    def verify_video_data(self, video_id: str) -> dict[str, Any]:
         """Alias for :meth:`verify_video_data_completeness`."""
         return self.verify_video_data_completeness(video_id)
     
@@ -618,7 +619,7 @@ class VideoProcessingService:
             logger.error(f"Failed to count {context_type} for video {video_id}: {e}")
             return 0
     
-    def delete_video_data(self, video_id: str) -> Dict[str, int]:
+    def delete_video_data(self, video_id: str) -> dict[str, int]:
         """
         Delete all processing data for a video.
         
@@ -679,7 +680,7 @@ class VideoProcessingService:
 
 
 # Global service instance
-_service_instance: Optional[VideoProcessingService] = None
+_service_instance: VideoProcessingService | None = None
 
 
 def get_video_processing_service() -> VideoProcessingService:

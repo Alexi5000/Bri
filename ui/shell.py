@@ -8,13 +8,12 @@ from ``services.application`` rather than raw database rows or HTTP payloads.
 from __future__ import annotations
 
 import html
-from typing import Iterable
+from collections.abc import Iterable
 
 import streamlit as st
 
 from services.application import DashboardSnapshot, PersistenceReadiness, VideoSummary
 from services.mcp_client import VideoProgress
-
 
 STATUS_COLORS = {
     "complete": "#40E0D0",

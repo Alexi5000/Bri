@@ -1,14 +1,16 @@
 """Database connection and utilities for BRI video agent."""
 
-import sqlite3
-import logging
 import json
+import logging
+import sqlite3
 import threading
-from pathlib import Path
-from typing import Optional, List, Tuple, Dict, Any
 from contextlib import contextmanager
+from pathlib import Path
+from typing import Any
+
 from config import Config
-from services.errors import StorageError, ValidationError as _BriValidationError
+from services.errors import StorageError
+from services.errors import ValidationError as _BriValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +26,7 @@ class ValidationError(_BriValidationError):
 class Database:
     """SQLite database connection manager with error handling."""
 
-    def __init__(self, db_path: Optional[str] = None):
+    def __init__(self, db_path: str | None = None):
         """Initialize database connection.
 
         Args:
@@ -32,7 +34,7 @@ class Database:
         """
         self.db_path = db_path or Config.DATABASE_PATH
         self._ensure_database_directory()
-        self._connection: Optional[sqlite3.Connection] = None
+        self._connection: sqlite3.Connection | None = None
         self._lock = threading.RLock()
 
     def _ensure_database_directory(self) -> None:
@@ -100,7 +102,7 @@ class Database:
                 cursor.close()
 
     @contextmanager
-    def transaction(self, isolation_level: Optional[str] = None):
+    def transaction(self, isolation_level: str | None = None):
         """Context manager for explicit transaction control with savepoint support.
 
         Args:
@@ -142,8 +144,8 @@ class Database:
     def execute_query(
         self,
         query: str,
-        parameters: Optional[Tuple] = None
-    ) -> List[sqlite3.Row]:
+        parameters: tuple | None = None
+    ) -> list[sqlite3.Row]:
         """Execute a SELECT query and return results.
 
         Args:
@@ -170,7 +172,7 @@ class Database:
     def execute_update(
         self,
         query: str,
-        parameters: Optional[Tuple] = None
+        parameters: tuple | None = None
     ) -> int:
         """Execute an INSERT, UPDATE, or DELETE query.
 
@@ -198,7 +200,7 @@ class Database:
     def execute_many(
         self,
         query: str,
-        parameters_list: List[Tuple]
+        parameters_list: list[tuple]
     ) -> int:
         """Execute a query multiple times with different parameters.
 
@@ -220,7 +222,7 @@ class Database:
             logger.error(f"Batch execution failed: {query} - {e}")
             raise DatabaseError(f"Batch execution failed: {e}")
 
-    def initialize_schema(self, schema_path: Optional[str] = None) -> None:
+    def initialize_schema(self, schema_path: str | None = None) -> None:
         """Initialize database schema from SQL file.
 
         Args:
@@ -233,7 +235,7 @@ class Database:
             schema_path = Path(__file__).parent / "schema.sql"
 
         try:
-            with open(schema_path, 'r') as f:
+            with open(schema_path) as f:
                 schema_sql = f.read()
 
             conn = self.get_connection()
@@ -314,7 +316,7 @@ class Database:
         )
         return record_id
 
-    def get_video(self, video_id: str) -> Optional[sqlite3.Row]:
+    def get_video(self, video_id: str) -> sqlite3.Row | None:
         """Return a video row by identifier from this database instance."""
         results = self.execute_query("SELECT * FROM videos WHERE video_id = ?", (video_id,))
         return results[0] if results else None
@@ -344,7 +346,7 @@ class Database:
         self.close()
 
     @staticmethod
-    def validate_json(data: str, schema_type: Optional[str] = None) -> bool:
+    def validate_json(data: str, schema_type: str | None = None) -> bool:
         """Validate JSON data structure.
 
         Args:
@@ -427,7 +429,7 @@ class Database:
         video_id: str,
         context_type: str,
         data: str,
-        timestamp: Optional[float] = None
+        timestamp: float | None = None
     ) -> None:
         """Validate video context data before insertion.
 
@@ -455,7 +457,7 @@ class Database:
         # Validate JSON structure
         self.validate_json(data, context_type)
 
-    def get_schema_version(self) -> Optional[int]:
+    def get_schema_version(self) -> int | None:
         """Get current database schema version.
 
         Returns:
@@ -470,7 +472,7 @@ class Database:
         except sqlite3.Error:
             return None
 
-    def check_constraints(self) -> Dict[str, Any]:
+    def check_constraints(self) -> dict[str, Any]:
         """Check database constraints and integrity.
 
         Returns:
@@ -532,7 +534,7 @@ class Transaction:
         """
         self.connection = connection
         self._savepoint_counter = 0
-        self._savepoints: List[str] = []
+        self._savepoints: list[str] = []
 
     def cursor(self) -> sqlite3.Cursor:
         """Get a cursor for this transaction.
@@ -596,7 +598,7 @@ class Transaction:
 
 
 # Global database instance
-_db_instance: Optional[Database] = None
+_db_instance: Database | None = None
 _db_instance_lock = threading.Lock()
 
 
@@ -614,7 +616,7 @@ def get_database() -> Database:
         return _db_instance
 
 
-def initialize_database(schema_path: Optional[str] = None) -> None:
+def initialize_database(schema_path: str | None = None) -> None:
     """Initialize database with schema.
 
     Args:
@@ -631,7 +633,7 @@ def insert_video(
     filename: str,
     file_path: str,
     duration: float,
-    thumbnail_path: Optional[str] = None
+    thumbnail_path: str | None = None
 ) -> None:
     """
     Insert a new video record into the database.
@@ -660,7 +662,7 @@ def insert_video(
     logger.info(f"Inserted video record: {video_id}")
 
 
-def get_video(video_id: str) -> Optional[sqlite3.Row]:
+def get_video(video_id: str) -> sqlite3.Row | None:
     """
     Retrieve a video record by ID.
 
@@ -676,7 +678,7 @@ def get_video(video_id: str) -> Optional[sqlite3.Row]:
     return results[0] if results else None
 
 
-def get_all_videos() -> List[sqlite3.Row]:
+def get_all_videos() -> list[sqlite3.Row]:
     """
     Retrieve all video records.
 

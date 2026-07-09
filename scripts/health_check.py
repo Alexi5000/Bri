@@ -9,16 +9,16 @@ Usage:
     python scripts/health_check.py cleanup-backups # Clean up old backups
 """
 
-import sys
 import argparse
-import logging
 import json
+import logging
+import sys
 from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from storage.database import get_database, initialize_database
+from storage.database import initialize_database
 from storage.health_monitor import get_health_monitor
 
 # Configure logging
@@ -46,13 +46,13 @@ def show_report():
         
         # Database size
         size_info = report['database_size']
-        print(f"\n📊 Database Size:")
+        print("\n📊 Database Size:")
         print(f"   Size: {size_info['size_mb']} MB")
         print(f"   Path: {size_info['path']}")
         
         # Growth rate
         growth = report['growth_rate']
-        print(f"\n📈 Growth Rate:")
+        print("\n📈 Growth Rate:")
         print(f"   Total Videos: {growth.get('total_videos', 0)}")
         print(f"   Total Conversations: {growth.get('total_memory', 0)}")
         print(f"   Total Context: {growth.get('total_context', 0)}")
@@ -62,7 +62,7 @@ def show_report():
         
         # Connection pool
         conn = report['connection_pool']
-        print(f"\n🔌 Connection Pool:")
+        print("\n🔌 Connection Pool:")
         print(f"   Connected: {'✓' if conn['connected'] else '✗'}")
         print(f"   Foreign Keys: {'✓ Enabled' if conn.get('foreign_keys_enabled') else '✗ Disabled'}")
         print(f"   Journal Mode: {conn.get('journal_mode', 'unknown')}")
@@ -70,20 +70,20 @@ def show_report():
         
         # Integrity
         integrity = report['integrity']
-        print(f"\n🔍 Integrity Check:")
+        print("\n🔍 Integrity Check:")
         print(f"   Status: {'✓ OK' if integrity['integrity_ok'] else '✗ FAILED'}")
         if not integrity['integrity_ok']:
             print(f"   Message: {integrity.get('integrity_message', 'unknown')}")
         
         # Tables
         if 'tables' in integrity:
-            print(f"\n📋 Tables:")
+            print("\n📋 Tables:")
             for table, count in integrity['tables'].items():
                 print(f"   {table}: {count} records")
         
         # Constraints
         constraints = report['constraints']
-        print(f"\n⚙️  Constraints:")
+        print("\n⚙️  Constraints:")
         print(f"   Foreign Keys: {'✓ Enabled' if constraints['foreign_keys_enabled'] else '✗ Disabled'}")
         print(f"   Orphaned Memory: {constraints['orphaned_memory']}")
         print(f"   Orphaned Context: {constraints['orphaned_context']}")
@@ -103,7 +103,7 @@ def show_report():
                 print(f"      Slow Count: {query['slow_count']}/{query['total_count']}")
                 print(f"      Max Time: {query['max_time_ms']:.2f}ms")
         else:
-            print(f"\n⏱️  Slow Queries: None detected")
+            print("\n⏱️  Slow Queries: None detected")
         
         print("\n" + "="*60 + "\n")
         
@@ -125,7 +125,7 @@ def show_size():
         monitor = get_health_monitor()
         size_info = monitor.get_database_size()
         
-        print(f"\n📊 Database Size:")
+        print("\n📊 Database Size:")
         print(f"   Size: {size_info['size_mb']} MB ({size_info['size_bytes']:,} bytes)")
         print(f"   Path: {size_info['path']}\n")
         
@@ -140,7 +140,7 @@ def show_growth():
         monitor = get_health_monitor()
         growth = monitor.get_growth_rate()
         
-        print(f"\n📈 Database Growth Rate:")
+        print("\n📈 Database Growth Rate:")
         print(f"   Current Size: {growth.get('current_size_mb', 0)} MB")
         print(f"   Total Videos: {growth.get('total_videos', 0)}")
         print(f"   Recent Videos ({growth.get('days_analyzed', 0)} days): {growth.get('recent_videos', 0)}")
@@ -158,12 +158,12 @@ def check_integrity():
         monitor = get_health_monitor()
         integrity = monitor.check_table_integrity()
         
-        print(f"\n🔍 Database Integrity Check:")
+        print("\n🔍 Database Integrity Check:")
         print(f"   Status: {'✓ OK' if integrity['integrity_ok'] else '✗ FAILED'}")
         print(f"   Message: {integrity.get('integrity_message', 'unknown')}")
         
         if 'tables' in integrity:
-            print(f"\n   Tables:")
+            print("\n   Tables:")
             for table, count in integrity['tables'].items():
                 print(f"     {table}: {count} records")
         

@@ -1,8 +1,8 @@
 """Audio transcription tool using OpenAI Whisper."""
 
-import os
 import logging
-from typing import Optional
+import os
+
 import whisper
 
 from models.tools import Transcript, TranscriptSegment
@@ -30,7 +30,7 @@ class AudioTranscriber:
     def transcribe_video(
         self,
         video_path: str,
-        language: Optional[str] = None
+        language: str | None = None
     ) -> Transcript:
         """
         Transcribe entire video audio with timestamps.
@@ -101,7 +101,7 @@ class AudioTranscriber:
         video_path: str,
         start_time: float,
         end_time: float,
-        language: Optional[str] = None
+        language: str | None = None
     ) -> TranscriptSegment:
         """
         Transcribe a specific time range of the video.

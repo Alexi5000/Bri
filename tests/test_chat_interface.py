@@ -3,12 +3,13 @@ Test suite for chat interface functionality.
 Tests the complete chat flow including edge cases.
 """
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-import asyncio
-from unittest.mock import Mock, patch, MagicMock
+
+from models.responses import AssistantMessageResponse
 from services.agent import GroqAgent
 from services.memory import Memory
-from models.responses import AssistantMessageResponse
 
 
 class TestChatInterface:
@@ -97,9 +98,10 @@ class TestChatInterface:
     def test_memory_persistence(self):
         """Test that messages are stored in memory - Integration test."""
         # Use real database for this test since mocking is complex
-        from storage.database import Database
-        import tempfile
         import os
+        import tempfile
+
+        from storage.database import Database
         
         # Create temporary database
         with tempfile.NamedTemporaryFile(delete=False, suffix='.db') as tmp:

@@ -1,9 +1,9 @@
 """Tool Router for query analysis and tool selection."""
 
-import re
 import logging
+import re
 from dataclasses import dataclass, field
-from typing import List, Dict, Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -11,9 +11,9 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ToolPlan:
     """Represents an execution plan for processing a query."""
-    tools_needed: List[str] = field(default_factory=list)  # e.g., ['captions', 'objects']
-    execution_order: List[str] = field(default_factory=list)
-    parameters: Dict[str, Any] = field(default_factory=dict)
+    tools_needed: list[str] = field(default_factory=list)  # e.g., ['captions', 'objects']
+    execution_order: list[str] = field(default_factory=list)
+    parameters: dict[str, Any] = field(default_factory=dict)
 
 
 class ToolRouter:
@@ -56,7 +56,7 @@ class ToolRouter:
     def analyze_query(
         self,
         query: str,
-        context: Optional[Dict[str, Any]] = None
+        context: dict[str, Any] | None = None
     ) -> ToolPlan:
         """
         Determine which tools to use and in what order based on query content.
@@ -275,7 +275,7 @@ class ToolRouter:
         
         return False
     
-    def extract_timestamp(self, query: str) -> Optional[float]:
+    def extract_timestamp(self, query: str) -> float | None:
         """
         Extract timestamp from query if present.
         
@@ -317,7 +317,7 @@ class ToolRouter:
         
         return None
     
-    def _extract_object_name(self, query_lower: str) -> Optional[str]:
+    def _extract_object_name(self, query_lower: str) -> str | None:
         """
         Extract object name from query for object detection.
         
@@ -361,9 +361,9 @@ class ToolRouter:
     
     def _optimize_execution_order(
         self,
-        tools_needed: List[str],
-        parameters: Dict[str, Any]
-    ) -> List[str]:
+        tools_needed: list[str],
+        parameters: dict[str, Any]
+    ) -> list[str]:
         """
         Optimize tool execution order based on dependencies and efficiency.
         

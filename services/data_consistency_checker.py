@@ -4,11 +4,11 @@ Verifies data integrity and detects/fixes corruption
 """
 
 import json
-from typing import Dict, Any, Optional
+from typing import Any
+
+from services.errors import StateError
 from storage.database import Database
 from utils.logging_config import get_logger
-from services.errors import StateError
-
 
 logger = get_logger(__name__)
 
@@ -29,7 +29,7 @@ class DataConsistencyChecker:
     - Missing data detection
     """
     
-    def __init__(self, db: Optional[Database] = None):
+    def __init__(self, db: Database | None = None):
         """
         Initialize DataConsistencyChecker.
         
@@ -41,7 +41,7 @@ class DataConsistencyChecker:
             self.db.connect()
         logger.info("DataConsistencyChecker initialized")
     
-    def check_video_consistency(self, video_id: str) -> Dict[str, Any]:
+    def check_video_consistency(self, video_id: str) -> dict[str, Any]:
         """
         Perform comprehensive consistency check for a video.
         
@@ -127,7 +127,7 @@ class DataConsistencyChecker:
         
         return report
     
-    def _check_frame_count(self, video_id: str) -> Dict[str, Any]:
+    def _check_frame_count(self, video_id: str) -> dict[str, Any]:
         """
         Check if frame count is reasonable based on video duration.
         
@@ -200,7 +200,7 @@ class DataConsistencyChecker:
                 'recommendation': "Check database connectivity"
             }
     
-    def _check_caption_frame_match(self, video_id: str) -> Dict[str, Any]:
+    def _check_caption_frame_match(self, video_id: str) -> dict[str, Any]:
         """
         Check if caption count matches frame count.
         
@@ -269,7 +269,7 @@ class DataConsistencyChecker:
                 'recommendation': "Check database connectivity"
             }
     
-    def _check_timestamp_ordering(self, video_id: str) -> Dict[str, Any]:
+    def _check_timestamp_ordering(self, video_id: str) -> dict[str, Any]:
         """
         Check if timestamps are in monotonically increasing order.
         
@@ -331,7 +331,7 @@ class DataConsistencyChecker:
                 'recommendation': "Check database connectivity"
             }
     
-    def _check_data_corruption(self, video_id: str) -> Dict[str, Any]:
+    def _check_data_corruption(self, video_id: str) -> dict[str, Any]:
         """
         Check for data corruption (invalid JSON, missing required fields).
         
@@ -405,7 +405,7 @@ class DataConsistencyChecker:
                 'recommendation': "Check database connectivity"
             }
     
-    def _check_transcript_segments(self, video_id: str) -> Dict[str, Any]:
+    def _check_transcript_segments(self, video_id: str) -> dict[str, Any]:
         """
         Check transcript segment consistency (end > start, no gaps).
         
@@ -477,7 +477,7 @@ class DataConsistencyChecker:
                 'recommendation': "Check database connectivity"
             }
     
-    def fix_timestamp_ordering(self, video_id: str, context_type: str) -> Dict[str, Any]:
+    def fix_timestamp_ordering(self, video_id: str, context_type: str) -> dict[str, Any]:
         """
         Fix timestamp ordering by re-sorting records.
         
@@ -525,7 +525,7 @@ class DataConsistencyChecker:
                 'message': f"Fix failed: {e}"
             }
     
-    def delete_corrupted_records(self, video_id: str) -> Dict[str, int]:
+    def delete_corrupted_records(self, video_id: str) -> dict[str, int]:
         """
         Delete corrupted records for a video.
         
@@ -572,7 +572,7 @@ class DataConsistencyChecker:
 
 
 # Global checker instance
-_checker_instance: Optional[DataConsistencyChecker] = None
+_checker_instance: DataConsistencyChecker | None = None
 
 
 def get_consistency_checker(db=None) -> DataConsistencyChecker:

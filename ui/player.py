@@ -3,10 +3,10 @@ Video Player Component for BRI
 Provides video playback with timestamp navigation and controls
 """
 
-import streamlit as st
-from pathlib import Path
-from typing import Optional, List
 import logging
+from pathlib import Path
+
+import streamlit as st
 
 logger = logging.getLogger(__name__)
 
@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 def render_video_player(
     video_path: str,
     video_id: str,
-    current_timestamp: Optional[float] = None,
-    timestamps: Optional[List[float]] = None
+    current_timestamp: float | None = None,
+    timestamps: list[float] | None = None
 ) -> None:
     """Render video player with timestamp navigation.
     
@@ -151,7 +151,7 @@ def _render_player_header(video_id: str) -> None:
 def _render_video_component(
     video_path: str,
     video_id: str,
-    start_time: Optional[float] = None
+    start_time: float | None = None
 ) -> None:
     """Render the actual video player component.
     
@@ -233,7 +233,7 @@ def _render_playback_controls(video_id: str) -> None:
     st.markdown('</div>', unsafe_allow_html=True)
 
 
-def _render_timestamp_navigation(timestamps: List[float], video_id: str) -> None:
+def _render_timestamp_navigation(timestamps: list[float], video_id: str) -> None:
     """Render clickable timestamp chips for navigation.
     
     Args:
@@ -278,7 +278,7 @@ def _render_timestamp_navigation(timestamps: List[float], video_id: str) -> None
 def render_video_player_with_context(
     video_path: str,
     video_id: str,
-    conversation_timestamps: List[float]
+    conversation_timestamps: list[float]
 ) -> None:
     """Render video player synced with conversation context.
     
@@ -367,7 +367,7 @@ def get_current_playback_time(video_id: str) -> float:
     return 0.0
 
 
-def extract_timestamps_from_conversation(conversation_history: List) -> List[float]:
+def extract_timestamps_from_conversation(conversation_history: list) -> list[float]:
     """Extract all timestamps mentioned in conversation history.
     
     Args:

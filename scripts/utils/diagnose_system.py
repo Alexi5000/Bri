@@ -3,8 +3,10 @@ BRI System Diagnostic Tool
 Analyzes the complete data pipeline and identifies issues.
 """
 import os
-from storage.database import Database
+
 from config import Config
+from storage.database import Database
+
 
 def diagnose():
     print("="*80)
@@ -115,8 +117,9 @@ def diagnose():
     print("\n🔧 MCP SERVER")
     print("-"*80)
     try:
-        import httpx
         import asyncio
+
+        import httpx
         
         async def check_server():
             try:

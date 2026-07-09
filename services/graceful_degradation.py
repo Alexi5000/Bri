@@ -8,21 +8,15 @@ Handles service failures gracefully by:
 - Logging all degradation events
 """
 
-import logging
-import time
-from typing import Optional, Dict, Any, List, Callable
-from datetime import datetime, timedelta
-from enum import Enum
 import json
+from collections.abc import Callable
+from datetime import datetime
+from enum import Enum
+from typing import Any
 
-from mcp_server.circuit_breaker import (
-    database_breaker,
-    cache_breaker,
-    groq_api_breaker,
-    CircuitBreakerOpenError
-)
+from mcp_server.circuit_breaker import CircuitBreakerOpenError, database_breaker
 from services.error_handler import ErrorHandler
-from utils.logging_config import get_logger, LogContext
+from utils.logging_config import LogContext, get_logger
 
 logger = get_logger(__name__)
 
@@ -47,9 +41,9 @@ class GracefulDegradationService:
     
     def __init__(self):
         """Initialize degradation service."""
-        self.service_status: Dict[str, ServiceStatus] = {}
-        self.degradation_events: List[Dict[str, Any]] = []
-        self.request_queue: List[Dict[str, Any]] = []
+        self.service_status: dict[str, ServiceStatus] = {}
+        self.degradation_events: list[dict[str, Any]] = []
+        self.request_queue: list[dict[str, Any]] = []
         self.cache_fallback_enabled = True
         self.partial_response_enabled = True
         
@@ -112,6 +106,7 @@ class GracefulDegradationService:
         """
         try:
             from groq import Groq
+
             from config import Config
             
             client = Groq(api_key=Config.GROQ_API_KEY)
@@ -134,9 +129,9 @@ class GracefulDegradationService:
     def get_data_with_fallback(
         self,
         primary_fetch: Callable,
-        cache_key: Optional[str] = None,
-        video_id: Optional[str] = None
-    ) -> Optional[Any]:
+        cache_key: str | None = None,
+        video_id: str | None = None
+    ) -> Any | None:
         """Fetch data with fallback to cache if database unavailable.
         
         Args:
@@ -177,7 +172,7 @@ class GracefulDegradationService:
                 logger.error("No fallback data available")
                 return None
     
-    def _fetch_from_cache(self, cache_key: str) -> Optional[Any]:
+    def _fetch_from_cache(self, cache_key: str) -> Any | None:
         """Fetch data from cache.
         
         Args:
@@ -190,8 +185,9 @@ class GracefulDegradationService:
             return None
         
         try:
-            from config import Config
             import redis
+
+            from config import Config
             
             if not Config.REDIS_ENABLED:
                 return None
@@ -213,9 +209,9 @@ class GracefulDegradationService:
     def build_partial_response(
         self,
         video_id: str,
-        available_data: Dict[str, Any],
-        missing_data: List[str]
-    ) -> Dict[str, Any]:
+        available_data: dict[str, Any],
+        missing_data: list[str]
+    ) -> dict[str, Any]:
         """Build partial response when some data is missing.
         
         Args:
@@ -253,8 +249,8 @@ class GracefulDegradationService:
     def queue_request(
         self,
         request_type: str,
-        request_data: Dict[str, Any],
-        video_id: Optional[str] = None
+        request_data: dict[str, Any],
+        video_id: str | None = None
     ) -> str:
         """Queue request for later processing during maintenance.
         
@@ -331,7 +327,7 @@ class GracefulDegradationService:
         query: str,
         video_id: str,
         error: Exception
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Handle Groq API failure with graceful degradation.
         
         Args:
@@ -378,7 +374,7 @@ class GracefulDegradationService:
         self,
         service: str,
         reason: str,
-        mode: Optional[DegradationMode] = None
+        mode: DegradationMode | None = None
     ):
         """Log degradation event.
         
@@ -405,7 +401,7 @@ class GracefulDegradationService:
             extra={'degradation_mode': mode.value if mode else None}
         )
     
-    def get_system_health(self) -> Dict[str, Any]:
+    def get_system_health(self) -> dict[str, Any]:
         """Get overall system health status.
         
         Returns:
@@ -438,7 +434,7 @@ class GracefulDegradationService:
             'timestamp': datetime.now().isoformat()
         }
     
-    def get_degradation_report(self) -> Dict[str, Any]:
+    def get_degradation_report(self) -> dict[str, Any]:
         """Get detailed degradation report.
         
         Returns:

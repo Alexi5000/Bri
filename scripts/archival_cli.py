@@ -9,16 +9,16 @@ Usage:
     python scripts/archival_cli.py apply-policies            # Apply all retention policies
 """
 
-import sys
 import argparse
 import logging
+import sys
 from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from storage.database import get_database, initialize_database
 from storage.archival import get_archival_manager
+from storage.database import initialize_database
 
 # Configure logging
 logging.basicConfig(
@@ -36,11 +36,11 @@ def show_status():
         
         print("\n=== Data Retention Policy Status ===")
         print(f"Database Size: {status.get('database_size_mb', 0):.2f} MB")
-        print(f"\nTotal Records:")
+        print("\nTotal Records:")
         print(f"  Videos: {status.get('total_videos', 0)}")
         print(f"  Conversations: {status.get('total_memory', 0)}")
         print(f"  Context Entries: {status.get('total_context', 0)}")
-        print(f"\nRetention Status:")
+        print("\nRetention Status:")
         print(f"  Soft-Deleted Videos: {status.get('soft_deleted_videos', 0)}")
         print(f"  Old Conversations (>30 days): {status.get('old_conversations', 0)}")
         print()
@@ -173,7 +173,7 @@ def apply_policies(
         
         if cleanup_orphaned:
             stats = results['cleanup_stats']
-            print(f"\nCleanup Statistics:")
+            print("\nCleanup Statistics:")
             print(f"  Orphaned Memory: {stats.get('orphaned_memory', 0)}")
             print(f"  Orphaned Context: {stats.get('orphaned_context', 0)}")
             print(f"  Orphaned Lineage: {stats.get('orphaned_lineage', 0)}")

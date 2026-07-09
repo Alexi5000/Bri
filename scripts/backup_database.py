@@ -1,14 +1,14 @@
 """Script to create database backup."""
 
-import sys
 import argparse
+import sys
 from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from storage.backup import DatabaseBackup, create_automated_backup
-from utils.logging_config import setup_logging, get_logger
+from storage.backup import DatabaseBackup
+from utils.logging_config import get_logger, setup_logging
 
 setup_logging()
 logger = get_logger(__name__)
@@ -60,7 +60,7 @@ def main():
         
         # Show stats
         stats = backup_manager.get_backup_stats()
-        print(f"\nBackup Statistics:")
+        print("\nBackup Statistics:")
         print(f"  Total backups: {stats['total_backups']}")
         print(f"  Total size: {stats['total_size_mb']:.2f} MB")
         print(f"  Newest: {stats['newest_backup']}")

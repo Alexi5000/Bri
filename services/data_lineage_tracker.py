@@ -5,7 +5,8 @@ Tracks which tool version generated each result and enables reproducibility
 
 import json
 import uuid
-from typing import Dict, Any, List, Optional
+from typing import Any
+
 from storage.database import Database
 from utils.logging_config import get_logger
 
@@ -38,7 +39,7 @@ class DataLineageTracker:
         'yolo': 'yolov8n'
     }
     
-    def __init__(self, db: Optional[Database] = None):
+    def __init__(self, db: Database | None = None):
         """
         Initialize DataLineageTracker.
         
@@ -55,8 +56,8 @@ class DataLineageTracker:
         video_id: str,
         context_id: str,
         tool_name: str,
-        parameters: Optional[Dict[str, Any]] = None,
-        user_id: Optional[str] = None
+        parameters: dict[str, Any] | None = None,
+        user_id: str | None = None
     ) -> str:
         """
         Record a data processing operation in the lineage table.
@@ -100,11 +101,11 @@ class DataLineageTracker:
     def record_batch_processing(
         self,
         video_id: str,
-        context_ids: List[str],
+        context_ids: list[str],
         tool_name: str,
-        parameters: Optional[Dict[str, Any]] = None,
-        user_id: Optional[str] = None
-    ) -> List[str]:
+        parameters: dict[str, Any] | None = None,
+        user_id: str | None = None
+    ) -> list[str]:
         """
         Record multiple processing operations in batch.
         
@@ -154,9 +155,9 @@ class DataLineageTracker:
         self,
         context_id: str,
         tool_name: str,
-        tool_version: Optional[str] = None,
-        model_version: Optional[str] = None,
-        parameters: Optional[Dict[str, Any]] = None
+        tool_version: str | None = None,
+        model_version: str | None = None,
+        parameters: dict[str, Any] | None = None
     ) -> None:
         """
         Update lineage metadata in video_context table.
@@ -189,7 +190,7 @@ class DataLineageTracker:
             logger.error(f"Failed to update context lineage: {e}")
             raise
     
-    def get_lineage_history(self, video_id: str) -> List[Dict[str, Any]]:
+    def get_lineage_history(self, video_id: str) -> list[dict[str, Any]]:
         """
         Get complete lineage history for a video.
         
@@ -224,7 +225,7 @@ class DataLineageTracker:
             logger.error(f"Failed to get lineage history: {e}")
             return []
     
-    def get_context_lineage(self, context_id: str) -> Optional[Dict[str, Any]]:
+    def get_context_lineage(self, context_id: str) -> dict[str, Any] | None:
         """
         Get lineage information for a specific context record.
         
@@ -266,7 +267,7 @@ class DataLineageTracker:
             logger.error(f"Failed to get context lineage: {e}")
             return None
     
-    def get_reproducibility_info(self, video_id: str) -> Dict[str, Any]:
+    def get_reproducibility_info(self, video_id: str) -> dict[str, Any]:
         """
         Get all information needed to reproduce processing results.
         
@@ -326,7 +327,7 @@ class DataLineageTracker:
         video_id: str,
         tool_name: str,
         reason: str,
-        parameters: Optional[Dict[str, Any]] = None
+        parameters: dict[str, Any] | None = None
     ) -> str:
         """
         Record a reprocessing operation.
@@ -368,7 +369,7 @@ class DataLineageTracker:
             logger.error(f"Failed to record reprocessing: {e}")
             raise
     
-    def _get_model_version(self, tool_name: str) -> Optional[str]:
+    def _get_model_version(self, tool_name: str) -> str | None:
         """
         Get model version for a tool.
         
@@ -387,7 +388,7 @@ class DataLineageTracker:
 
 
 # Global tracker instance
-_tracker_instance: Optional[DataLineageTracker] = None
+_tracker_instance: DataLineageTracker | None = None
 
 
 def get_lineage_tracker(db=None) -> DataLineageTracker:

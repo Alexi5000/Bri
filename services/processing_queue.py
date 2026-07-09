@@ -6,10 +6,10 @@ Handles multiple video processing jobs with priority queue
 import asyncio
 import threading
 import time
-from typing import Dict, Optional, List
+from collections import deque
 from dataclasses import dataclass, field
 from enum import Enum
-from collections import deque
+
 from utils.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -29,10 +29,10 @@ class ProcessingJob:
     video_id: str = field(compare=False)
     video_path: str = field(compare=False)
     created_at: float = field(default_factory=time.time, compare=False)
-    started_at: Optional[float] = field(default=None, compare=False)
-    completed_at: Optional[float] = field(default=None, compare=False)
+    started_at: float | None = field(default=None, compare=False)
+    completed_at: float | None = field(default=None, compare=False)
     status: str = field(default='queued', compare=False)  # queued, processing, complete, failed
-    error: Optional[str] = field(default=None, compare=False)
+    error: str | None = field(default=None, compare=False)
 
 
 class ProcessingQueue:
@@ -56,16 +56,16 @@ class ProcessingQueue:
         self.max_concurrent_jobs = max_concurrent_jobs
 
         # Job queue (priority queue using sorted list)
-        self.queue: List[ProcessingJob] = []
+        self.queue: list[ProcessingJob] = []
 
         # Active jobs (currently processing)
-        self.active_jobs: Dict[str, ProcessingJob] = {}
+        self.active_jobs: dict[str, ProcessingJob] = {}
 
         # Completed jobs history (keep last 100)
         self.completed_jobs: deque = deque(maxlen=100)
 
         # Worker tasks
-        self.workers: List[asyncio.Task] = []
+        self.workers: list[asyncio.Task] = []
 
         # Shutdown flag
         self.shutdown_requested = False
@@ -124,7 +124,7 @@ class ProcessingQueue:
 
             return job
 
-    async def get_next_job(self) -> Optional[ProcessingJob]:
+    async def get_next_job(self) -> ProcessingJob | None:
         """
         Get next job from queue (highest priority).
 
@@ -154,7 +154,7 @@ class ProcessingQueue:
         self,
         video_id: str,
         success: bool = True,
-        error: Optional[str] = None
+        error: str | None = None
     ) -> None:
         """
         Mark a job as complete.
@@ -282,7 +282,7 @@ class ProcessingQueue:
             f"completed={len(self.completed_jobs)}"
         )
 
-    def get_status(self) -> Dict:
+    def get_status(self) -> dict:
         """
         Get current queue status.
 
@@ -298,7 +298,7 @@ class ProcessingQueue:
                 'shutdown_requested': self.shutdown_requested
             }
 
-    def get_job_status(self, video_id: str) -> Optional[Dict]:
+    def get_job_status(self, video_id: str) -> dict | None:
         """
         Get status of a specific job.
 
@@ -347,7 +347,7 @@ class ProcessingQueue:
 
 
 # Global queue instance
-_queue_instance: Optional[ProcessingQueue] = None
+_queue_instance: ProcessingQueue | None = None
 _queue_instance_lock = threading.Lock()
 
 

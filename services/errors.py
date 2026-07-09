@@ -12,7 +12,8 @@ name the recovery path, name the exception."
 
 from __future__ import annotations
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 
 class BriError(Exception):

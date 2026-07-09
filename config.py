@@ -8,13 +8,14 @@ normal imports so tests, CLI scripts, and API processes remain deterministic.
 from __future__ import annotations
 
 import os
+from collections.abc import Callable
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar
 
 if TYPE_CHECKING:
     # Import only for type checkers; at runtime we lazy-load the logger to
     # avoid a circular import between config.py and utils.logging_config.
-    from utils.logging_config import LoggerProtocol
+    pass
 
 
 def _get_logger():

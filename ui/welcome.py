@@ -3,8 +3,9 @@ Welcome Screen Component for BRI
 Implements friendly greeting, introduction, and upload prompt
 """
 
-import streamlit as st
 import logging
+
+import streamlit as st
 
 logger = logging.getLogger(__name__)
 

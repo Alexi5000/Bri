@@ -1,14 +1,14 @@
 """Script to restore database from backup."""
 
-import sys
 import argparse
+import sys
 from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from storage.backup import DatabaseBackup
-from utils.logging_config import setup_logging, get_logger
+from utils.logging_config import get_logger, setup_logging
 
 setup_logging()
 logger = get_logger(__name__)
@@ -70,7 +70,7 @@ def main():
             print(f"Using latest backup: {backups[0]['filename']}")
         
         # Confirm restore
-        print(f"\n⚠️  WARNING: This will replace the current database!")
+        print("\n⚠️  WARNING: This will replace the current database!")
         print(f"Backup to restore: {backup_path}")
         response = input("Continue? (yes/no): ")
         

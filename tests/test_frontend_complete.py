@@ -3,10 +3,11 @@ Complete A-Z Frontend Testing Suite
 Tests all user flows, edge cases, and error conditions
 """
 
-import pytest
 import asyncio
-from unittest.mock import Mock, patch, MagicMock
 import time
+from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 
 
 class TestWelcomeScreen:
@@ -309,7 +310,6 @@ class TestVideoProcessing:
     
     def test_frame_extraction_limit(self, monkeypatch):
         """Test that frame extraction respects the documented default."""
-        import os
 
         from config import Config
 

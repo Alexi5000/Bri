@@ -1,13 +1,15 @@
 """Unit tests for FrameExtractor."""
 
-import pytest
-import tempfile
 import os
+import tempfile
+from pathlib import Path
+
 import cv2
 import numpy as np
-from pathlib import Path
-from tools.frame_extractor import FrameExtractor
+import pytest
+
 from models.video import Frame, VideoMetadata
+from tools.frame_extractor import FrameExtractor
 
 
 @pytest.fixture

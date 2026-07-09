@@ -8,18 +8,18 @@ Features:
 - Performance monitoring
 """
 
-import time
-import sqlite3
 import hashlib
 import json
-from typing import Any, Optional, List, Tuple, Dict
+import sqlite3
+import time
 from contextlib import contextmanager
+from queue import Empty, Queue
 from threading import Lock
-from queue import Queue, Empty
+from typing import Any
 
 from config import Config
-from utils.logging_config import get_logger, get_performance_logger
 from storage.multi_tier_cache import get_multi_tier_cache
+from utils.logging_config import get_logger, get_performance_logger
 
 logger = get_logger(__name__)
 perf_logger = get_performance_logger(__name__)
@@ -112,7 +112,7 @@ class ConnectionPool:
         
         logger.info("All connections in pool closed")
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get connection pool statistics.
         
         Returns:
@@ -139,7 +139,7 @@ class PreparedStatementCache:
         Args:
             max_size: Maximum number of prepared statements to cache
         """
-        self.cache: Dict[str, str] = {}
+        self.cache: dict[str, str] = {}
         self.max_size = max_size
         self.lock = Lock()
         self.hits = 0
@@ -174,7 +174,7 @@ class PreparedStatementCache:
                 self.cache[query_hash] = query
                 return query
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get prepared statement cache statistics.
         
         Returns:
@@ -217,7 +217,7 @@ class QueryOptimizer:
         self.cache = get_multi_tier_cache()
         
         # Query performance tracking
-        self.query_times: Dict[str, List[float]] = {}
+        self.query_times: dict[str, list[float]] = {}
         self.query_lock = Lock()
         
         logger.info("Query optimizer initialized")
@@ -225,10 +225,10 @@ class QueryOptimizer:
     def execute_query(
         self,
         query: str,
-        parameters: Optional[Tuple] = None,
-        cache_key: Optional[str] = None,
+        parameters: tuple | None = None,
+        cache_key: str | None = None,
         cache_ttl: int = 300
-    ) -> List[sqlite3.Row]:
+    ) -> list[sqlite3.Row]:
         """Execute a SELECT query with caching and optimization.
         
         Args:
@@ -306,8 +306,8 @@ class QueryOptimizer:
     def execute_update(
         self,
         query: str,
-        parameters: Optional[Tuple] = None,
-        invalidate_pattern: Optional[str] = None
+        parameters: tuple | None = None,
+        invalidate_pattern: str | None = None
     ) -> int:
         """Execute an INSERT, UPDATE, or DELETE query.
         
@@ -370,9 +370,9 @@ class QueryOptimizer:
     def execute_batch(
         self,
         query: str,
-        parameters_list: List[Tuple],
+        parameters_list: list[tuple],
         batch_size: int = 100,
-        invalidate_pattern: Optional[str] = None
+        invalidate_pattern: str | None = None
     ) -> int:
         """Execute a query multiple times with batching for performance.
         
@@ -440,7 +440,7 @@ class QueryOptimizer:
             )
             raise
     
-    def _generate_cache_key(self, query: str, parameters: Optional[Tuple]) -> str:
+    def _generate_cache_key(self, query: str, parameters: tuple | None) -> str:
         """Generate cache key for query and parameters.
         
         Args:
@@ -480,7 +480,7 @@ class QueryOptimizer:
             if len(self.query_times[query_type]) > 100:
                 self.query_times[query_type] = self.query_times[query_type][-100:]
     
-    def get_query_stats(self) -> Dict[str, Any]:
+    def get_query_stats(self) -> dict[str, Any]:
         """Get query performance statistics.
         
         Returns:
@@ -504,7 +504,7 @@ class QueryOptimizer:
             
             return stats
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get comprehensive optimizer statistics.
         
         Returns:
@@ -524,7 +524,7 @@ class QueryOptimizer:
 
 
 # Global query optimizer instance
-_query_optimizer: Optional[QueryOptimizer] = None
+_query_optimizer: QueryOptimizer | None = None
 
 
 def get_query_optimizer() -> QueryOptimizer:

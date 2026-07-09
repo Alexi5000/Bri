@@ -1,11 +1,13 @@
 """API request validation and rate limiting."""
 
 import time
-from typing import Dict, Optional, Any, List
 from collections import defaultdict
 from threading import Lock
+from typing import Any
+
 from fastapi import HTTPException, Request, status
 from pydantic import BaseModel, Field, validator
+
 from storage.database import get_database
 from utils.logging_config import get_logger
 
@@ -25,7 +27,7 @@ class RateLimiter:
         """
         self.rate = requests_per_minute / 60.0  # Requests per second
         self.burst_size = burst_size
-        self.buckets: Dict[str, Dict[str, float]] = defaultdict(
+        self.buckets: dict[str, dict[str, float]] = defaultdict(
             lambda: {"tokens": burst_size, "last_update": time.time()}
         )
         self.lock = Lock()
@@ -153,7 +155,7 @@ class RequestSizeValidator:
                 )
     
     @staticmethod
-    def validate_parameters(parameters: Dict[str, Any]) -> None:
+    def validate_parameters(parameters: dict[str, Any]) -> None:
         """
         Validate tool parameters size and structure.
         
@@ -198,7 +200,7 @@ class ValidatedToolExecutionRequest(BaseModel):
     """Validated tool execution request with constraints."""
     
     video_id: str = Field(..., min_length=1, max_length=255, description="Video identifier")
-    parameters: Dict[str, Any] = Field(default_factory=dict, description="Tool parameters")
+    parameters: dict[str, Any] = Field(default_factory=dict, description="Tool parameters")
     
     @validator('video_id')
     def validate_video_id_format(cls, v):
@@ -252,7 +254,7 @@ class ValidatedToolExecutionRequest(BaseModel):
 class ValidatedProcessVideoRequest(BaseModel):
     """Validated video processing request."""
     
-    tools: Optional[List[str]] = Field(None, description="List of tool names to execute")
+    tools: list[str] | None = Field(None, description="List of tool names to execute")
     
     @validator('tools')
     def validate_tools_list(cls, v):

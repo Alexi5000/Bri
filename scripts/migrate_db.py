@@ -9,9 +9,9 @@ Usage:
     python scripts/migrate_db.py test            # Test all migrations
 """
 
-import sys
 import argparse
 import logging
+import sys
 from pathlib import Path
 
 # Add parent directory to path

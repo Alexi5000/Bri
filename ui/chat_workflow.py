@@ -14,7 +14,11 @@ from typing import Any
 import streamlit as st
 
 from services.application import BriApplicationService, VideoSummary
-from ui.player import extract_timestamps_from_conversation, navigate_to_timestamp, render_video_player
+from ui.player import (
+    extract_timestamps_from_conversation,
+    navigate_to_timestamp,
+    render_video_player,
+)
 from ui.shell import render_progress_panel
 
 MESSAGE_COOLDOWN_SECONDS = 2.0

@@ -2,8 +2,8 @@
 Quick Fix Script - Run this to diagnose and fix BRI
 """
 import os
-import sys
 import subprocess
+
 
 def print_header(text):
     print("\n" + "="*80)

@@ -1,8 +1,9 @@
 """API versioning support."""
 
-from typing import Optional
-from fastapi import Header, HTTPException, status
 from enum import Enum
+
+from fastapi import Header, HTTPException, status
+
 from utils.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -26,7 +27,7 @@ DEPRECATED_VERSIONS = {
 MIN_SUPPORTED_VERSION = APIVersion.V1
 
 
-def parse_version(version_string: str) -> Optional[APIVersion]:
+def parse_version(version_string: str) -> APIVersion | None:
     """
     Parse version string to APIVersion enum.
     
@@ -49,8 +50,8 @@ def parse_version(version_string: str) -> Optional[APIVersion]:
 
 
 def get_api_version(
-    accept_version: Optional[str] = Header(None, alias="Accept-Version"),
-    api_version: Optional[str] = Header(None, alias="API-Version")
+    accept_version: str | None = Header(None, alias="Accept-Version"),
+    api_version: str | None = Header(None, alias="API-Version")
 ) -> APIVersion:
     """
     Extract and validate API version from request headers.
@@ -120,7 +121,7 @@ def version_header(version: APIVersion) -> dict:
         sunset_date = DEPRECATED_VERSIONS[version]
         headers["Deprecation"] = "true"
         headers["Sunset"] = sunset_date
-        headers["Link"] = f'<https://docs.bri-api.com/migration>; rel="deprecation"'
+        headers["Link"] = '<https://docs.bri-api.com/migration>; rel="deprecation"'
     
     return headers
 

@@ -3,15 +3,14 @@
 Provides automated backup, point-in-time recovery, and backup verification.
 """
 
+import hashlib
+import json
+import logging
 import os
 import shutil
 import sqlite3
-import json
-from pathlib import Path
 from datetime import datetime, timedelta
-from typing import List, Dict, Optional, Tuple
-import logging
-import hashlib
+from pathlib import Path
 
 from config import Config
 
@@ -46,7 +45,7 @@ class DatabaseBackup:
         
         logger.info(f"Backup manager initialized: db={self.db_path}, backup_dir={self.backup_dir}")
     
-    def create_backup(self, backup_name: Optional[str] = None) -> str:
+    def create_backup(self, backup_name: str | None = None) -> str:
         """Create a backup of the database.
         
         Args:
@@ -100,9 +99,9 @@ class DatabaseBackup:
             # Clean up partial backup
             if os.path.exists(backup_path):
                 os.remove(backup_path)
-            raise IOError(f"Failed to create backup: {e}")
+            raise OSError(f"Failed to create backup: {e}")
     
-    def _create_backup_metadata(self, backup_path: str) -> Dict:
+    def _create_backup_metadata(self, backup_path: str) -> dict:
         """Create metadata for backup file.
         
         Args:
@@ -194,7 +193,7 @@ class DatabaseBackup:
             
         except Exception as e:
             logger.error(f"Restore failed: {e}", exc_info=True)
-            raise IOError(f"Failed to restore backup: {e}")
+            raise OSError(f"Failed to restore backup: {e}")
     
     def verify_backup(self, backup_path: str) -> bool:
         """Verify backup integrity.
@@ -214,7 +213,7 @@ class DatabaseBackup:
             # Check metadata file
             metadata_path = backup_path + '.meta'
             if os.path.exists(metadata_path):
-                with open(metadata_path, 'r') as f:
+                with open(metadata_path) as f:
                     metadata = json.load(f)
                 
                 # Verify checksum
@@ -244,7 +243,7 @@ class DatabaseBackup:
             logger.error(f"Backup verification failed: {e}", exc_info=True)
             return False
     
-    def list_backups(self) -> List[Dict]:
+    def list_backups(self) -> list[dict]:
         """List all available backups.
         
         Returns:
@@ -266,7 +265,7 @@ class DatabaseBackup:
                 
                 # Load metadata if available
                 if os.path.exists(metadata_path):
-                    with open(metadata_path, 'r') as f:
+                    with open(metadata_path) as f:
                         metadata = json.load(f)
                         backup_info.update(metadata)
                 
@@ -311,7 +310,7 @@ class DatabaseBackup:
         logger.info(f"Cleanup complete: {removed_count} backups removed")
         return removed_count
     
-    def get_backup_stats(self) -> Dict:
+    def get_backup_stats(self) -> dict:
         """Get backup statistics.
         
         Returns:
@@ -373,7 +372,7 @@ def restore_latest_backup() -> bool:
     return backup_manager.restore_backup(latest_backup['path'])
 
 
-def verify_all_backups() -> Tuple[int, int]:
+def verify_all_backups() -> tuple[int, int]:
     """Verify all backups.
     
     Returns:

@@ -4,9 +4,12 @@ Handles batch video processing with MCP server integration
 """
 
 import logging
-import requests
 import time
-from typing import Dict, Any, Optional, Callable
+from collections.abc import Callable
+from typing import Any
+
+import requests
+
 from config import Config
 from services.errors import ProcessingError
 from storage.database import update_video_status
@@ -29,7 +32,7 @@ class VideoProcessor:
     - Providing friendly status messages
     """
     
-    def __init__(self, mcp_server_url: Optional[str] = None):
+    def __init__(self, mcp_server_url: str | None = None):
         """
         Initialize video processor.
         
@@ -109,8 +112,8 @@ class VideoProcessor:
     async def process_video(
         self,
         video_id: str,
-        progress_callback: Optional[Callable[[str, float, str], None]] = None
-    ) -> Dict[str, Any]:
+        progress_callback: Callable[[str, float, str], None] | None = None
+    ) -> dict[str, Any]:
         """
         Process video with all available tools.
         
@@ -265,7 +268,7 @@ class VideoProcessor:
             logger.error(f"Video processing failed for {video_id}: {e}")
             raise VideoProcessingError(f"Processing failed: {str(e)}")
     
-    def get_processing_status(self, video_id: str) -> Dict[str, Any]:
+    def get_processing_status(self, video_id: str) -> dict[str, Any]:
         """
         Get current processing status for a video.
         

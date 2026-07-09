@@ -9,12 +9,14 @@ Features:
 """
 
 import gzip
+import io
 import json
 import zlib
-import io
-from typing import Any, Optional, Dict, Tuple
 from pathlib import Path
+from typing import Any
+
 from PIL import Image
+
 from utils.logging_config import get_logger, get_performance_logger
 
 logger = get_logger(__name__)
@@ -45,7 +47,7 @@ class JSONCompressor:
         self.compression_level = compression_level
         logger.info(f"JSON compressor initialized (level: {compression_level})")
     
-    def compress(self, data: Dict[str, Any]) -> bytes:
+    def compress(self, data: dict[str, Any]) -> bytes:
         """Compress JSON data.
         
         Args:
@@ -73,7 +75,7 @@ class JSONCompressor:
         
         return compressed
     
-    def decompress(self, compressed_data: bytes) -> Dict[str, Any]:
+    def decompress(self, compressed_data: bytes) -> dict[str, Any]:
         """Decompress JSON data.
         
         Args:
@@ -91,7 +93,7 @@ class JSONCompressor:
         
         return data
     
-    def should_compress(self, data: Dict[str, Any], threshold_bytes: int = 1024) -> bool:
+    def should_compress(self, data: dict[str, Any], threshold_bytes: int = 1024) -> bool:
         """Determine if data should be compressed.
         
         Small data may not benefit from compression due to overhead.
@@ -131,8 +133,8 @@ class ImageCompressor:
     def compress_to_webp(
         self,
         input_path: str,
-        output_path: Optional[str] = None
-    ) -> Tuple[str, int, int]:
+        output_path: str | None = None
+    ) -> tuple[str, int, int]:
         """Compress image to WebP format.
         
         Args:
@@ -208,8 +210,8 @@ class ImageCompressor:
     def batch_compress(
         self,
         input_paths: list[str],
-        output_dir: Optional[str] = None
-    ) -> Dict[str, Tuple[str, int, int]]:
+        output_dir: str | None = None
+    ) -> dict[str, tuple[str, int, int]]:
         """Compress multiple images in batch.
         
         Args:
@@ -334,7 +336,7 @@ class FrameDeduplicator:
             similarity_threshold: Similarity threshold (0-1, higher = more similar)
         """
         self.similarity_threshold = similarity_threshold
-        self.frame_hashes: Dict[str, str] = {}  # video_id:timestamp -> hash
+        self.frame_hashes: dict[str, str] = {}  # video_id:timestamp -> hash
         logger.info(
             f"Frame deduplicator initialized "
             f"(threshold: {similarity_threshold})"
@@ -375,7 +377,7 @@ class FrameDeduplicator:
         video_id: str,
         timestamp: float,
         image_path: str
-    ) -> Tuple[bool, Optional[float]]:
+    ) -> tuple[bool, float | None]:
         """Check if frame is a duplicate of an existing frame.
         
         Args:
@@ -429,7 +431,7 @@ class FrameDeduplicator:
         
         logger.debug(f"Cleared {len(keys_to_remove)} frame hashes for video {video_id}")
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get deduplicator statistics.
         
         Returns:
@@ -477,15 +479,15 @@ class CompressionManager:
         
         logger.info("Compression manager initialized")
     
-    def compress_json(self, data: Dict[str, Any]) -> bytes:
+    def compress_json(self, data: dict[str, Any]) -> bytes:
         """Compress JSON data."""
         return self.json_compressor.compress(data)
     
-    def decompress_json(self, compressed_data: bytes) -> Dict[str, Any]:
+    def decompress_json(self, compressed_data: bytes) -> dict[str, Any]:
         """Decompress JSON data."""
         return self.json_compressor.decompress(compressed_data)
     
-    def compress_image(self, input_path: str, output_path: Optional[str] = None) -> Tuple[str, int, int]:
+    def compress_image(self, input_path: str, output_path: str | None = None) -> tuple[str, int, int]:
         """Compress image to WebP."""
         return self.image_compressor.compress_to_webp(input_path, output_path)
     
@@ -502,11 +504,11 @@ class CompressionManager:
         video_id: str,
         timestamp: float,
         image_path: str
-    ) -> Tuple[bool, Optional[float]]:
+    ) -> tuple[bool, float | None]:
         """Check if frame is duplicate."""
         return self.frame_deduplicator.is_duplicate(video_id, timestamp, image_path)
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get comprehensive compression statistics.
         
         Returns:
@@ -518,7 +520,7 @@ class CompressionManager:
 
 
 # Global compression manager instance
-_compression_manager: Optional[CompressionManager] = None
+_compression_manager: CompressionManager | None = None
 
 
 def get_compression_manager() -> CompressionManager:

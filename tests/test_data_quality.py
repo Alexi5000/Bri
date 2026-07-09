@@ -9,13 +9,15 @@ Tests:
 - Chaos testing (simulate failures)
 """
 
-import pytest
 import json
 import time
-from storage.database import Database, get_database
-from services.data_validator import get_data_validator
+
+import pytest
+
 from services.data_consistency_checker import get_consistency_checker
 from services.data_quality_metrics import get_quality_metrics
+from services.data_validator import get_data_validator
+from storage.database import Database, get_database
 
 
 class TestDataTransformations:
@@ -412,7 +414,7 @@ class TestChaosEngineering:
             db = Database(db_path="/invalid/path/to/database.db")
             db.connect()
             # If we get here, connection might have succeeded (shouldn't happen)
-        except Exception as e:
+        except Exception:
             # Expected: connection should fail
             assert True
 

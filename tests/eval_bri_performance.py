@@ -3,20 +3,20 @@ BRI Performance Evaluation Framework
 Tests BRI's ability to answer questions about video content with 50 test cases.
 """
 
-import sys
 import os
+import sys
+
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import asyncio
 import json
 import time
+from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import List, Dict, Any
-from dataclasses import dataclass, asdict
+from typing import Any
+
 from services.agent import GroqAgent
-from services.memory import Memory
-from storage.database import Database
 
 
 @dataclass
@@ -25,7 +25,7 @@ class EvalTestCase:
     id: int
     video_id: str
     question: str
-    expected_keywords: List[str]  # Keywords that should appear in response
+    expected_keywords: list[str]  # Keywords that should appear in response
     category: str  # "scene", "object", "audio", "timestamp", "general"
     difficulty: str  # "easy", "medium", "hard"
 
@@ -36,8 +36,8 @@ class EvalResult:
     test_id: int
     question: str
     response: str
-    keywords_found: List[str]
-    keywords_missing: List[str]
+    keywords_found: list[str]
+    keywords_missing: list[str]
     score: float  # 0.0 to 1.0
     response_time: float
     category: str
@@ -50,9 +50,9 @@ class BRIEvaluator:
     
     def __init__(self):
         self.agent = GroqAgent()
-        self.results: List[EvalResult] = []
+        self.results: list[EvalResult] = []
     
-    def get_test_cases(self) -> List[EvalTestCase]:
+    def get_test_cases(self) -> list[EvalTestCase]:
         """Generate 50 test cases across different categories."""
         test_cases = []
         
@@ -237,7 +237,7 @@ class BRIEvaluator:
                 passed=False
             )
     
-    async def run_evaluation(self, video_id: str) -> Dict[str, Any]:
+    async def run_evaluation(self, video_id: str) -> dict[str, Any]:
         """Run full evaluation suite."""
         print("Starting BRI Performance Evaluation...")
         print(f"Video ID: {video_id}")
@@ -260,7 +260,7 @@ class BRIEvaluator:
         self.results = results
         return self.generate_report()
     
-    def generate_report(self) -> Dict[str, Any]:
+    def generate_report(self) -> dict[str, Any]:
         """Generate comprehensive evaluation report."""
         total_tests = len(self.results)
         passed_tests = sum(1 for r in self.results if r.passed)
@@ -312,13 +312,13 @@ class BRIEvaluator:
         
         return report
     
-    def save_report(self, report: Dict[str, Any], filename: str = "eval_report.json"):
+    def save_report(self, report: dict[str, Any], filename: str = "eval_report.json"):
         """Save evaluation report to file."""
         with open(filename, 'w') as f:
             json.dump(report, f, indent=2)
         print(f"\nReport saved to {filename}")
     
-    def print_summary(self, report: Dict[str, Any]):
+    def print_summary(self, report: dict[str, Any]):
         """Print evaluation summary."""
         print("\n" + "=" * 60)
         print("EVALUATION SUMMARY")

@@ -2,12 +2,12 @@
 UI Components for BRI Video Assistant
 """
 
-from ui.welcome import render_welcome_screen
-from ui.library import render_video_library
-from ui.chat import render_chat_window, render_assistant_response
-from ui.player import render_video_player
+from ui.chat import render_assistant_response, render_chat_window
 from ui.history import render_conversation_history_panel
-from ui.styles import apply_custom_styles, COLORS
+from ui.library import render_video_library
+from ui.player import render_video_player
+from ui.styles import COLORS, apply_custom_styles
+from ui.welcome import render_welcome_screen
 
 __all__ = [
     'render_welcome_screen',

@@ -94,11 +94,21 @@ markers = [
 [tool.ruff]
 line-length = 100
 target-version = "py310"
-exclude = ["data", "logs", ".venv", "venv"]
+exclude = ["data", "logs", ".venv", "venv", "build", "dist", "site"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
 ignore = ["E501"]
+
+# New code must follow the rules. Existing files that pre-date the v1.1.0
+# baseline are explicitly tolerated via ``per-file-ignores`` so contributors
+# do not have to fix unrelated lint debt as a precondition for shipping.
+# Adding a new rule: keep the baseline fresh by deleting its entry from this
+# table once the corresponding files have been cleaned up.
+[tool.ruff.lint.per-file-ignores]
+"scripts/archive/**" = ["E", "F", "I", "UP", "B"]
+"docs/archive/**" = ["E", "F", "I", "UP", "B"]
+"tests/archive/**" = ["E", "F", "I", "UP", "B"]
 
 [tool.coverage.run]
 source = ["config", "models", "services", "storage", "mcp_server", "tools", "ui"]

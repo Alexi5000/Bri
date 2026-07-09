@@ -3,12 +3,12 @@ Video Library View Component
 Displays uploaded videos in a grid layout with thumbnails and metadata
 """
 
-import streamlit as st
-import cv2
-from pathlib import Path
-from datetime import datetime
-from typing import Dict, Optional
 import logging
+from datetime import datetime
+from pathlib import Path
+
+import cv2
+import streamlit as st
 
 from services.application import get_application_service
 from storage.file_store import get_file_store
@@ -71,7 +71,7 @@ def generate_thumbnail(video_path: str, output_path: str, timestamp: float = 1.0
         return False
 
 
-def get_or_create_thumbnail(video_id: str, video_path: str) -> Optional[str]:
+def get_or_create_thumbnail(video_id: str, video_path: str) -> str | None:
     """
     Get existing thumbnail or create a new one.
     
@@ -183,7 +183,7 @@ def get_status_text(status: str) -> str:
     return status_texts.get(status, 'Unknown')
 
 
-def render_video_card(video: Dict, col) -> None:
+def render_video_card(video: dict, col) -> None:
     """
     Render a single video card in the grid.
     

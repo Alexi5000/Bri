@@ -4,10 +4,10 @@ Validates all data before database insertion to ensure integrity
 """
 
 import json
-from typing import Dict, Any, List, Optional, Tuple
-from utils.logging_config import get_logger
-from services.errors import ValidationError as _BriValidationError
+from typing import Any
 
+from services.errors import ValidationError as _BriValidationError
+from utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
@@ -118,7 +118,7 @@ class DataValidator:
         self.db = db
         logger.info("DataValidator initialized")
     
-    def validate_frame(self, frame_data: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
+    def validate_frame(self, frame_data: dict[str, Any]) -> tuple[bool, str | None]:
         """
         Validate frame data structure.
         
@@ -130,7 +130,7 @@ class DataValidator:
         """
         return self._validate_against_schema(frame_data, self.FRAME_SCHEMA, 'frame')
     
-    def validate_caption(self, caption_data: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
+    def validate_caption(self, caption_data: dict[str, Any]) -> tuple[bool, str | None]:
         """
         Validate caption data structure.
         
@@ -148,7 +148,7 @@ class DataValidator:
         
         return is_valid, error
     
-    def validate_transcript(self, transcript_data: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
+    def validate_transcript(self, transcript_data: dict[str, Any]) -> tuple[bool, str | None]:
         """
         Validate transcript segment data structure.
         
@@ -177,7 +177,7 @@ class DataValidator:
         
         return True, None
     
-    def validate_object_detection(self, detection_data: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
+    def validate_object_detection(self, detection_data: dict[str, Any]) -> tuple[bool, str | None]:
         """
         Validate object detection data structure.
         
@@ -216,7 +216,7 @@ class DataValidator:
         
         return True, None
     
-    def validate_video_id_exists(self, video_id: str) -> Tuple[bool, Optional[str]]:
+    def validate_video_id_exists(self, video_id: str) -> tuple[bool, str | None]:
         """
         Validate that a video_id exists in the database (foreign key check).
         
@@ -244,7 +244,7 @@ class DataValidator:
             logger.error(f"Failed to validate video_id: {e}")
             return False, f"Foreign key validation failed: {e}"
     
-    def validate_json_structure(self, data: Any) -> Tuple[bool, Optional[str]]:
+    def validate_json_structure(self, data: Any) -> tuple[bool, str | None]:
         """
         Validate that data can be serialized to JSON.
         
@@ -262,9 +262,9 @@ class DataValidator:
     
     def validate_timestamp_ordering(
         self,
-        timestamps: List[float],
+        timestamps: list[float],
         allow_duplicates: bool = True
-    ) -> Tuple[bool, Optional[str]]:
+    ) -> tuple[bool, str | None]:
         """
         Validate that timestamps are in monotonically increasing order.
         
@@ -291,9 +291,9 @@ class DataValidator:
     def validate_batch(
         self,
         context_type: str,
-        data_list: List[Dict[str, Any]],
-        video_id: Optional[str] = None
-    ) -> Tuple[bool, List[str]]:
+        data_list: list[dict[str, Any]],
+        video_id: str | None = None
+    ) -> tuple[bool, list[str]]:
         """
         Validate a batch of data items.
         
@@ -360,10 +360,10 @@ class DataValidator:
     
     def _validate_against_schema(
         self,
-        data: Dict[str, Any],
-        schema: Dict[str, Any],
+        data: dict[str, Any],
+        schema: dict[str, Any],
         data_type: str
-    ) -> Tuple[bool, Optional[str]]:
+    ) -> tuple[bool, str | None]:
         """
         Validate data against a schema definition.
         
@@ -413,7 +413,7 @@ class DataValidator:
 
 
 # Global validator instance
-_validator_instance: Optional[DataValidator] = None
+_validator_instance: DataValidator | None = None
 
 
 def get_data_validator(db=None) -> DataValidator:

@@ -3,17 +3,14 @@ End-to-End Test with Real Video
 Task 44.1: Upload actual video file, wait for processing, verify data, run test queries
 """
 
+from typing import Any
+
 import pytest
-import asyncio
-import os
-import time
-import sqlite3
-from pathlib import Path
-from typing import List, Dict, Any
+
 from services.agent import GroqAgent
 from services.memory import Memory
-from storage.database import Database
 from services.video_processing_service import VideoProcessingService
+from storage.database import Database
 
 
 class TestE2ERealVideo:
@@ -172,9 +169,9 @@ class TestE2ERealVideo:
                 
                 if success:
                     passed += 1
-                    print(f"  ✓ PASS")
+                    print("  ✓ PASS")
                 else:
-                    print(f"  ✗ FAIL - No relevant keywords found")
+                    print("  ✗ FAIL - No relevant keywords found")
                 
                 results.append({
                     'query': query,
@@ -198,7 +195,7 @@ class TestE2ERealVideo:
         assert pass_rate >= 90.0, f"Pass rate {pass_rate:.1f}% is below 90% threshold"
 
     
-    def _get_test_queries(self) -> List[Dict[str, Any]]:
+    def _get_test_queries(self) -> list[dict[str, Any]]:
         """Get 50 test queries with expected keywords."""
         return [
             # Scene description (10)

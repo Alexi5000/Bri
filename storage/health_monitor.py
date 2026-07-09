@@ -8,14 +8,15 @@ This module provides functionality for:
 - Database backup strategy
 """
 
-import logging
 import json
-import time
+import logging
 import shutil
-from pathlib import Path
-from typing import List, Dict, Any, Optional
-from datetime import datetime, timedelta
+import time
 from contextlib import contextmanager
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Any
+
 from storage.database import Database, get_database
 
 logger = logging.getLogger(__name__)
@@ -31,10 +32,10 @@ class QueryPerformanceMonitor:
             slow_query_threshold_ms: Threshold in milliseconds for slow queries
         """
         self.slow_query_threshold_ms = slow_query_threshold_ms
-        self.query_stats: Dict[str, Dict[str, Any]] = {}
+        self.query_stats: dict[str, dict[str, Any]] = {}
     
     @contextmanager
-    def monitor_query(self, query: str, parameters: Optional[tuple] = None):
+    def monitor_query(self, query: str, parameters: tuple | None = None):
         """Context manager to monitor query execution time.
         
         Args:
@@ -79,7 +80,7 @@ class QueryPerformanceMonitor:
                     f"Slow query detected ({execution_time_ms:.2f}ms): {query_key}"
                 )
     
-    def get_statistics(self) -> Dict[str, Dict[str, Any]]:
+    def get_statistics(self) -> dict[str, dict[str, Any]]:
         """Get query performance statistics.
         
         Returns:
@@ -92,7 +93,7 @@ class QueryPerformanceMonitor:
         
         return self.query_stats
     
-    def get_slow_queries(self) -> List[Dict[str, Any]]:
+    def get_slow_queries(self) -> list[dict[str, Any]]:
         """Get list of slow queries.
         
         Returns:
@@ -122,7 +123,7 @@ class QueryPerformanceMonitor:
 class DatabaseHealthMonitor:
     """Monitor database health and performance."""
     
-    def __init__(self, db: Optional[Database] = None):
+    def __init__(self, db: Database | None = None):
         """Initialize database health monitor.
         
         Args:
@@ -133,7 +134,7 @@ class DatabaseHealthMonitor:
         self.health_log_path = Path("logs/database_health.log")
         self.health_log_path.parent.mkdir(parents=True, exist_ok=True)
     
-    def get_database_size(self) -> Dict[str, Any]:
+    def get_database_size(self) -> dict[str, Any]:
         """Get database size information.
         
         Returns:
@@ -158,7 +159,7 @@ class DatabaseHealthMonitor:
             logger.error(f"Failed to get database size: {e}")
             return {'size_bytes': 0, 'size_mb': 0}
     
-    def get_growth_rate(self, days: int = 7) -> Dict[str, Any]:
+    def get_growth_rate(self, days: int = 7) -> dict[str, Any]:
         """Calculate database growth rate.
         
         Args:
@@ -201,7 +202,7 @@ class DatabaseHealthMonitor:
             logger.error(f"Failed to calculate growth rate: {e}")
             return {}
     
-    def check_connection_pool(self) -> Dict[str, Any]:
+    def check_connection_pool(self) -> dict[str, Any]:
         """Check database connection pool status.
         
         Returns:
@@ -238,7 +239,7 @@ class DatabaseHealthMonitor:
             logger.error(f"Failed to check connection pool: {e}")
             return {'connected': False, 'error': str(e)}
     
-    def check_table_integrity(self) -> Dict[str, Any]:
+    def check_table_integrity(self) -> dict[str, Any]:
         """Check database table integrity.
         
         Returns:
@@ -272,7 +273,7 @@ class DatabaseHealthMonitor:
             logger.error(f"Failed to check table integrity: {e}")
             return {'integrity_ok': False, 'error': str(e)}
     
-    def check_index_usage(self) -> List[Dict[str, Any]]:
+    def check_index_usage(self) -> list[dict[str, Any]]:
         """Check index usage statistics.
         
         Returns:
@@ -324,7 +325,7 @@ class DatabaseHealthMonitor:
         except Exception as e:
             logger.error(f"Failed to log health metrics: {e}")
     
-    def get_health_report(self) -> Dict[str, Any]:
+    def get_health_report(self) -> dict[str, Any]:
         """Generate comprehensive health report.
         
         Returns:
@@ -364,7 +365,7 @@ class DatabaseHealthMonitor:
         
         return report
     
-    def create_backup(self, backup_dir: Optional[str] = None) -> Optional[str]:
+    def create_backup(self, backup_dir: str | None = None) -> str | None:
         """Create database backup.
         
         Args:
@@ -396,7 +397,7 @@ class DatabaseHealthMonitor:
             logger.error(f"Failed to create backup: {e}")
             return None
     
-    def cleanup_old_backups(self, backup_dir: Optional[str] = None, keep_days: int = 30) -> int:
+    def cleanup_old_backups(self, backup_dir: str | None = None, keep_days: int = 30) -> int:
         """Clean up old backup files.
         
         Args:
@@ -431,7 +432,7 @@ class DatabaseHealthMonitor:
             return 0
 
 
-def get_health_monitor(db: Optional[Database] = None) -> DatabaseHealthMonitor:
+def get_health_monitor(db: Database | None = None) -> DatabaseHealthMonitor:
     """Get database health monitor instance.
     
     Args:

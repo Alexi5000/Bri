@@ -1,7 +1,10 @@
 """Process a video to prepare it for evaluation tests."""
 import asyncio
+
 import httpx
+
 from config import Config
+
 
 async def process_video(video_id: str):
     """Process a video with all tools."""
@@ -19,16 +22,16 @@ async def process_video(video_id: str):
         
         if response.status_code == 200:
             result = response.json()
-            print(f"\nProcessing complete!")
+            print("\nProcessing complete!")
             print(f"Status: {result['status']}")
             print(f"Execution time: {result['execution_time']:.2f}s")
-            print(f"\nResults:")
+            print("\nResults:")
             for tool_name, tool_result in result.get('results', {}).items():
                 cached = " (cached)" if tool_result.get('cached') else ""
                 print(f"  - {tool_name}: SUCCESS{cached}")
             
             if result.get('errors'):
-                print(f"\nErrors:")
+                print("\nErrors:")
                 for tool_name, error in result['errors'].items():
                     print(f"  - {tool_name}: {error}")
         else:

@@ -11,8 +11,8 @@ This module provides functionality for:
 import logging
 import shutil
 from pathlib import Path
-from typing import List, Dict, Any, Optional
-from datetime import datetime, timedelta
+from typing import Any
+
 from storage.database import Database, DatabaseError, get_database
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class ArchivalManager:
     """Manages data archival and cleanup operations."""
     
-    def __init__(self, db: Optional[Database] = None):
+    def __init__(self, db: Database | None = None):
         """Initialize archival manager.
         
         Args:
@@ -85,7 +85,7 @@ class ArchivalManager:
             logger.error(f"Failed to restore video {video_id}: {e}")
             return False
     
-    def get_deleted_videos(self, days_old: Optional[int] = None) -> List[Dict[str, Any]]:
+    def get_deleted_videos(self, days_old: int | None = None) -> list[dict[str, Any]]:
         """Get list of soft-deleted videos.
         
         Args:
@@ -154,7 +154,7 @@ class ArchivalManager:
             logger.error(f"Failed to permanently delete video {video_id}: {e}")
             return False
     
-    def _delete_video_files(self, video_data: Dict[str, Any]) -> None:
+    def _delete_video_files(self, video_data: dict[str, Any]) -> None:
         """Delete video files and associated frames.
         
         Args:
@@ -217,7 +217,7 @@ class ArchivalManager:
             logger.error(f"Failed to archive old conversations: {e}")
             return 0
     
-    def cleanup_orphaned_data(self) -> Dict[str, int]:
+    def cleanup_orphaned_data(self) -> dict[str, int]:
         """Clean up orphaned data (context without videos, files without database records).
         
         Returns:
@@ -351,7 +351,7 @@ class ArchivalManager:
             logger.error(f"Failed to analyze database: {e}")
             return False
     
-    def get_retention_policy_status(self) -> Dict[str, Any]:
+    def get_retention_policy_status(self) -> dict[str, Any]:
         """Get status of data retention policies.
         
         Returns:
@@ -394,7 +394,7 @@ class ArchivalManager:
         delete_soft_deleted_days: int = 7,
         cleanup_orphaned: bool = True,
         vacuum: bool = True
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Apply all retention policies.
         
         Args:
@@ -437,7 +437,7 @@ class ArchivalManager:
         return results
 
 
-def get_archival_manager(db: Optional[Database] = None) -> ArchivalManager:
+def get_archival_manager(db: Database | None = None) -> ArchivalManager:
     """Get archival manager instance.
     
     Args:

@@ -9,22 +9,21 @@ Provides centralized logging setup with:
 - API call logging
 """
 
+import json
 import logging
 import logging.handlers
 import os
 import sys
-from pathlib import Path
-from typing import TYPE_CHECKING, Optional, Dict, Any
-from datetime import datetime
-import json
-import threading
 from contextvars import ContextVar
+from datetime import datetime
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from config import Config
+    pass
 
 # Context variables for request-scoped logging
-_log_context: ContextVar[Dict[str, Any]] = ContextVar('log_context', default={})
+_log_context: ContextVar[dict[str, Any]] = ContextVar('log_context', default={})
 
 
 class StructuredFormatter(logging.Formatter):
@@ -206,9 +205,9 @@ class APILogger:
         api_name: str,
         endpoint: str,
         method: str = "POST",
-        status_code: Optional[int] = None,
-        execution_time: Optional[float] = None,
-        error: Optional[str] = None
+        status_code: int | None = None,
+        execution_time: float | None = None,
+        error: str | None = None
     ) -> None:
         """Log API call details.
         
@@ -251,8 +250,8 @@ class APILogger:
 
 
 def setup_logging(
-    log_level: Optional[str] = None,
-    log_dir: Optional[str] = None,
+    log_level: str | None = None,
+    log_dir: str | None = None,
     json_format: bool = False,
     enable_rotation: bool = True
 ) -> None:
@@ -486,8 +485,8 @@ class AuditLogger:
         operation: str,  # 'INSERT', 'UPDATE', 'DELETE'
         table: str,
         record_id: str,
-        changes: Optional[Dict[str, Any]] = None,
-        user_id: Optional[str] = None,
+        changes: dict[str, Any] | None = None,
+        user_id: str | None = None,
         **kwargs
     ) -> None:
         """Log data mutation for audit trail.
@@ -544,9 +543,9 @@ class PipelineLogger:
         stage: str,  # 'extract', 'caption', 'transcribe', 'detect'
         video_id: str,
         status: str,  # 'started', 'completed', 'failed'
-        execution_time: Optional[float] = None,
-        items_processed: Optional[int] = None,
-        error: Optional[str] = None,
+        execution_time: float | None = None,
+        items_processed: int | None = None,
+        error: str | None = None,
         **kwargs
     ) -> None:
         """Log pipeline stage execution.

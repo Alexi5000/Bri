@@ -14,9 +14,10 @@ import asyncio
 import copy
 import threading
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, replace
 from enum import Enum
-from typing import Any, Callable, Dict, Optional
+from typing import Any
 
 from storage.database import Database
 from utils.logging_config import get_logger
@@ -53,7 +54,7 @@ class ProcessingProgress:
     transcript_segments: int = 0
     objects_detected: int = 0
 
-    def with_updates(self, **updates: Any) -> "ProcessingProgress":
+    def with_updates(self, **updates: Any) -> ProcessingProgress:
         """Return a new progress snapshot with the supplied updates."""
 
         return replace(self, **updates)
@@ -74,16 +75,16 @@ class ProgressiveProcessor:
     such as FastAPI status endpoints and Streamlit middle-layer polling.
     """
 
-    def __init__(self, db: Optional[Database] = None):
+    def __init__(self, db: Database | None = None):
         self.db = db or Database()
         if not self.db._connection:
             self.db.connect()
 
         self._state_lock = threading.RLock()
         self._job_locks_guard = asyncio.Lock()
-        self._job_locks: Dict[str, asyncio.Lock] = {}
-        self.active_jobs: Dict[str, ProcessingProgress] = {}
-        self.progress_callbacks: Dict[str, ProgressCallback] = {}
+        self._job_locks: dict[str, asyncio.Lock] = {}
+        self.active_jobs: dict[str, ProcessingProgress] = {}
+        self.progress_callbacks: dict[str, ProgressCallback] = {}
 
         logger.info("Progressive Processor initialized")
 
@@ -91,8 +92,8 @@ class ProgressiveProcessor:
         self,
         video_id: str,
         video_path: str,
-        progress_callback: Optional[ProgressCallback] = None,
-    ) -> Dict[str, Any]:
+        progress_callback: ProgressCallback | None = None,
+    ) -> dict[str, Any]:
         """Process a video through the progressive intelligence stages."""
 
         job_lock = await self._reserve_video_job(video_id)
@@ -119,8 +120,8 @@ class ProgressiveProcessor:
         self,
         video_id: str,
         video_path: str,
-        progress_callback: Optional[ProgressCallback],
-    ) -> Dict[str, Any]:
+        progress_callback: ProgressCallback | None,
+    ) -> dict[str, Any]:
         """Execute the staged workflow after duplicate-job protection is acquired."""
 
         logger.info("Starting progressive processing for video %s", video_id)
@@ -341,7 +342,7 @@ class ProgressiveProcessor:
         logger.info("Object detection complete: %s detections", detections_count)
         return "objects_detected", detections_count
 
-    def _store_results(self, video_id: str, tool_name: str, result: Dict[str, Any]) -> None:
+    def _store_results(self, video_id: str, tool_name: str, result: dict[str, Any]) -> None:
         """Persist tool outputs to the video processing service.
 
         Failures here are logged but never raised: the pipeline's primary job
@@ -368,7 +369,7 @@ class ProgressiveProcessor:
     def _update_progress(self, progress: ProcessingProgress) -> None:
         """Store progress atomically and notify the callback with a snapshot."""
 
-        callback: Optional[ProgressCallback]
+        callback: ProgressCallback | None
         with self._state_lock:
             self.active_jobs[progress.video_id] = progress
             callback = self.progress_callbacks.get(progress.video_id)
@@ -410,7 +411,7 @@ class ProgressiveProcessor:
             self.active_jobs.pop(video_id, None)
             self.progress_callbacks.pop(video_id, None)
 
-    def get_progress(self, video_id: str) -> Optional[ProcessingProgress]:
+    def get_progress(self, video_id: str) -> ProcessingProgress | None:
         """Return a defensive snapshot of current video progress."""
 
         with self._state_lock:
@@ -424,7 +425,7 @@ class ProgressiveProcessor:
             return video_id in self.active_jobs
 
 
-_processor_instance: Optional[ProgressiveProcessor] = None
+_processor_instance: ProgressiveProcessor | None = None
 _processor_instance_lock = threading.Lock()
 
 

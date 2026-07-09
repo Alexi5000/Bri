@@ -4,10 +4,12 @@ This module provides a simple migration framework for managing database schema c
 Migrations are versioned and tracked in the schema_version table.
 """
 
-import sqlite3
 import logging
+import sqlite3
+from collections.abc import Callable
 from pathlib import Path
-from typing import List, Dict, Any, Optional, Callable
+from typing import Any
+
 from storage.database import Database, DatabaseError
 
 logger = logging.getLogger(__name__)
@@ -21,7 +23,7 @@ class Migration:
         version: int,
         description: str,
         up: Callable[[sqlite3.Connection], None],
-        down: Optional[Callable[[sqlite3.Connection], None]] = None
+        down: Callable[[sqlite3.Connection], None] | None = None
     ):
         """Initialize migration.
         
@@ -99,7 +101,7 @@ class MigrationManager:
             db: Database instance
         """
         self.db = db
-        self.migrations: List[Migration] = []
+        self.migrations: list[Migration] = []
         self._register_migrations()
     
     def _register_migrations(self) -> None:
@@ -130,7 +132,7 @@ class MigrationManager:
             # schema_version table doesn't exist yet
             return 0
     
-    def get_pending_migrations(self) -> List[Migration]:
+    def get_pending_migrations(self) -> list[Migration]:
         """Get list of pending migrations.
         
         Returns:
@@ -139,7 +141,7 @@ class MigrationManager:
         current_version = self.get_current_version()
         return [m for m in self.migrations if m.version > current_version]
     
-    def get_applied_migrations(self) -> List[Dict[str, Any]]:
+    def get_applied_migrations(self) -> list[dict[str, Any]]:
         """Get list of applied migrations.
         
         Returns:
@@ -153,7 +155,7 @@ class MigrationManager:
         except sqlite3.Error:
             return []
     
-    def migrate(self, target_version: Optional[int] = None) -> None:
+    def migrate(self, target_version: int | None = None) -> None:
         """Apply pending migrations up to target version.
         
         Args:
@@ -185,7 +187,7 @@ class MigrationManager:
         
         logger.info(f"Migration complete. Current version: {self.get_current_version()}")
     
-    def rollback(self, target_version: Optional[int] = None, steps: int = 1) -> None:
+    def rollback(self, target_version: int | None = None, steps: int = 1) -> None:
         """Rollback migrations.
         
         Args:
@@ -225,7 +227,7 @@ class MigrationManager:
         
         logger.info(f"Rollback complete. Current version: {self.get_current_version()}")
     
-    def status(self) -> Dict[str, Any]:
+    def status(self) -> dict[str, Any]:
         """Get migration status.
         
         Returns:
@@ -290,7 +292,7 @@ def create_migration(
     version: int,
     description: str,
     up_sql: str,
-    down_sql: Optional[str] = None
+    down_sql: str | None = None
 ) -> Migration:
     """Helper function to create a migration from SQL strings.
     
@@ -346,7 +348,7 @@ def migration_003_add_video_tags() -> Migration:
     )
 
 
-def get_migration_manager(db: Optional[Database] = None) -> MigrationManager:
+def get_migration_manager(db: Database | None = None) -> MigrationManager:
     """Get migration manager instance.
     
     Args:

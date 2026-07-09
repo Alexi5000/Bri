@@ -9,9 +9,9 @@ Cache invalidation uses TTL + event-based strategies.
 """
 
 import time
-from typing import Any, Optional, Dict, List
 from collections import OrderedDict
 from threading import Lock
+from typing import Any
 
 from config import Config
 from utils.logging_config import get_logger, get_performance_logger
@@ -41,7 +41,7 @@ class LRUCache:
         
         logger.info(f"L1 Cache (LRU) initialized with capacity: {capacity}")
     
-    def get(self, key: str) -> Optional[Any]:
+    def get(self, key: str) -> Any | None:
         """Get value from cache.
         
         Args:
@@ -108,7 +108,7 @@ class LRUCache:
             self.misses = 0
             logger.info("L1 cache cleared")
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get cache statistics.
         
         Returns:
@@ -172,8 +172,8 @@ class MultiTierCache:
         
         # L3 Cache: Database query cache
         self.l3_enabled = l3_enabled
-        self.l3_cache: Dict[str, Any] = {}
-        self.l3_cache_ttl: Dict[str, float] = {}
+        self.l3_cache: dict[str, Any] = {}
+        self.l3_cache_ttl: dict[str, float] = {}
         self.l3_lock = Lock()
         self.l3_default_ttl = 300  # 5 minutes
         
@@ -182,14 +182,14 @@ class MultiTierCache:
         
         # Cache warming configuration
         self.warm_cache_enabled = True
-        self.warm_cache_keys: List[str] = []
+        self.warm_cache_keys: list[str] = []
         
         logger.info(
             f"Multi-tier cache initialized: "
             f"L1={True}, L2={self.l2_enabled}, L3={self.l3_enabled}"
         )
     
-    def get(self, key: str, namespace: str = "default") -> Optional[Any]:
+    def get(self, key: str, namespace: str = "default") -> Any | None:
         """Get value from cache (checks L1 → L2 → L3).
         
         Args:
@@ -242,7 +242,7 @@ class MultiTierCache:
         key: str,
         value: Any,
         namespace: str = "default",
-        ttl: Optional[int] = None
+        ttl: int | None = None
     ) -> None:
         """Set value in all cache tiers.
         
@@ -353,7 +353,7 @@ class MultiTierCache:
         regex_pattern = pattern.replace("*", ".*")
         return re.match(f"^{regex_pattern}$", key) is not None
     
-    def _get_l3(self, key: str) -> Optional[Any]:
+    def _get_l3(self, key: str) -> Any | None:
         """Get value from L3 cache with TTL check.
         
         Args:
@@ -399,7 +399,7 @@ class MultiTierCache:
             if key in self.l3_cache_ttl:
                 del self.l3_cache_ttl[key]
     
-    def warm_cache(self, keys: List[str], loader) -> None:
+    def warm_cache(self, keys: list[str], loader) -> None:
         """Warm cache with frequently accessed data.
         
         Args:
@@ -428,7 +428,7 @@ class MultiTierCache:
         
         logger.info(f"Cache warming complete: {warmed}/{len(keys)} keys loaded")
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get comprehensive cache statistics.
         
         Returns:
@@ -481,7 +481,7 @@ class MultiTierCache:
 
 
 # Global multi-tier cache instance
-_multi_tier_cache: Optional[MultiTierCache] = None
+_multi_tier_cache: MultiTierCache | None = None
 
 
 def get_multi_tier_cache() -> MultiTierCache:

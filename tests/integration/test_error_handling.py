@@ -7,17 +7,18 @@ friendly error messages to users.
 Covers Requirements: 10.1, 10.2, 10.3, 10.4, 10.5
 """
 
-import pytest
-import tempfile
 import os
-from unittest.mock import Mock, patch, AsyncMock
 import sqlite3
+import tempfile
+from unittest.mock import AsyncMock, Mock, patch
 
-from services.agent import GroqAgent
-from services.memory import Memory
-from services.error_handler import ErrorHandler, ErrorType
-from storage.database import Database
+import pytest
+
 from models.responses import AssistantMessageResponse
+from services.agent import GroqAgent
+from services.error_handler import ErrorHandler, ErrorType
+from services.memory import Memory
+from storage.database import Database
 
 
 @pytest.fixture

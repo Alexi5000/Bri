@@ -1,10 +1,10 @@
 """Performance optimization for vector search and retrieval."""
 
+import hashlib
 import logging
 import time
-from typing import List, Optional, Dict, Any, Tuple
 from collections import OrderedDict
-import hashlib
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -25,11 +25,11 @@ class QueryCache:
         """
         self.max_size = max_size
         self.ttl_seconds = ttl_seconds
-        self.cache: OrderedDict[str, Tuple[Any, float]] = OrderedDict()
+        self.cache: OrderedDict[str, tuple[Any, float]] = OrderedDict()
         self.hits = 0
         self.misses = 0
     
-    def _make_key(self, query: str, video_id: Optional[str], top_k: int) -> str:
+    def _make_key(self, query: str, video_id: str | None, top_k: int) -> str:
         """Generate cache key from query parameters."""
         key_str = f"{query}|{video_id}|{top_k}"
         return hashlib.md5(key_str.encode()).hexdigest()
@@ -37,9 +37,9 @@ class QueryCache:
     def get(
         self,
         query: str,
-        video_id: Optional[str] = None,
+        video_id: str | None = None,
         top_k: int = 5
-    ) -> Optional[List[Any]]:
+    ) -> list[Any] | None:
         """Get cached results for a query.
         
         Args:
@@ -72,8 +72,8 @@ class QueryCache:
     def put(
         self,
         query: str,
-        results: List[Any],
-        video_id: Optional[str] = None,
+        results: list[Any],
+        video_id: str | None = None,
         top_k: int = 5
     ) -> None:
         """Cache query results.
@@ -92,7 +92,7 @@ class QueryCache:
         
         self.cache[key] = (results, time.time())
     
-    def invalidate(self, video_id: Optional[str] = None) -> None:
+    def invalidate(self, video_id: str | None = None) -> None:
         """Invalidate cache entries.
         
         Args:
@@ -112,7 +112,7 @@ class QueryCache:
                 del self.cache[key]
             logger.info(f"Invalidated {len(keys_to_remove)} cache entries for video {video_id}")
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get cache statistics."""
         total_requests = self.hits + self.misses
         hit_rate = self.hits / total_requests if total_requests > 0 else 0
@@ -155,7 +155,7 @@ class VectorSearchOptimizer:
         self.query_cache = QueryCache(max_size=cache_size, ttl_seconds=cache_ttl) if enable_cache else None
         
         # Performance metrics
-        self.query_times: List[float] = []
+        self.query_times: list[float] = []
         self.max_query_time_history = 1000
         
         logger.info(f"Vector search optimizer initialized (cache: {enable_cache})")
@@ -164,10 +164,10 @@ class VectorSearchOptimizer:
         self,
         search_func: callable,
         query: str,
-        video_id: Optional[str] = None,
+        video_id: str | None = None,
         top_k: int = 5,
         **kwargs
-    ) -> Tuple[List[Any], bool]:
+    ) -> tuple[list[Any], bool]:
         """Perform search with caching.
         
         Args:
@@ -210,7 +210,7 @@ class VectorSearchOptimizer:
         if len(self.query_times) > self.max_query_time_history:
             self.query_times = self.query_times[-self.max_query_time_history:]
     
-    def invalidate_cache(self, video_id: Optional[str] = None) -> None:
+    def invalidate_cache(self, video_id: str | None = None) -> None:
         """Invalidate query cache.
         
         Args:
@@ -219,7 +219,7 @@ class VectorSearchOptimizer:
         if self.query_cache:
             self.query_cache.invalidate(video_id)
     
-    def get_performance_stats(self) -> Dict[str, Any]:
+    def get_performance_stats(self) -> dict[str, Any]:
         """Get performance statistics.
         
         Returns:
@@ -248,7 +248,7 @@ class VectorSearchOptimizer:
         
         return stats
     
-    def recommend_optimizations(self, stats: Dict[str, Any]) -> List[str]:
+    def recommend_optimizations(self, stats: dict[str, Any]) -> list[str]:
         """Analyze performance and recommend optimizations.
         
         Args:
@@ -307,11 +307,11 @@ class VectorSearchOptimizer:
     
     def ab_test_search_quality(
         self,
-        test_queries: List[Dict[str, Any]],
+        test_queries: list[dict[str, Any]],
         search_func_a: callable,
         search_func_b: callable,
         metric: str = "precision"
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """A/B test two search implementations.
         
         Args:

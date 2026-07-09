@@ -3,11 +3,11 @@
 import logging
 import uuid
 from datetime import datetime
-from typing import List, Optional
-from models.memory import MemoryRecord
-from storage.database import Database, DatabaseError
-from services.errors import StorageError
+
 from config import Config
+from models.memory import MemoryRecord
+from services.errors import StorageError
+from storage.database import Database, DatabaseError
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class Memory:
     - Performance-optimized queries with indexing
     """
     
-    def __init__(self, db: Optional[Database] = None):
+    def __init__(self, db: Database | None = None):
         """Initialize Memory Manager.
         
         Args:
@@ -77,9 +77,9 @@ class Memory:
     def get_conversation_history(
         self,
         video_id: str,
-        limit: Optional[int] = None,
+        limit: int | None = None,
         offset: int = 0
-    ) -> List[MemoryRecord]:
+    ) -> list[MemoryRecord]:
         """Retrieve conversation history for a video with pagination support.
         
         Args:
@@ -136,7 +136,7 @@ class Memory:
             logger.error("Failed to retrieve conversation history: %s", (e))
             raise MemoryError(f"Failed to retrieve conversation history: {e}")
     
-    def get_by_message_id(self, message_id: str) -> Optional[MemoryRecord]:
+    def get_by_message_id(self, message_id: str) -> MemoryRecord | None:
         """Retrieve a specific message by ID.
         
         Args:

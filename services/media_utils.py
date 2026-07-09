@@ -1,11 +1,11 @@
 """Media utilities for frame thumbnail generation and processing."""
 
+import base64
 import logging
 import os
-from typing import Optional, Tuple
-from PIL import Image
-import base64
 from io import BytesIO
+
+from PIL import Image
 
 from services.errors import ProcessingError
 
@@ -32,7 +32,7 @@ class MediaUtils:
     @staticmethod
     def generate_thumbnail(
         image_path: str,
-        output_path: Optional[str] = None,
+        output_path: str | None = None,
         max_width: int = DEFAULT_THUMBNAIL_WIDTH,
         max_height: int = DEFAULT_THUMBNAIL_HEIGHT,
         quality: int = 85
@@ -181,7 +181,7 @@ class MediaUtils:
             raise MediaError(f"Base64 conversion failed: {e}")
     
     @staticmethod
-    def get_image_dimensions(image_path: str) -> Tuple[int, int]:
+    def get_image_dimensions(image_path: str) -> tuple[int, int]:
         """
         Get the dimensions of an image file.
         

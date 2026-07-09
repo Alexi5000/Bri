@@ -1,8 +1,7 @@
 """Object detection tool using YOLOv8."""
 
-import os
-from typing import List
 import logging
+import os
 
 from ultralytics import YOLO
 
@@ -30,10 +29,10 @@ class ObjectDetector:
     
     def detect_objects_in_frames(
         self,
-        frame_paths: List[str],
-        timestamps: List[float],
+        frame_paths: list[str],
+        timestamps: list[float],
         confidence_threshold: float = 0.25
-    ) -> List[DetectionResult]:
+    ) -> list[DetectionResult]:
         """
         Detect objects in multiple frames using batch processing.
         
@@ -132,11 +131,11 @@ class ObjectDetector:
     
     def search_for_object(
         self,
-        frame_paths: List[str],
-        timestamps: List[float],
+        frame_paths: list[str],
+        timestamps: list[float],
         object_class: str,
         confidence_threshold: float = 0.25
-    ) -> List[DetectionResult]:
+    ) -> list[DetectionResult]:
         """
         Find all occurrences of a specific object class across frames.
         
@@ -181,7 +180,7 @@ class ObjectDetector:
         
         return filtered_results
     
-    def get_available_classes(self) -> List[str]:
+    def get_available_classes(self) -> list[str]:
         """
         Get list of object classes that the model can detect.
         

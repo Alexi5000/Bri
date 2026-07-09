@@ -3,13 +3,13 @@ Agent Response Quality Tests
 Task 44.4: Test agent response quality and conversation context
 """
 
-import pytest
-import asyncio
-import os
 import re
-from storage.database import Database
+
+import pytest
+
 from services.agent import GroqAgent
 from services.memory import Memory
+from storage.database import Database
 
 
 class TestAgentQuality:
@@ -61,7 +61,7 @@ class TestAgentQuality:
             pytest.skip("No processed video available")
         
         print(f"\n{'='*60}")
-        print(f"Testing Response Keyword Relevance")
+        print("Testing Response Keyword Relevance")
         print(f"{'='*60}\n")
         
         test_cases = [
@@ -125,7 +125,7 @@ class TestAgentQuality:
             pytest.skip("No live GROQ_API_KEY configured for live LLM assertions")
         
         print(f"\n{'='*60}")
-        print(f"Testing Timestamp Inclusion")
+        print("Testing Timestamp Inclusion")
         print(f"{'='*60}\n")
         
         # Queries that should trigger timestamp responses
@@ -150,10 +150,10 @@ class TestAgentQuality:
             )
             
             if has_timestamps:
-                print(f"  ✓ PASS - Includes timestamps")
+                print("  ✓ PASS - Includes timestamps")
                 passed += 1
             else:
-                print(f"  ✗ FAIL - No timestamps found")
+                print("  ✗ FAIL - No timestamps found")
         
         pass_rate = (passed / len(temporal_queries)) * 100
         print(f"\n{'='*60}")
@@ -169,7 +169,7 @@ class TestAgentQuality:
             pytest.skip("No processed video available")
         
         print(f"\n{'='*60}")
-        print(f"Testing Video Content References")
+        print("Testing Video Content References")
         print(f"{'='*60}\n")
         
         # Get some actual content from the video
@@ -209,7 +209,7 @@ class TestAgentQuality:
             pytest.skip("No processed video available")
         
         print(f"\n{'='*60}")
-        print(f"Testing Conversation Context")
+        print("Testing Conversation Context")
         print(f"{'='*60}\n")
         
         # First query
@@ -252,7 +252,7 @@ class TestAgentQuality:
             pytest.skip("No processed video available")
         
         print(f"\n{'='*60}")
-        print(f"Overall Response Quality Score")
+        print("Overall Response Quality Score")
         print(f"{'='*60}\n")
         
         test_queries = [
@@ -296,7 +296,7 @@ class TestAgentQuality:
         
         print(f"\n{'='*60}")
         print(f"Average Quality Score: {avg_score:.1f}/100")
-        print(f"Target: >= 90")
+        print("Target: >= 90")
         print(f"Status: {'✓ PASS' if avg_score >= 90 else '✗ FAIL'}")
         print(f"{'='*60}\n")
         

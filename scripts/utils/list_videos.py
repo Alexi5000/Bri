@@ -1,5 +1,6 @@
-from storage.database import Database
 import os
+
+from storage.database import Database
 
 db = Database()
 db.connect()

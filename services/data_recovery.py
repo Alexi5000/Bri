@@ -12,8 +12,10 @@ Features:
 import json
 import time
 import uuid
-from typing import Dict, Any, List, Optional, Callable
+from collections.abc import Callable
 from datetime import datetime
+from typing import Any
+
 from storage.database import Database
 from utils.logging_config import get_logger
 
@@ -77,7 +79,7 @@ class AutomaticRetry:
     Automatic retry mechanism for failed operations.
     """
     
-    def __init__(self, db: Optional[Database] = None, retry_policy: Optional[RetryPolicy] = None):
+    def __init__(self, db: Database | None = None, retry_policy: RetryPolicy | None = None):
         """
         Initialize automatic retry.
         
@@ -147,7 +149,7 @@ class AutomaticRetry:
         self,
         operation_name: str,
         error: Exception,
-        context: Dict[str, Any]
+        context: dict[str, Any]
     ) -> str:
         """
         Log a failed operation for later analysis.
@@ -200,7 +202,7 @@ class DeadLetterQueue:
     Dead letter queue for unprocessable data.
     """
     
-    def __init__(self, db: Optional[Database] = None):
+    def __init__(self, db: Database | None = None):
         """
         Initialize dead letter queue.
         
@@ -234,7 +236,7 @@ class DeadLetterQueue:
         self,
         video_id: str,
         operation: str,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         error_message: str
     ) -> str:
         """
@@ -270,11 +272,11 @@ class DeadLetterQueue:
     
     def get_queue_items(
         self,
-        video_id: Optional[str] = None,
-        operation: Optional[str] = None,
+        video_id: str | None = None,
+        operation: str | None = None,
         processed: bool = False,
         limit: int = 100
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Get items from dead letter queue.
         
@@ -375,7 +377,7 @@ class ManualReprocessing:
     Manual reprocessing interface for failed operations.
     """
     
-    def __init__(self, db: Optional[Database] = None):
+    def __init__(self, db: Database | None = None):
         """
         Initialize manual reprocessing.
         
@@ -393,8 +395,8 @@ class ManualReprocessing:
     def reprocess_video(
         self,
         video_id: str,
-        operations: Optional[List[str]] = None
-    ) -> Dict[str, Any]:
+        operations: list[str] | None = None
+    ) -> dict[str, Any]:
         """
         Manually reprocess a video.
         
@@ -443,7 +445,7 @@ class ManualReprocessing:
             results['error'] = str(e)
             return results
     
-    def reprocess_dlq_item(self, dlq_id: str) -> Dict[str, Any]:
+    def reprocess_dlq_item(self, dlq_id: str) -> dict[str, Any]:
         """
         Reprocess a specific DLQ item.
         
@@ -498,7 +500,7 @@ class ManualReprocessing:
                 'error': str(e)
             }
     
-    def get_reprocessing_candidates(self) -> List[Dict[str, Any]]:
+    def get_reprocessing_candidates(self) -> list[dict[str, Any]]:
         """
         Get list of videos that are candidates for reprocessing.
         
@@ -525,7 +527,7 @@ class DataReconciliation:
     Data reconciliation jobs to fix inconsistencies.
     """
     
-    def __init__(self, db: Optional[Database] = None):
+    def __init__(self, db: Database | None = None):
         """
         Initialize data reconciliation.
         
@@ -537,7 +539,7 @@ class DataReconciliation:
             self.db.connect()
         logger.info("DataReconciliation initialized")
     
-    def reconcile_video_data(self, video_id: str) -> Dict[str, Any]:
+    def reconcile_video_data(self, video_id: str) -> dict[str, Any]:
         """
         Reconcile data for a specific video.
         
@@ -598,7 +600,7 @@ class DataReconciliation:
             result['error'] = str(e)
             return result
     
-    def reconcile_all_videos(self) -> Dict[str, Any]:
+    def reconcile_all_videos(self) -> dict[str, Any]:
         """
         Reconcile data for all videos.
         
@@ -637,7 +639,7 @@ class DataRecovery:
     Unified data recovery interface.
     """
     
-    def __init__(self, db: Optional[Database] = None):
+    def __init__(self, db: Database | None = None):
         """
         Initialize data recovery.
         
@@ -655,7 +657,7 @@ class DataRecovery:
         
         logger.info("DataRecovery initialized")
     
-    def get_recovery_dashboard(self) -> Dict[str, Any]:
+    def get_recovery_dashboard(self) -> dict[str, Any]:
         """
         Get comprehensive recovery dashboard.
         
@@ -671,7 +673,7 @@ class DataRecovery:
 
 
 # Global recovery instance
-_recovery_instance: Optional[DataRecovery] = None
+_recovery_instance: DataRecovery | None = None
 
 
 def get_data_recovery(db=None) -> DataRecovery:

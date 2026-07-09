@@ -1,11 +1,12 @@
 """File storage utilities for videos and extracted assets."""
 
+import logging
 import os
 import shutil
 import uuid
-import logging
 from pathlib import Path
-from typing import Optional, BinaryIO
+from typing import BinaryIO
+
 from config import Config
 from services.errors import StorageError
 
@@ -32,9 +33,9 @@ class FileStore:
     
     def __init__(
         self,
-        video_path: Optional[str] = None,
-        frame_path: Optional[str] = None,
-        cache_path: Optional[str] = None
+        video_path: str | None = None,
+        frame_path: str | None = None,
+        cache_path: str | None = None
     ):
         """
         Initialize file store with storage paths.
@@ -61,7 +62,7 @@ class FileStore:
         self,
         filename: str,
         file_size: int
-    ) -> tuple[bool, Optional[str]]:
+    ) -> tuple[bool, str | None]:
         """
         Validate video file format and size.
         
@@ -92,7 +93,7 @@ class FileStore:
         self,
         file_data: BinaryIO,
         original_filename: str,
-        video_id: Optional[str] = None
+        video_id: str | None = None
     ) -> tuple[str, str]:
         """
         Save uploaded video file to storage.
@@ -303,7 +304,7 @@ class FileStore:
 
 
 # Global file store instance
-_file_store_instance: Optional[FileStore] = None
+_file_store_instance: FileStore | None = None
 
 
 def get_file_store() -> FileStore:

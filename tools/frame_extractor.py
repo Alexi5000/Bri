@@ -1,14 +1,14 @@
 """Frame extraction tool using OpenCV."""
 
-import cv2
 import base64
+import logging
 import os
 from pathlib import Path
-from typing import List, Optional
-import logging
 
-from models.video import Frame, VideoMetadata
+import cv2
+
 from config import Config
+from models.video import Frame, VideoMetadata
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class FrameExtractor:
     """Extract frames from videos using OpenCV."""
     
-    def __init__(self, frame_storage_path: Optional[str] = None):
+    def __init__(self, frame_storage_path: str | None = None):
         """
         Initialize the FrameExtractor.
         
@@ -98,9 +98,9 @@ class FrameExtractor:
         self,
         video_path: str,
         video_id: str,
-        interval_seconds: Optional[float] = None,
-        max_frames: Optional[int] = None
-    ) -> List[Frame]:
+        interval_seconds: float | None = None,
+        max_frames: int | None = None
+    ) -> list[Frame]:
         """
         Extract frames from video at regular intervals.
         

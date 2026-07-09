@@ -1,12 +1,12 @@
 """Context Builder for aggregating video processing results."""
 
-import logging
 import json
-from typing import List, Optional
+import logging
 from dataclasses import dataclass
-from models.video import VideoMetadata, Frame
+
 from models.memory import MemoryRecord
-from models.tools import Caption, Transcript, TranscriptSegment, DetectionResult, DetectedObject
+from models.tools import Caption, DetectedObject, DetectionResult, Transcript, TranscriptSegment
+from models.video import Frame, VideoMetadata
 from storage.database import Database
 
 # Import semantic search service (optional)
@@ -32,22 +32,22 @@ __all__ = ["ContextError"]
 class VideoContext:
     """Aggregated context for a video including all processed data."""
     video_id: str
-    metadata: Optional[VideoMetadata]
-    frames: List[Frame]
-    captions: List[Caption]
-    transcript: Optional[Transcript]
-    objects: List[DetectionResult]
-    conversation_history: List[MemoryRecord]
+    metadata: VideoMetadata | None
+    frames: list[Frame]
+    captions: list[Caption]
+    transcript: Transcript | None
+    objects: list[DetectionResult]
+    conversation_history: list[MemoryRecord]
 
 
 @dataclass
 class TimestampContext:
     """Context around a specific timestamp in a video."""
     timestamp: float
-    nearby_frames: List[Frame]
-    captions: List[Caption]
-    transcript_segment: Optional[TranscriptSegment]
-    detected_objects: List[DetectedObject]
+    nearby_frames: list[Frame]
+    captions: list[Caption]
+    transcript_segment: TranscriptSegment | None
+    detected_objects: list[DetectedObject]
 
 
 class ContextBuilder:
@@ -61,7 +61,7 @@ class ContextBuilder:
     - Retrieve context around specific timestamps
     """
     
-    def __init__(self, db: Optional[Database] = None, enable_semantic_search: bool = True):
+    def __init__(self, db: Database | None = None, enable_semantic_search: bool = True):
         """Initialize Context Builder.
         
         Args:
@@ -273,7 +273,7 @@ class ContextBuilder:
         query: str,
         top_k: int = 5,
         use_semantic: bool = True
-    ) -> List[Caption]:
+    ) -> list[Caption]:
         """Find relevant captions using text similarity.
         
         ENHANCED: Improved keyword matching with:
@@ -502,7 +502,7 @@ class ContextBuilder:
         video_id: str,
         query: str,
         top_k: int = 10
-    ) -> List[TranscriptSegment]:
+    ) -> list[TranscriptSegment]:
         """Search transcript for keywords.
         
         ENHANCED: Improved keyword matching with relevance scoring and ranking.
@@ -593,7 +593,7 @@ class ContextBuilder:
         self,
         video_id: str,
         object_class: str
-    ) -> List[Frame]:
+    ) -> list[Frame]:
         """Find frames containing a specific object.
         
         Args:
@@ -725,7 +725,7 @@ class ContextBuilder:
 
     # Private helper methods for data retrieval
     
-    def _get_video_metadata(self, video_id: str) -> Optional[VideoMetadata]:
+    def _get_video_metadata(self, video_id: str) -> VideoMetadata | None:
         """Retrieve video metadata from database.
         
         Args:
@@ -754,7 +754,7 @@ class ContextBuilder:
             logger.warning("Failed to retrieve metadata for video %s: %s", (video_id), (e))
             return None
     
-    def _get_frames(self, video_id: str) -> List[Frame]:
+    def _get_frames(self, video_id: str) -> list[Frame]:
         """Retrieve all frames for a video.
         
         Args:
@@ -783,7 +783,7 @@ class ContextBuilder:
             logger.warning("Failed to retrieve frames for video %s: %s", (video_id), (e))
             return []
     
-    def _get_captions(self, video_id: str) -> List[Caption]:
+    def _get_captions(self, video_id: str) -> list[Caption]:
         """Retrieve all captions for a video.
         
         Args:
@@ -812,7 +812,7 @@ class ContextBuilder:
             logger.warning("Failed to retrieve captions for video %s: %s", (video_id), (e))
             return []
     
-    def _get_transcript(self, video_id: str) -> Optional[Transcript]:
+    def _get_transcript(self, video_id: str) -> Transcript | None:
         """Retrieve transcript for a video.
         
         Args:
@@ -841,7 +841,7 @@ class ContextBuilder:
             logger.warning("Failed to retrieve transcript for video %s: %s", (video_id), (e))
             return None
     
-    def _get_object_detections(self, video_id: str) -> List[DetectionResult]:
+    def _get_object_detections(self, video_id: str) -> list[DetectionResult]:
         """Retrieve all object detections for a video.
         
         Args:
@@ -870,7 +870,7 @@ class ContextBuilder:
             logger.warning("Failed to retrieve object detections for video %s: %s", (video_id), (e))
             return []
     
-    def _get_conversation_history(self, video_id: str) -> List[MemoryRecord]:
+    def _get_conversation_history(self, video_id: str) -> list[MemoryRecord]:
         """Retrieve conversation history for a video.
         
         Args:
@@ -892,7 +892,7 @@ class ContextBuilder:
         self,
         video_id: str,
         timestamp: float
-    ) -> Optional[TranscriptSegment]:
+    ) -> TranscriptSegment | None:
         """Get the transcript segment at a specific timestamp.
         
         Args:
@@ -980,7 +980,7 @@ class ContextBuilder:
         query: str,
         top_k: int = 5,
         min_score: float = 0.3
-    ) -> List[Caption]:
+    ) -> list[Caption]:
         """Search captions using pure semantic similarity (no keyword matching).
         
         Args:

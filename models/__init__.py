@@ -1,9 +1,14 @@
 """Data models for BRI video agent."""
 
-from models.video import Video, VideoMetadata, Frame
-from models.tools import Caption, Transcript, TranscriptSegment, DetectionResult, DetectedObject
 from models.memory import MemoryRecord
-from models.responses import AssistantMessageResponse, UserQuery, ToolExecutionRequest, ToolExecutionResponse
+from models.responses import (
+    AssistantMessageResponse,
+    ToolExecutionRequest,
+    ToolExecutionResponse,
+    UserQuery,
+)
+from models.tools import Caption, DetectedObject, DetectionResult, Transcript, TranscriptSegment
+from models.video import Frame, Video, VideoMetadata
 
 __all__ = [
     # Video models

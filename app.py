@@ -5,9 +5,10 @@ Main Streamlit Application Entry Point
 
 import streamlit as st
 
-# Initialize logging first
-from utils.logging_config import setup_logging, get_logger
 from config import Config
+
+# Initialize logging first
+from utils.logging_config import get_logger, setup_logging
 
 setup_logging(
     log_level=Config.LOG_LEVEL,
@@ -35,11 +36,10 @@ except Exception as e:
     st.stop()
 
 # Import UI components
-from ui.welcome import render_welcome_screen
-from ui.library import render_video_library  # Task 19
-from ui.history import render_conversation_history_panel  # Task 22
+from services.application import get_application_service
 from ui.chat_workflow import render_video_chat_workspace
-from ui.styles import apply_custom_styles
+from ui.history import render_conversation_history_panel  # Task 22
+from ui.library import render_video_library  # Task 19
 from ui.shell import (
     render_dashboard,
     render_enterprise_styles,
@@ -48,7 +48,8 @@ from ui.shell import (
     render_sidebar_readiness,
     render_video_workflow,
 )
-from services.application import get_application_service
+from ui.styles import apply_custom_styles
+from ui.welcome import render_welcome_screen
 
 # Configure page
 st.set_page_config(

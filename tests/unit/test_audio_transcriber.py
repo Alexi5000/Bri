@@ -1,13 +1,15 @@
 """Unit tests for AudioTranscriber."""
 
-import pytest
-import tempfile
 import os
+import tempfile
+from unittest.mock import Mock, patch
+
 import cv2
 import numpy as np
-from unittest.mock import Mock, patch
-from tools.audio_transcriber import AudioTranscriber
+import pytest
+
 from models.tools import Transcript, TranscriptSegment
+from tools.audio_transcriber import AudioTranscriber
 
 
 @pytest.fixture

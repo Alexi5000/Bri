@@ -1,13 +1,15 @@
 """Unit tests for ObjectDetector."""
 
-import pytest
-import tempfile
 import os
+import tempfile
+from unittest.mock import MagicMock, patch
+
 import numpy as np
+import pytest
 from PIL import Image
-from unittest.mock import patch, MagicMock
-from tools.object_detector import ObjectDetector
+
 from models.tools import DetectedObject, DetectionResult
+from tools.object_detector import ObjectDetector
 
 
 @pytest.fixture

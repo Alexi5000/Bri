@@ -1,8 +1,8 @@
 """Semantic search service using vector embeddings and ChromaDB."""
 
 import logging
-from typing import List, Optional, Dict, Any
 from dataclasses import dataclass
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -28,8 +28,8 @@ class SemanticSearchResult:
     """Result from semantic search."""
     text: str
     score: float  # Similarity score (0-1, higher is better)
-    metadata: Dict[str, Any]
-    embedding: Optional[List[float]] = None
+    metadata: dict[str, Any]
+    embedding: list[float] | None = None
 
 
 class SemanticSearchService:
@@ -133,7 +133,7 @@ class SemanticSearchService:
         """Check if semantic search is available."""
         return self.enabled
     
-    def generate_embedding(self, text: str) -> Optional[List[float]]:
+    def generate_embedding(self, text: str) -> list[float] | None:
         """Generate embedding for a single text.
         
         Args:
@@ -152,7 +152,7 @@ class SemanticSearchService:
             logger.error(f"Failed to generate embedding: {e}")
             return None
     
-    def generate_embeddings_batch(self, texts: List[str]) -> Optional[List[List[float]]]:
+    def generate_embeddings_batch(self, texts: list[str]) -> list[list[float]] | None:
         """Generate embeddings for multiple texts (more efficient).
         
         Args:
@@ -174,7 +174,7 @@ class SemanticSearchService:
     def index_captions(
         self,
         video_id: str,
-        captions: List[Dict[str, Any]],
+        captions: list[dict[str, Any]],
         batch_size: int = 32
     ) -> bool:
         """Index captions for a video with embeddings.
@@ -243,7 +243,7 @@ class SemanticSearchService:
     def index_transcripts(
         self,
         video_id: str,
-        segments: List[Dict[str, Any]],
+        segments: list[dict[str, Any]],
         batch_size: int = 32
     ) -> bool:
         """Index transcript segments for a video with embeddings.
@@ -313,12 +313,12 @@ class SemanticSearchService:
     def search(
         self,
         query: str,
-        video_id: Optional[str] = None,
-        content_type: Optional[str] = None,
+        video_id: str | None = None,
+        content_type: str | None = None,
         top_k: int = 5,
         min_score: float = 0.0,
         use_cache: bool = True
-    ) -> List[SemanticSearchResult]:
+    ) -> list[SemanticSearchResult]:
         """Perform semantic similarity search.
         
         Args:
@@ -354,11 +354,11 @@ class SemanticSearchService:
     def _search_internal(
         self,
         query: str,
-        video_id: Optional[str] = None,
-        content_type: Optional[str] = None,
+        video_id: str | None = None,
+        content_type: str | None = None,
         top_k: int = 5,
         min_score: float = 0.0
-    ) -> List[SemanticSearchResult]:
+    ) -> list[SemanticSearchResult]:
         """Internal search implementation (called by search() with/without cache).
         
         Args:
@@ -418,11 +418,11 @@ class SemanticSearchService:
     def hybrid_search(
         self,
         query: str,
-        keyword_results: List[Dict[str, Any]],
-        video_id: Optional[str] = None,
+        keyword_results: list[dict[str, Any]],
+        video_id: str | None = None,
         top_k: int = 5,
         semantic_weight: float = 0.7
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Perform hybrid search combining keyword and semantic matching.
         
         Args:
@@ -536,7 +536,7 @@ class SemanticSearchService:
             logger.error(f"Failed to delete embeddings: {e}")
             return False
     
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get statistics about the vector database.
         
         Returns:
@@ -565,7 +565,7 @@ class SemanticSearchService:
             logger.error(f"Failed to get stats: {e}")
             return {"enabled": True, "error": str(e)}
     
-    def get_performance_recommendations(self) -> List[str]:
+    def get_performance_recommendations(self) -> list[str]:
         """Get performance optimization recommendations.
         
         Returns:
@@ -580,7 +580,7 @@ class SemanticSearchService:
         
         return []
     
-    def invalidate_cache(self, video_id: Optional[str] = None) -> None:
+    def invalidate_cache(self, video_id: str | None = None) -> None:
         """Invalidate query cache.
         
         Args:

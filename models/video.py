@@ -1,8 +1,8 @@
 """Video-related data models."""
 
-from pydantic import BaseModel, Field
-from typing import Optional
 from datetime import datetime
+
+from pydantic import BaseModel, Field
 
 
 class VideoMetadata(BaseModel):
@@ -23,12 +23,12 @@ class Video(BaseModel):
     duration: float = Field(..., description="Video duration in seconds")
     upload_timestamp: datetime = Field(default_factory=datetime.now, description="Upload timestamp")
     processing_status: str = Field(default="pending", description="Processing status: pending, processing, complete, error")
-    thumbnail_path: Optional[str] = Field(None, description="Path to thumbnail image")
+    thumbnail_path: str | None = Field(None, description="Path to thumbnail image")
 
 
 class Frame(BaseModel):
     """Extracted video frame."""
     timestamp: float = Field(..., description="Frame timestamp in seconds")
     image_path: str = Field(..., description="Path to frame image file")
-    image_base64: Optional[str] = Field(None, description="Base64-encoded image data")
+    image_base64: str | None = Field(None, description="Base64-encoded image data")
     frame_number: int = Field(..., description="Frame number in video")

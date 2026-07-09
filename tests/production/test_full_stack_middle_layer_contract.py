@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from services.application import BriApplicationService, VideoSummary
+from services.application import BriApplicationService
 from services.mcp_client import MCPClient, MCPClientError
 from storage.maintenance import (
     configure_sqlite_for_production,

@@ -1,69 +1,48 @@
 """FastAPI MCP Server for BRI video processing tools."""
 
+import os
+import sys
 import time
-from typing import Optional
-from pydantic import BaseModel
+
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-import sys
-import os
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from models.responses import ToolExecutionResponse
-from services.errors import BriError, http_status_for
-from mcp_server.registry import ToolRegistry
+from config import Config
 from mcp_server.cache import CacheManager
-from mcp_server.validation import (
-    ValidatedToolExecutionRequest,
-    ValidatedProcessVideoRequest,
-    ValidatedProgressiveProcessRequest,
-    VideoIdValidator,
-    RequestSizeValidator,
-    check_rate_limit,
-    tool_execution_limiter,
-    video_processing_limiter,
-    general_limiter
-)
+from mcp_server.circuit_breaker import cache_breaker, database_breaker, tool_execution_breaker
 from mcp_server.middleware import (
     RequestIDMiddleware,
     ResponseStandardizationMiddleware,
+    get_execution_time,
     get_request_id,
-    get_execution_time
 )
-from mcp_server.circuit_breaker import (
-    database_breaker,
-    cache_breaker,
-    tool_execution_breaker,
-    CircuitBreakerOpenError,
-    retry_with_backoff
-)
-from mcp_server.versioning import (
-    get_api_version,
-    version_header,
-    get_version_info,
-    APIVersion,
-    DEFAULT_VERSION
-)
-from fastapi import Depends
+from mcp_server.registry import ToolRegistry
 from mcp_server.response_models import (
-    create_standard_response,
-    create_paginated_response,
-    ErrorDetail,
     HealthCheckResponse,
-    ToolListResponse,
+    ResponseMetadata,
     ToolExecutionResponseV1,
+    ToolListResponse,
     VideoProcessingResponse,
-    VideoStatusResponse,
-    QueueStatusResponse,
-    CacheStatsResponse,
-    CacheClearResponse,
-    ResponseMetadata
+    create_standard_response,
 )
-from config import Config
-from utils.logging_config import setup_logging, get_logger, get_performance_logger
+from mcp_server.validation import (
+    RequestSizeValidator,
+    ValidatedProcessVideoRequest,
+    ValidatedProgressiveProcessRequest,
+    ValidatedToolExecutionRequest,
+    VideoIdValidator,
+    check_rate_limit,
+    general_limiter,
+    tool_execution_limiter,
+    video_processing_limiter,
+)
+from mcp_server.versioning import APIVersion, get_api_version, get_version_info
+from services.errors import BriError, http_status_for
+from utils.logging_config import get_logger, get_performance_logger, setup_logging
 
 # Setup logging
 setup_logging(
@@ -829,7 +808,7 @@ async def process_video_progressive(
     VideoIdValidator.validate_or_raise(video_id)
     
     try:
-        from services.processing_queue import get_processing_queue, JobPriority
+        from services.processing_queue import JobPriority, get_processing_queue
         
         queue = get_processing_queue()
         

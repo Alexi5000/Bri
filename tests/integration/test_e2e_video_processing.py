@@ -5,24 +5,22 @@ Tests the complete flow: upload → process → query → response
 Covers Requirements: 3.7, 4.1, 5.3
 """
 
-import pytest
-import asyncio
-import tempfile
 import os
 import shutil
-from pathlib import Path
-from datetime import datetime
-from unittest.mock import Mock, patch, AsyncMock
 import sqlite3
+import tempfile
+from pathlib import Path
+from unittest.mock import AsyncMock, Mock, patch
 
+import pytest
+
+from models.responses import AssistantMessageResponse
 from services.agent import GroqAgent
+from services.context import ContextBuilder
 from services.memory import Memory
 from services.router import ToolRouter
-from services.context import ContextBuilder
 from storage.database import Database
 from storage.file_store import FileStore
-from models.video import Video
-from models.responses import AssistantMessageResponse
 
 
 @pytest.fixture

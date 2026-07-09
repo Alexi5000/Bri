@@ -1,22 +1,23 @@
 """Groq Agent for conversational video analysis."""
 
-import httpx
 import time
-from typing import Optional, Dict, Any, List
+from typing import Any
+
+import httpx
 
 try:
     from groq import Groq
 except ModuleNotFoundError:  # pragma: no cover - optional production dependency
     Groq = None  # type: ignore[assignment]
+from config import Config
 from models.responses import AssistantMessageResponse
-from services.memory import Memory
-from services.router import ToolRouter, ToolPlan
 from services.context import ContextBuilder
-from services.media_utils import MediaUtils
 from services.error_handler import ErrorHandler
 from services.errors import BriError
-from config import Config
-from utils.logging_config import get_logger, get_performance_logger, get_api_logger
+from services.media_utils import MediaUtils
+from services.memory import Memory
+from services.router import ToolPlan, ToolRouter
+from utils.logging_config import get_api_logger, get_logger, get_performance_logger
 
 logger = get_logger(__name__)
 perf_logger = get_performance_logger(__name__)
@@ -78,9 +79,9 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
 
     def __init__(
         self,
-        groq_api_key: Optional[str] = None,
-        memory: Optional[Memory] = None,
-        context_builder: Optional[ContextBuilder] = None
+        groq_api_key: str | None = None,
+        memory: Memory | None = None,
+        context_builder: ContextBuilder | None = None
     ):
         """
         Initialize Groq Agent.
@@ -113,7 +114,7 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
         self,
         message: str,
         video_id: str,
-        image_base64: Optional[str] = None
+        image_base64: str | None = None
     ) -> AssistantMessageResponse:
         """
         Main entry point for processing user messages.
@@ -223,7 +224,7 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
         except Exception:
             return False
     
-    def _get_processing_stage_info(self, video_id: str) -> Dict[str, Any]:
+    def _get_processing_stage_info(self, video_id: str) -> dict[str, Any]:
         """
         Get current processing stage and available data for a video.
         
@@ -286,7 +287,7 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
                 'message': "⏳ Processing your video... This may take a moment!"
             }
     
-    def _should_use_tool(self, message: str, has_video_context: bool) -> Optional[str]:
+    def _should_use_tool(self, message: str, has_video_context: bool) -> str | None:
         """
         Determine if a tool is needed for the query.
         
@@ -345,8 +346,8 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
         self,
         message: str,
         video_id: str,
-        image_base64: Optional[str]
-    ) -> tuple[str, List[str], List[float], List[Dict[str, Any]]]:
+        image_base64: str | None
+    ) -> tuple[str, list[str], list[float], list[dict[str, Any]]]:
         """
         Execute tool-based query processing with stage-aware responses.
         
@@ -420,7 +421,7 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
         self,
         video_id: str,
         tool_plan: ToolPlan
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Gather context from video processing tools via MCP server.
         
@@ -613,7 +614,7 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
         self,
         tool_name: str,
         result: Any,
-        context_data: Dict[str, Any]
+        context_data: dict[str, Any]
     ) -> None:
         """Process tool result and add to context data."""
         if tool_name == 'captions' and result:
@@ -644,7 +645,7 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
     def _build_tool_prompt(
         self,
         message: str,
-        context_data: Dict[str, Any],
+        context_data: dict[str, Any],
         conversation_context: str
     ) -> str:
         """Build prompt with tool context for Groq.
@@ -946,10 +947,10 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
     
     def _extract_relevant_moments(
         self,
-        context_data: Dict[str, Any],
+        context_data: dict[str, Any],
         query: str,
         response: str
-    ) -> tuple[List[str], List[float], List[Dict[str, Any]]]:
+    ) -> tuple[list[str], list[float], list[dict[str, Any]]]:
         """
         Extract and organize relevant frames and timestamps from context.
         
@@ -1037,8 +1038,8 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
     def _find_closest_frame(
         self,
         timestamp: float,
-        frames: List[str]
-    ) -> Optional[str]:
+        frames: list[str]
+    ) -> str | None:
         """
         Find the frame path closest to a given timestamp.
         
@@ -1057,7 +1058,7 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
         # or maintain a mapping of timestamps to frames
         return frames[0] if frames else None
     
-    def _generate_frame_thumbnails(self, frames: List[str]) -> List[str]:
+    def _generate_frame_thumbnails(self, frames: list[str]) -> list[str]:
         """
         Generate thumbnails for frame images.
         
@@ -1092,7 +1093,7 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
     def _format_timestamps_in_response(
         self,
         response: str,
-        timestamps: List[float]
+        timestamps: list[float]
     ) -> str:
         """
         Format timestamps in the response text for better readability.
@@ -1156,7 +1157,7 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
         user_message: str,
         response: str,
         video_id: str
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Generate 1-3 relevant follow-up question suggestions.
         
@@ -1264,7 +1265,7 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
         
         return 'unknown'
     
-    def _suggest_visual_followups(self, message_lower: str, response_lower: str) -> List[str]:
+    def _suggest_visual_followups(self, message_lower: str, response_lower: str) -> list[str]:
         """Generate suggestions for visual description queries."""
         suggestions = []
         
@@ -1284,7 +1285,7 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
         
         return suggestions
     
-    def _suggest_audio_followups(self, message_lower: str, response_lower: str) -> List[str]:
+    def _suggest_audio_followups(self, message_lower: str, response_lower: str) -> list[str]:
         """Generate suggestions for audio/transcript queries."""
         suggestions = []
         
@@ -1302,7 +1303,7 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
         
         return suggestions
     
-    def _suggest_object_followups(self, message_lower: str, response_lower: str) -> List[str]:
+    def _suggest_object_followups(self, message_lower: str, response_lower: str) -> list[str]:
         """Generate suggestions for object search queries."""
         suggestions = []
         
@@ -1320,7 +1321,7 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
         
         return suggestions
     
-    def _suggest_timestamp_followups(self, message_lower: str, response_lower: str) -> List[str]:
+    def _suggest_timestamp_followups(self, message_lower: str, response_lower: str) -> list[str]:
         """Generate suggestions for timestamp-specific queries."""
         suggestions = []
         
@@ -1333,7 +1334,7 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
         
         return suggestions
     
-    def _suggest_summary_followups(self, message_lower: str, response_lower: str) -> List[str]:
+    def _suggest_summary_followups(self, message_lower: str, response_lower: str) -> list[str]:
         """Generate suggestions for summary queries."""
         suggestions = []
         
@@ -1346,7 +1347,7 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
         
         return suggestions
     
-    def _suggest_general_followups(self, message_lower: str, response_lower: str) -> List[str]:
+    def _suggest_general_followups(self, message_lower: str, response_lower: str) -> list[str]:
         """Generate suggestions for general conversational queries."""
         suggestions = []
         
@@ -1357,7 +1358,7 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
         
         return suggestions
     
-    def _suggest_exploration_followups(self) -> List[str]:
+    def _suggest_exploration_followups(self) -> list[str]:
         """Generate generic exploration suggestions."""
         return [
             "What are the main highlights of this video?",
@@ -1365,7 +1366,7 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
             "What's the overall theme?"
         ]
     
-    def _detect_additional_content(self, response_lower: str) -> List[str]:
+    def _detect_additional_content(self, response_lower: str) -> list[str]:
         """
         Detect if response mentions additional content and suggest proactive exploration.
         

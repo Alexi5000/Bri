@@ -1,14 +1,14 @@
 """Database initialization script for BRI video agent."""
 
-import sys
 import logging
+import sys
 from pathlib import Path
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import Config
-from storage import initialize_database, get_database
+from storage import get_database, initialize_database
 
 # Configure logging
 logging.basicConfig(

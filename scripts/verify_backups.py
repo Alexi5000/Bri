@@ -7,7 +7,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from storage.backup import DatabaseBackup
-from utils.logging_config import setup_logging, get_logger
+from utils.logging_config import get_logger, setup_logging
 
 setup_logging()
 logger = get_logger(__name__)
@@ -40,7 +40,7 @@ def main():
                 invalid_count += 1
         
         print("-" * 80)
-        print(f"\nResults:")
+        print("\nResults:")
         print(f"  Valid: {valid_count}")
         print(f"  Invalid: {invalid_count}")
         print(f"  Total: {len(backups)}")
