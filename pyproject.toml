@@ -1,24 +1,31 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=75", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "bri-video-agent"
-version = "1.0.0"
-description = "BRI is a production-ready Streamlit and FastAPI video intelligence assistant powered by Python API integrations."
+version = "1.1.0"
+description = "Empathetic multimodal video intelligence: Streamlit UI, FastAPI MCP server, and optional local BLIP/Whisper/YOLOv8 tools."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
-authors = [{ name = "Alexi5000" }]
-keywords = ["video-analysis", "streamlit", "fastapi", "groq", "mcp", "python"]
+authors = [{ name = "Alexi5000", email = "alexjobs23@gmail.com" }]
+keywords = ["video-analysis", "streamlit", "fastapi", "groq", "mcp", "blip", "whisper", "yolov8", "python"]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Framework :: FastAPI",
   "Framework :: Pydantic",
+  "Framework :: Streamlit",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
   "Topic :: Multimedia :: Video",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
   "streamlit>=1.28.0",
@@ -33,6 +40,11 @@ dependencies = [
   "requests>=2.31.0",
   "httpx>=0.24.0",
 ]
+
+[project.scripts]
+bri-video-agent = "scripts.cli:main"
+bri-mcp = "scripts.cli:run_mcp"
+bri-ui = "scripts.cli:run_ui"
 
 [project.optional-dependencies]
 ai = [
@@ -56,11 +68,10 @@ dev = [
   "pymdown-extensions>=10.0.0",
 ]
 
-docs = [
-  "mkdocs-material>=9.5.0",
-  "mkdocstrings[python]>=0.24.0",
-  "pymdown-extensions>=10.0.0",
-]
+# Note: [project.urls] is intentionally omitted. Recent setuptools versions
+# auto-inject the optional-dependencies table into urls.dependencies and
+# project.scripts.dependencies, which the pyproject validator then rejects.
+# Project URLs are documented in README.md and the package description.
 
 [tool.setuptools]
 py-modules = ["app", "config"]
@@ -105,7 +116,7 @@ exclude_lines = [
 
 [tool.mypy]
 python_version = "3.11"
-strict = false            # turned on per-module below; the codebase is not yet globally strict-clean
+strict = false
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -117,7 +128,6 @@ warn_no_return = true
 plugins = ["pydantic.mypy"]
 
 [[tool.mypy.overrides]]
-# Modules that are already --strict clean and which we want CI to enforce.
 module = [
   "services.errors",
   "mcp_server.response_models",
@@ -130,8 +140,6 @@ strict = true
 disallow_untyped_defs = true
 
 [[tool.mypy.overrides]]
-# Modules where strict is being phased in; CI allows missing annotations here
-# but still flags implicit Optional and Any.
 module = [
   "services.application",
   "services.mcp_client",
@@ -180,7 +188,6 @@ disallow_untyped_defs = false
 check_untyped_defs = false
 
 [[tool.mypy.overrides]]
-# Third-party packages we don't own; relax strictness.
 module = [
   "groq.*",
   "transformers.*",

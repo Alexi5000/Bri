@@ -1,0 +1,108 @@
+# docker-compose.prod.yml — production overlay that pulls BRI from GHCR
+# rather than building from source. Use it when you want to deploy BRI
+# without cloning the repo.
+#
+# Usage:
+#   docker compose -f docker-compose.prod.yml pull
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# Override the image tag with the BRI_VERSION env var; default is the
+# latest published build. Pin a specific version in production, e.g.:
+#   BRI_VERSION=v1.1.0 docker compose -f docker-compose.prod.yml up -d
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: bri-redis
+    expose:
+      - "6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bri-network
+    mem_limit: 256m
+    cpus: "0.5"
+    restart: unless-stopped
+
+  mcp-server:
+    image: ghcr.io/alexi5000/bri-mcp:${BRI_VERSION:-latest}
+    container_name: bri-mcp-server
+    pull_policy: always
+    ports:
+      - "8000:8000"
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_PATH=/app/data/bri.db
+      - VIDEO_STORAGE_PATH=/app/data/videos
+      - FRAME_STORAGE_PATH=/app/data/frames
+      - CACHE_STORAGE_PATH=/app/data/cache
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - APP_ENV=production
+    volumes:
+      - bri-data:/app/data
+      - bri-logs:/app/logs
+    command: ["sh", "-c", "python scripts/init_docker_db.py && exec python -m uvicorn mcp_server.main:app --host 0.0.0.0 --port 8000"]
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - bri-network
+    restart: unless-stopped
+    mem_limit: 2g
+    cpus: "1.5"
+
+  streamlit-ui:
+    image: ghcr.io/alexi5000/bri-ui:${BRI_VERSION:-latest}
+    container_name: bri-streamlit-ui
+    pull_policy: always
+    ports:
+      - "8501:8501"
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - MCP_SERVER_URL=http://mcp-server:8000
+      - DATABASE_PATH=/app/data/bri.db
+      - VIDEO_STORAGE_PATH=/app/data/videos
+      - FRAME_STORAGE_PATH=/app/data/frames
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - bri-data:/app/data
+      - bri-logs:/app/logs
+    depends_on:
+      mcp-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - bri-network
+    restart: unless-stopped
+    mem_limit: 1g
+    cpus: "1.0"
+
+volumes:
+  redis-data:
+    driver: local
+  bri-data:
+    driver: local
+  bri-logs:
+    driver: local
+
+networks:
+  bri-network:
+    driver: bridge

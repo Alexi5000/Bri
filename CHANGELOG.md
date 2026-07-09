@@ -84,3 +84,64 @@ Initial public release: Streamlit UI, FastAPI MCP server, SQLite persistence,
 optional BLIP / Whisper / YOLOv8 multimodal tools, Groq-backed conversational
 agent with per-video memory. Production hardening, structured logging, and
 Uncle Bob clean-code review applied across the codebase.
+
+## [1.1.0] - 2026-07-09
+
+Open-source flagship release. CI green, contributor experience polished,
+distribution channels wired.
+
+### Added
+- Continuous integration: `ci.yml` matrix (ubuntu + windows × py3.11 + 3.12),
+  `docs.yml` (markdownlint + lychee + mkdocs preview), `release.yml`
+  (multi-arch GHCR with SBOM), `codeql.yml`, `dependabot.yml`.
+- Design system: vector `assets/icon.svg` and `cover.svg`, `docs/styles/palette.css`,
+  `.editorconfig`, `.gitattributes` with `linguist-generated` markers, `.github/CODEOWNERS`.
+- `BriError` hierarchy under `services/errors.py` with `HTTP_STATUS` mapping and
+  a FastAPI exception handler that returns a JSON envelope.
+- 13 domain exceptions migrated to subclass BriError.
+- `py.typed` marker; per-module strict `mypy` overrides.
+- Property-based (Hypothesis) tests for public validators and Pydantic round-trips.
+- Snapshot (syrupy) tests for every public response envelope.
+- Contract tests against the live FastAPI app via `TestClient`.
+- mkdocs-material docs site with auto-generated API reference via mkdocstrings.
+- `scripts/build_api_reference.py` to generate per-module reference stubs.
+- CLI entry points: `bri-video-agent`, `bri-mcp`, `bri-ui`.
+- `docker-compose.prod.yml` overlay that pulls published GHCR images.
+- Community files: `CONTRIBUTING.md`, `SECURITY.md`, `GOVERNANCE.md`,
+  `MAINTAINERS.md`, `CODE_OF_CONDUCT.md`, `CHANGELOG.md`, `cliff.toml`.
+- Issue and PR templates under `.github/ISSUE_TEMPLATE/` and
+  `.github/PULL_REQUEST_TEMPLATE.md`.
+
+### Changed
+- `config.py` consults environment variables first; only falls back to
+  Streamlit secrets when running inside a Streamlit runtime.
+- The `config` ↔ `utils.logging_config` circular import is broken by lazy
+  imports in both modules.
+- `MediaUtils.format_timestamp` drops leading zeros on minutes and hours.
+- `FileStore.SUPPORTED_VIDEO_FORMATS` includes `.mpeg`.
+- `VideoProcessingService.verify_video_data` returns a per-category `complete` flag.
+- `services.router.ToolRouter` recognises `the <noun>` as an object hint and
+  adds a multi-tool path for audio queries that also name an object.
+- `pyproject.toml` widens pytest `testpaths` from `["tests/production"]` to `["tests"]`.
+- `[tool.coverage.run].source` includes `tools` and `ui`.
+- `README.md` rewritten to the canonical 11-section template with raster
+  fallbacks and a Quality bar / Uncle Bob section.
+- Logger calls across five modules converted from f-strings to lazy `%-format`.
+- Stray `print()` calls in `config.py` and `tools/image_captioner.py` replaced
+  with proper logger calls.
+
+### Fixed
+- 11 pre-existing test failures across router, config-validation,
+  data-completeness, frontend, and e2e suites brought to passing.
+- Three production-contract tests promoted from skip to passing by adding
+  the missing Quality bar section and raster PNG fallbacks to `README.md`.
+
+### Removed
+- ~70 orphan task summaries and the lowercase `docs/task_*.md` family moved
+  to `docs/archive/tasks/`, `docs/archive/`, and `docs/archive/summaries/`.
+- 32 legacy `scripts/test_*.py` smoke scripts moved to `scripts/archive/legacy_tests/`.
+- 6 `scripts/{apply,patch,demo}_*.py` one-off patch scripts moved to `scripts/archive/builds/`.
+
+### Security
+- Streamlit secrets are now only consulted when `STREAMLIT_RUNTIME_SCRIPT` is set,
+  preventing local `secrets.toml` from leaking into tests and CI.
