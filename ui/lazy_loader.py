@@ -2,6 +2,7 @@
 
 import logging
 from pathlib import Path
+from typing import Callable
 
 import streamlit as st
 
