@@ -80,7 +80,7 @@ class CircuitBreaker:
             if self.state == CircuitState.OPEN:
                 if self._should_attempt_reset():
                     self.state = CircuitState.HALF_OPEN
-                    logger.info(f"Circuit breaker '{self.name}' entering HALF_OPEN state")
+                    logger.info("Circuit breaker '%s' entering HALF_OPEN state", self.name)
                 else:
                     logger.warning(
                         f"Circuit breaker '{self.name}' is OPEN, rejecting request"
@@ -118,7 +118,7 @@ class CircuitBreaker:
             if self.state == CircuitState.OPEN:
                 if self._should_attempt_reset():
                     self.state = CircuitState.HALF_OPEN
-                    logger.info(f"Circuit breaker '{self.name}' entering HALF_OPEN state")
+                    logger.info("Circuit breaker '%s' entering HALF_OPEN state", self.name)
                 else:
                     logger.warning(
                         f"Circuit breaker '{self.name}' is OPEN, rejecting request"
@@ -147,7 +147,7 @@ class CircuitBreaker:
                 if self.success_count >= 2:
                     self.state = CircuitState.CLOSED
                     self.success_count = 0
-                    logger.info(f"Circuit breaker '{self.name}' closed after recovery")
+                    logger.info("Circuit breaker '%s' closed after recovery", self.name)
     
     def _on_failure(self):
         """Handle failed execution."""
@@ -207,7 +207,7 @@ class CircuitBreaker:
             self.failure_count = 0
             self.success_count = 0
             self.last_failure_time = None
-            logger.info(f"Circuit breaker '{self.name}' manually reset")
+            logger.info("Circuit breaker '%s' manually reset", self.name)
 
 
 class CircuitBreakerOpenError(UpstreamError):
@@ -348,7 +348,7 @@ async def retry_with_backoff(
                 )
                 await asyncio.sleep(delay)
             else:
-                logger.error(f"All {max_retries + 1} attempts failed")
+                logger.error("All %s attempts failed", max_retries + 1)
     
     raise last_exception
 
