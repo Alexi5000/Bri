@@ -49,11 +49,23 @@ def _strip_inline_comment(value: str) -> str:
 
 
 def get_config_value(key: str, default: str = "") -> str:
-    """Resolve a configuration value from Streamlit secrets or environment.
+    """Resolve a configuration value from environment, falling back to Streamlit secrets.
 
-    Streamlit secrets are optional because API workers, tests, and CLI scripts do
-    not run inside a Streamlit runtime. Missing secrets are silent by design.
+    Environment variables take precedence so that tests, CLI scripts, and CI
+    jobs can override values without needing a Streamlit runtime. Streamlit
+    secrets are only consulted when the env var is not set AND we are
+    actually running inside a Streamlit runtime (detected via the
+    ``STREAMLIT_RUNTIME_SCRIPT`` env var that Streamlit sets itself).
+
+    Outside Streamlit, importing ``streamlit`` is enough to populate
+    ``st.secrets`` from a developer's local ``.streamlit/secrets.toml``,
+    which would otherwise leak local values into tests and CI.
     """
+    env_value = os.getenv(key)
+    if env_value is not None:
+        return env_value
+    if not os.getenv("STREAMLIT_RUNTIME_SCRIPT"):
+        return default
     try:
         import streamlit as st  # type: ignore
 
@@ -61,8 +73,7 @@ def get_config_value(key: str, default: str = "") -> str:
             return str(st.secrets[key])
     except Exception:
         pass
-
-    return os.getenv(key, default)
+    return default
 
 
 class ConfigMeta(type):
