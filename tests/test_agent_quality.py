@@ -5,6 +5,7 @@ Task 44.4: Test agent response quality and conversation context
 
 import pytest
 import asyncio
+import os
 import re
 from storage.database import Database
 from services.agent import GroqAgent
@@ -113,6 +114,11 @@ class TestAgentQuality:
         """Test that responses include timestamps when relevant."""
         if not processed_video_id:
             pytest.skip("No processed video available")
+        # The test fires three live LLM round-trips and asserts a 90% pass
+        # rate. Without a working API key the run is doomed to flake; the
+        # CI gate should skip rather than fail.
+        if not os.getenv("GROQ_API_KEY"):
+            pytest.skip("GROQ_API_KEY not set; live LLM assertions disabled")
         
         print(f"\n{'='*60}")
         print(f"Testing Timestamp Inclusion")
