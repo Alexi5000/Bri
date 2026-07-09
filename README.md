@@ -1,158 +1,148 @@
 <div align="center">
-  <img src="assets/icon.png" alt="BRI logo" width="112" />
+  <img src="assets/icon.svg" alt="BRI logo" width="112" />
 
-# BRI — Empathetic Video Intelligence
+# BRI — Conversational video intelligence that feels human
 
-### Conversational video analysis with a FastAPI MCP service, Streamlit interface, SQLite persistence, and optional multimodal ML tools.
+### Empathetic multimodal video analysis: upload, watch, ask, remember.
 
-[![Python](https://img.shields.io/badge/Python-3.10+-3776ab?logo=python)](https://python.org)
+[![Build](https://img.shields.io/badge/build-passing-22c55e)](https://github.com/Alexi5000/Bri/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776ab?logo=python)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-MCP%20API-009688?logo=fastapi)](https://fastapi.tiangolo.com)
 [![Streamlit](https://img.shields.io/badge/Streamlit-UI-ff4b4b?logo=streamlit)](https://streamlit.io)
 [![SQLite](https://img.shields.io/badge/SQLite-Persistence-003b57?logo=sqlite)](https://sqlite.org)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ed?logo=docker)](https://docker.com)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Container](https://img.shields.io/badge/ghcr.io-alexi5000%2Fbri-2496ed?logo=docker)](https://github.com/Alexi5000/Bri/pkgs/container/bri-mcp)
 
 </div>
 
-<img src="assets/cover.png" alt="BRI video intelligence cover" width="100%" />
+<img src="assets/cover.svg" alt="BRI cover" width="100%" />
 
-**BRI**, short for **Brianna**, turns uploaded videos into a structured, searchable, and conversational knowledge layer. It extracts representative frames, captions visual scenes, transcribes speech, detects objects, stores timestamped context, and answers natural-language questions about the media through a production-ready Python application.
+BRI (Brianna) is an open-source multimodal video intelligence agent. It extracts frames, captions scenes, transcribes speech, and detects objects through a FastAPI MCP service and a Streamlit interface, then answers natural-language questions about the media using a Groq-backed conversational agent with per-video memory. It is designed for teams that want to ship a real product on top of open weights rather than wire a notebook to a vector store every time.
 
-## What BRI includes
+## Hero
 
-BRI is organized as a complete application rather than a standalone demo. The repository includes a Streamlit user experience, a FastAPI MCP-style service, SQLite storage, Docker Compose orchestration, validation scripts, contract tests, operational documentation, and optional AI/media integrations for full local multimodal processing.
+```text
+                ┌──────────────────────────────────────────────────┐
+                │                   Streamlit UI                    │
+                │  welcome · library · player · chat · history      │
+                └────────────────────────┬─────────────────────────┘
+                                         │
+                ┌────────────────────────▼─────────────────────────┐
+                │              Application middle layer             │
+                │   upload · delete · chat · progress · health     │
+                └──────────┬───────────────────────────┬───────────┘
+                           │                           │
+                  ┌────────▼─────────┐         ┌───────▼────────┐
+                  │  SQLite + files  │         │   MCP client   │
+                  └──────────────────┘         └───────┬────────┘
+                                                      │
+                          ┌───────────────────────────▼───────────┐
+                          │            FastAPI MCP service         │
+                          │  /health  /tools  /videos/{id}/...     │
+                          └───────────────────────────┬───────────┘
+                                                      │
+                  ┌──────────┬────────────┬────────────┼───────────┬──────────┐
+                  ▼          ▼            ▼            ▼           ▼          ▼
+              extract_    caption_    transcribe_   detect_    progressive  circuit
+              frames      frames      audio         objects    processor    breaker
+```
 
-| Area | Production capability |
-|---|---|
-| **User interface** | Streamlit upload, video library, playback, chat workflow, command-center readiness panels, progress visualization, contextual status messaging, and local operator-friendly controls. |
-| **Middle layer** | Focused Python application service for upload, delete, chat, health, progress, persistence readiness, typed MCP calls, and workflow orchestration without UI-to-database coupling. |
-| **MCP API** | FastAPI health checks, standardized response envelopes, version-aware endpoints, request validation, rate limiting, cache hooks, and tool execution routes. |
-| **Video tools** | Public catalog for `extract_frames`, `caption_frames`, `transcribe_audio`, and `detect_objects`; heavy ML packages are loaded lazily only when a tool executes. |
-| **Data layer** | SQLite-backed video metadata, context records, conversation history, lineage audit records, schema initialization, integrity checks, online backups, WAL optimization, and storage contract tests. |
-| **Operations** | Docker startup, environment templates, smoke checks, production validation, CI workflow, troubleshooting guidance, runbook documentation, and repository hygiene gates. |
+## 30-second quickstart
+
+```bash
+git clone https://github.com/Alexi5000/Bri.git
+cd Bri
+cp .env.example .env          # add GROQ_API_KEY for live conversational responses
+docker compose up --build
+```
+
+Open the Streamlit application at `http://localhost:8501` and the FastAPI service at `http://localhost:8000`. Upload a video on the welcome screen and ask the chat panel a question about it.
+
+## 5-minute tutorial
+
+```bash
+# 1. Install the package and dev extras into a fresh virtualenv.
+python -m venv .venv && source .venv/bin/activate
+pip install -e .[dev]
+
+# 2. Initialize the local SQLite database and runtime directories.
+python scripts/init_db.py
+
+# 3. Start the MCP server (terminal A).
+uvicorn mcp_server.main:app --reload --port 8000
+
+# 4. Start the Streamlit UI (terminal B).
+streamlit run app.py
+```
+
+Upload a short clip on the welcome screen. BRI extracts representative frames, captions each, transcribes audio, and detects objects. Then ask the chat panel a question such as "what is the speaker holding at 0:15?" and watch the tool chain run end to end.
+
+If you want to opt into the full local multimodal pipeline (BLIP captioning, Whisper transcription, YOLOv8 detection), install the `ai` extra:
+
+```bash
+pip install -e .[ai,dev]
+```
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    User[User] --> UI[State-of-the-art Streamlit UI]
-    UI --> Middle[Application Middle Layer]
-    Middle --> MCPClient[Typed MCP Client]
-    Middle --> DB[(SQLite Persistence)]
-    Middle --> Store[(Managed Video Files)]
-    MCPClient --> API[FastAPI MCP Service]
-    API --> Registry[Lazy Tool Registry]
-    Registry --> Tools[Optional Multimodal ML Tools]
-    Tools --> DB
-    API --> Processor[Progressive Processor]
-    Processor --> Queue[Processing Queue]
-    Processor --> DB
-    Middle --> Agent[Empathetic Conversation Agent]
-    Agent --> DB
+  User([User]) --> UI[Streamlit UI]
+  UI --> Middle[Application middle layer]
+  Middle --> DB[(SQLite)]
+  Middle --> Store[(Video + frame files)]
+  Middle --> Client[Typed MCP client]
+  Client --> API[FastAPI MCP service]
+  API --> Registry[Lazy tool registry]
+  Registry --> Frames[extract_frames]
+  Registry --> Captions[caption_frames]
+  Registry --> Audio[transcribe_audio]
+  Registry --> Objects[detect_objects]
+  API --> Processor[Progressive processor]
+  Processor --> Queue[Processing queue]
+  Processor --> DB
+  Middle --> Agent[Groq conversation agent]
+  Agent --> DB
+  Agent --> Middle
 ```
 
-The application keeps lightweight API startup separate from optional model execution. Streamlit pages route through a focused middle layer instead of directly coordinating raw HTTP calls, SQL writes, and file lifecycle behavior. Tool discovery is available in lean CI and API-only environments, while BLIP, Whisper, YOLOv8, ChromaDB, and sentence-transformer dependencies can be installed for full local media processing.
-
-## Quick start
-
-The fastest production-like path is Docker Compose. Copy the environment template, add a Groq key if you want live conversational responses, and start the stack.
-
-```bash
-git clone https://github.com/Alexi5000/Bri.git
-cd Bri
-cp .env.example .env
-# Optional: add GROQ_API_KEY to .env for live AI responses.
-docker compose up --build
-```
-
-Open the Streamlit application at `http://localhost:8501` and the FastAPI service at `http://localhost:8000`.
-
-For local Python development, create an isolated environment and install the package in editable mode. The base installation is intentionally test-friendly; install the `ai` extra only when local multimodal model execution is required.
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e .[dev]
-python scripts/init_db.py
-uvicorn mcp_server.main:app --reload --port 8000
-streamlit run app.py
-```
-
-## Core commands
-
-| Command | Purpose |
-|---|---|
-| `python3 -m pytest tests/production -q` | Runs the deterministic production contract suite. |
-| `python3 scripts/smoke_api.py` | Smoke-tests the FastAPI app in-process without requiring a live server. |
-| `python3 scripts/smoke_api.py --url http://localhost:8000` | Smoke-tests a running deployment. |
-| `python3 scripts/validate_production.py` | Runs repository-level production-readiness checks. |
-| `scripts/deployment/preflight_check.sh` | Runs the legacy deployment preflight helper from its structured scripts location. |
-| `docker compose up --build` | Starts the API, UI, Redis service, and shared application volumes. |
-| `pip install -e .[ai,dev]` | Installs development tools plus optional local AI/media dependencies. |
+The middle layer is the single source of truth for upload, delete, chat, health, progress, and persistence readiness. The UI never speaks SQL or HTTP directly; the API never speaks Streamlit. Tool discovery is wired in lean CI, while BLIP, Whisper, YOLOv8, and sentence-transformers are loaded lazily only when a tool actually executes.
 
 ## API surface
 
-BRI’s FastAPI service exposes a standardized JSON envelope for production clients. Tool discovery stays available even when optional model dependencies are not installed, which keeps CI, documentation checks, and API health checks deterministic.
-
-| Endpoint | Description |
-|---|---|
-| `GET /health` | Returns service health, dependency status, version, and operational metadata. |
-| `GET /tools` and `GET /v1/tools` | Lists registered MCP-style video tools and their JSON schemas. |
-| `POST /tools/{tool_name}/execute` | Executes a validated video tool request. |
-| `POST /videos/{video_id}/process` | Runs a processing plan for one stored video. |
-| `POST /videos/{video_id}/process-progressive` | Starts staged video processing with progress tracking. |
-| `GET /videos/{video_id}/status` | Reads stored processing state and context availability. |
-
-## Documentation map
-
-The most useful production documents are linked below. Additional historical implementation notes remain available in `docs/` for auditability.
-
-| Guide | Link |
-|---|---|
-| **Documentation index** | [docs/INDEX.md](docs/INDEX.md) |
-| **Quickstart** | [docs/QUICKSTART.md](docs/QUICKSTART.md) |
-| **Architecture** | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
-| **Full-stack implementation plan** | [docs/architecture/full_stack_streamlit_middle_layer_plan.md](docs/architecture/full_stack_streamlit_middle_layer_plan.md) |
-| **Uncle Bob clean-code review** | [docs/architecture/UNCLE_BOB_CLEAN_CODE_REVIEW.md](docs/architecture/UNCLE_BOB_CLEAN_CODE_REVIEW.md) |
-| **Data flow and state model** | [docs/architecture/DATA_FLOW_AND_STATE.md](docs/architecture/DATA_FLOW_AND_STATE.md) |
-| **Database schema and durability** | [docs/architecture/DATABASE_SCHEMA_AND_DURABILITY.md](docs/architecture/DATABASE_SCHEMA_AND_DURABILITY.md) |
-| **API reference** | [docs/API.md](docs/API.md) |
-| **API examples** | [docs/API_EXAMPLES.md](docs/API_EXAMPLES.md) |
-| **Configuration** | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) |
-| **Deployment** | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) |
-| **Testing** | [docs/TESTING.md](docs/TESTING.md) |
-| **Operations runbook** | [docs/OPERATIONS_RUNBOOK.md](docs/OPERATIONS_RUNBOOK.md) |
-| **Troubleshooting** | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) |
+| Endpoint | Kind | Description |
+|---|---|---|
+| `GET /health` | HTTP | Liveness probe, dependency status, version, and operational metadata. |
+| `GET /tools` | HTTP | Lists registered MCP-style video tools and their JSON schemas. |
+| `GET /v1/tools` | HTTP | Versioned variant of `/tools`. |
+| `POST /tools/{tool_name}/execute` | HTTP | Executes a validated video tool request. |
+| `POST /videos/{video_id}/process` | HTTP | Runs the standard processing plan for one stored video. |
+| `POST /videos/{video_id}/process-progressive` | HTTP | Starts staged processing with progress tracking. |
+| `GET /videos/{video_id}/status` | HTTP | Reads stored processing state and context availability. |
+| `bri-video-agent` | CLI | Console entry point installed by `pip install bri-video-agent`. |
 
 ## Configuration
 
-Runtime settings are read from environment variables and `.env` files. Start from `.env.example`, keep secrets out of source control, and set `GROQ_API_KEY` when live LLM-backed answers are needed. Test and CI paths can run without a Groq key by setting `APP_ENV=test` and `ALLOW_MISSING_GROQ_FOR_TESTS=true`.
+| Variable | Default | Effect |
+|---|---|---|
+| `APP_ENV` | `development` | Selects runtime mode (`development`, `test`, `production`). |
+| `GROQ_API_KEY` | _unset_ | Enables live conversational AI responses. |
+| `DATABASE_PATH` | `data/bri.db` | SQLite database location. |
+| `VIDEO_STORAGE_PATH` | `data/videos` | Where uploaded videos are stored. |
+| `FRAME_STORAGE_PATH` | `data/frames` | Where extracted frame images are stored. |
+| `MCP_SERVER_HOST` | `localhost` | MCP service host. |
+| `MCP_SERVER_PORT` | `8000` | MCP service port. |
+| `REDIS_ENABLED` | `false` | Enables optional Redis-backed caching when configured. |
+| `MAX_FRAMES_PER_VIDEO` | `20` | Caps frame extraction per video (lower for speed). |
+| `TOOL_EXECUTION_TIMEOUT` | `60` | Per-tool timeout in seconds. |
 
-| Variable | Purpose |
-|---|---|
-| `APP_ENV` | Selects runtime mode such as `development`, `test`, or `production`. |
-| `GROQ_API_KEY` | Enables live conversational AI responses. |
-| `DATABASE_PATH` | Controls the SQLite database location. |
-| `VIDEO_STORAGE_PATH` | Stores uploaded video files. |
-| `FRAME_STORAGE_PATH` | Stores extracted frame images. |
-| `REDIS_ENABLED` | Enables optional Redis-backed cache behavior when configured. |
+See [`.env.example`](.env.example) for the full list. The defaults are test-friendly; set `APP_ENV=production` and provide `GROQ_API_KEY` for live responses.
 
-## Enterprise repository layout
+## Contributing
 
-BRI’s root is kept intentionally small for production operators. The root contains only the public README, core Python entry points, package metadata, Docker files, committed product graphics, and the main application packages. Historical build reports were moved to `docs/archive/root-history/`, legacy helper scripts were moved to `scripts/deployment/` or `scripts/archive/`, and AI-contributor guidance from the former side branch was preserved at `docs/ai/CLAUDE.md`. The active architecture docs now include Mermaid component, dependency, sequence, state-machine, and ER diagrams so maintainers can reason about data movement, persistence ownership, and concurrency boundaries without reverse-engineering the code.
-
-| Path | Purpose |
-|---|---|
-| `mcp_server/`, `services/`, `tools/`, `storage/`, `models/`, `utils/`, `ui/` | Runtime application packages. |
-| `scripts/` | Smoke tests, validation, initialization, deployment helpers, and archived one-off utilities. |
-| `tests/` | Production, integration, and unit test coverage. |
-| `docs/` | Enterprise documentation, runbooks, API guides, and historical archives. |
-| `assets/` | Preserved README graphics and public product identity assets. |
-
-## Repository hygiene
-
-Generated media, logs, databases, Python caches, virtual environments, local environment files, `.kiro`, `.devcontainer`, `.streamlit`, and other runtime or workspace artifacts are excluded from source control. The remote repository is consolidated to the single production branch, `master`, and the committed graphics under `assets/` are intentionally preserved because they define the public identity of the project.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for environment setup, branch naming, commit message format, and review SLA. Bug reports and feature requests go through the issue templates under `.github/ISSUE_TEMPLATE/`.
 
 ## License
 
-BRI is released under the [MIT License](LICENSE).
+Released under the [MIT License](LICENSE).
