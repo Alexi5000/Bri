@@ -1,5 +1,6 @@
 <div align="center">
   <img src="assets/icon.svg" alt="BRI logo" width="112" />
+  <img src="assets/icon.png" alt="BRI logo (raster fallback)" width="112" />
 
 # BRI — Conversational video intelligence that feels human
 
@@ -17,6 +18,7 @@
 </div>
 
 <img src="assets/cover.svg" alt="BRI cover" width="100%" />
+<img src="assets/cover.png" alt="BRI cover (raster fallback)" width="100%" />
 
 BRI (Brianna) is an open-source multimodal video intelligence agent. It extracts frames, captions scenes, transcribes speech, and detects objects through a FastAPI MCP service and a Streamlit interface, then answers natural-language questions about the media using a Groq-backed conversational agent with per-video memory. It is designed for teams that want to ship a real product on top of open weights rather than wire a notebook to a vector store every time.
 
@@ -138,6 +140,31 @@ The middle layer is the single source of truth for upload, delete, chat, health,
 | `TOOL_EXECUTION_TIMEOUT` | `60` | Per-tool timeout in seconds. |
 
 See [`.env.example`](.env.example) for the full list. The defaults are test-friendly; set `APP_ENV=production` and provide `GROQ_API_KEY` for live responses.
+
+## Documentation
+
+| Guide | Link |
+|---|---|
+| Architecture | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
+| API reference | [docs/API.md](docs/API.md) |
+| Testing strategy | [docs/TESTING.md](docs/TESTING.md) |
+| Configuration reference | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) |
+| Deployment guide | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) |
+| Operations runbook | [docs/OPERATIONS_RUNBOOK.md](docs/OPERATIONS_RUNBOOK.md) |
+| Troubleshooting | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) |
+
+## Quality bar
+
+BRI follows the **Uncle Bob** clean-code review documented in
+[`docs/architecture/UNCLE_BOB_CLEAN_CODE_REVIEW.md`](docs/architecture/UNCLE_BOB_CLEAN_CODE_REVIEW.md).
+Every module in `mcp_server/`, `services/`, `tools/`, `storage/`, `ui/`,
+`models/`, and `utils/` declares its responsibility in a module-level
+docstring; every public function declares its contract in a one-line
+docstring; every exception subclasses `services.errors.BriError`; every
+logger call uses lazy `%-format`; every public API surface is generated
+from docstrings by `mkdocstrings` and deployed with the release. The
+data-flow and database-schema reasoning lives alongside the code in the
+`docs/architecture/` directory.
 
 ## Contributing
 

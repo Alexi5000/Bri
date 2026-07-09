@@ -99,10 +99,23 @@ class ToolRouter:
             # Audio questions → Use transcripts
             tools_needed.append('transcripts')
             logger.debug("Audio query detected: using transcripts")
+
+        elif query_type == 'audio_with_objects':
+            # Audio question that also names an object → use both.
+            tools_needed.extend(['transcripts', 'objects'])
+            object_name = self._extract_object_name(query_lower)
+            if object_name:
+                parameters['object_name'] = object_name
+            logger.debug("Audio+object query detected: using transcripts + objects")
         
         elif query_type == 'temporal':
-            # Temporal questions → Use all data with timestamp filtering
+            # Temporal questions → Use all data with timestamp filtering.
+            # If the user also names a specific object, capture it for the
+            # detector tool downstream.
             tools_needed.extend(['captions', 'transcripts', 'objects'])
+            object_name = self._extract_object_name(query_lower)
+            if object_name:
+                parameters['object_name'] = object_name
             logger.debug("Temporal query detected: using all data with timestamp filtering")
         
         elif query_type == 'object_search':
@@ -165,8 +178,11 @@ class ToolRouter:
             if self.extract_timestamp(query_lower) is not None:
                 return 'temporal'
         
-        # Audio queries
+        # Audio queries — but if the user also names a concrete object we still
+        # need the object detector, so route to a multi-tool plan downstream.
         if any(kw in query_lower for kw in self.TRANSCRIPT_KEYWORDS):
+            if self._extract_object_name(query_lower):
+                return 'audio_with_objects'
             return 'audio'
         
         # Object search queries
@@ -320,6 +336,10 @@ class ToolRouter:
             r'(?:show|find)\s+me\s+all\s+(?:the\s+)?(\w+)',  # "show me all the dogs"
             r'(?:show|find)\s+all\s+(?:the\s+)?(\w+)',       # "show all the dogs"
             r'(?:find|locate|detect)\s+(?:the\s+)?(\w+)',    # "find the car"
+            # Generic fallback: "the <word>" anywhere in the sentence counts
+            # when the word is not a stop word. This catches questions like
+            # "what did they say when the car appeared?".
+            r'\b(?:the|a|an)\s+(\w+)',
         ]
         
         for pattern in object_patterns:
@@ -327,8 +347,13 @@ class ToolRouter:
             if match:
                 object_name = match.group(1)
                 # Filter out common words that aren't objects
-                stop_words = ['the', 'a', 'an', 'this', 'that', 'these', 'those', 
-                             'me', 'all', 'some', 'any', 'every', 'each', 'video']
+                stop_words = [
+                    'the', 'a', 'an', 'this', 'that', 'these', 'those',
+                    'me', 'all', 'some', 'any', 'every', 'each', 'video',
+                    'scene', 'scenes', 'frame', 'frames', 'shot', 'shots',
+                    'moment', 'time', 'part', 'clip', 'video',
+                    'happening', 'going', 'doing', 'said', 'say', 'says',
+                ]
                 if object_name not in stop_words:
                     return object_name
         
