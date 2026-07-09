@@ -1,0 +1,53 @@
+name: Feature request
+description: Propose a new capability for BRI.
+labels: ["enhancement"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Feature requests get the most traction when they include the
+        problem they solve, not just the proposed solution.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user problem does this address?
+      placeholder: |
+        Operators want to retrain the captioner on their own dataset
+        without leaving the BRI UI.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Sketch of the desired behaviour.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other approaches did you weigh and why this one?
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: |
+        Which packages does this touch? Does it require a new dependency?
+        Does it change the public API or storage schema?
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Self-check
+      options:
+        - label: I searched the issue tracker for an existing request.
+        - label: I am willing to submit a PR for this.
+        - label: I have read `CONTRIBUTING.md`.

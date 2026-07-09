@@ -1,0 +1,45 @@
+name: Question
+description: Ask the maintainers how to use, deploy, or extend BRI.
+labels: ["question"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Questions get answered fastest when they include the exact
+        command you ran and the output you saw.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+      description: A precise, specific question.
+      validations:
+        required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: |
+        What you have already tried, what docs you read, what you
+        expected to find.
+      placeholder: |
+        I read docs/DEPLOYMENT.md but couldn't find how to point the
+        UI at a remote MCP server.
+
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: |
+        OS, Python version, BRI commit SHA.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Self-check
+      options:
+        - label: I searched the issue tracker and Discussions.
+        - label: I read the relevant docs page first.

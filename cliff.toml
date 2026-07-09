@@ -1,0 +1,48 @@
+# git-cliff configuration. Used by .github/workflows/release.yml to generate
+# release notes from Conventional Commits between tags.
+#
+# https://git-cliff.org/docs/configuration
+
+[changelog]
+header = """
+# Changelog
+
+All notable changes to BRI are documented here. Dates are ISO 8601.
+"""
+body = """
+{% if version %}\
+## [{{ version }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+
+{% else %}\
+## [unreleased]
+
+{% endif %}\
+{% for group, commits in commits | filter(attribute="merge_commit", value=false) | group_by(attribute="group") %}
+### {{ group | upper_first }}
+
+{% for commit in commits %}
+- {{ commit.message | split(pat="\n") | first | upper_first | trim }} ({{ commit.id | truncate(length=7, end="") }})
+{% endfor %}
+{% endfor %}
+"""
+trim = true
+postprocessors = []
+
+[git]
+conventional_commits = true
+filter_unconventional = true
+split_commits = false
+protect_breaking_commits = true
+filter_commits = false
+tag_pattern = "v[0-9]+\\.[0-9]+\\.[0-9]+"
+skip_tags = "v0\\.1\\.0-beta\\.1"
+topo_order = false
+sort_commits = "newest"
+
+[github]
+owner = "Alexi5000"
+repo = "Bri"
+
+[bump]
+features_always_bump_minor = false
+breaking_bump_major = false
