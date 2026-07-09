@@ -1,0 +1,66 @@
+# .github/dependabot.yml
+# Weekly dependency updates for pip, Docker, and GitHub Actions.
+# Limits PR churn; groups minor and patch updates; opens separate majors
+# so reviewers see the breaking change clearly.
+
+version: 2
+enable-beta-ecosystems: false
+
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "America/Los_Angeles"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "python"
+    groups:
+      minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      - dependency-name: "openai-whisper"
+        # Pinned by date; manual upgrade to verify model compatibility.
+      - dependency-name: "torch"
+        # Heavy upgrade; coordinate with CUDA matrix.
+
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "06:00"
+      timezone: "America/Los_Angeles"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "docker"
+    ignore:
+      - dependency-name: "python"
+        # Pinned to 3.11-slim-bookworm; bookworm is required for OpenCV libs.
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "06:00"
+      timezone: "America/Los_Angeles"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "ci"
+    groups:
+      actions-minor-and-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
