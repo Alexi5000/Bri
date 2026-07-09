@@ -59,7 +59,7 @@ include = ["models*", "services*", "storage*", "tools*", "utils*", "mcp_server*"
 exclude = ["tests*", "scripts*"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests/production"]
+testpaths = ["tests"]
 python_files = ["test_*.py"]
 norecursedirs = ["data", "logs", ".git", ".venv", "venv"]
 asyncio_mode = "auto"
@@ -79,5 +79,15 @@ select = ["E", "F", "I", "UP", "B"]
 ignore = ["E501"]
 
 [tool.coverage.run]
-source = ["config", "models", "services", "storage", "mcp_server"]
+source = ["config", "models", "services", "storage", "mcp_server", "tools", "ui"]
 omit = ["tests/*", "scripts/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+exclude_lines = [
+  "pragma: no cover",
+  "raise NotImplementedError",
+  "if TYPE_CHECKING:",
+  "if __name__ == .__main__.:",
+]
