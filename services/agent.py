@@ -1460,6 +1460,7 @@ class AgentService:
         self.memory = memory
 
     def build_prompt(self, question: str, context: dict[str, object] | None = None) -> str:
+        """Compose the system+user prompt for a single LLM call."""
         context = context or {}
         context_lines = [f"{key}: {value}" for key, value in sorted(context.items())]
         context_block = "\n".join(context_lines) if context_lines else "No processed context is available yet."
@@ -1476,6 +1477,7 @@ class AgentService:
         question: str,
         context: dict[str, object] | None = None,
     ) -> dict[str, object]:
+        """Return the agent's structured response for a question about one video."""
         prompt = self.build_prompt(question, context)
         if self.groq_client is None:
             summary = (context or {}).get("summary") or "the available video context"
