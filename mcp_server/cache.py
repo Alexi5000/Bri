@@ -30,12 +30,12 @@ class CacheManager:
                 )
                 # Test connection
                 self.redis_client.ping()
-                logger.info(f"Redis cache enabled with TTL: {Config.CACHE_TTL_HOURS}h")
+                logger.info("Redis cache enabled with TTL: %sh", Config.CACHE_TTL_HOURS)
             except ImportError:
                 logger.warning("Redis library not installed. Caching disabled.")
                 self.enabled = False
             except Exception as e:
-                logger.warning(f"Failed to connect to Redis: {str(e)}. Caching disabled.")
+                logger.warning("Failed to connect to Redis: %s. Caching disabled.", str(e))
                 self.enabled = False
         else:
             logger.info("Redis caching disabled by configuration")
@@ -84,15 +84,15 @@ class CacheManager:
         try:
             value = self.redis_client.get(key)
             if value is not None:
-                logger.debug(f"Cache hit: {key}")
+                logger.debug("Cache hit: %s", key)
                 perf_logger.log_cache_hit(key, hit=True)
                 return json.loads(value)
             else:
-                logger.debug(f"Cache miss: {key}")
+                logger.debug("Cache miss: %s", key)
                 perf_logger.log_cache_hit(key, hit=False)
                 return None
         except Exception as e:
-            logger.error(f"Cache get failed for key {key}: {str(e)}")
+            logger.error("Cache get failed for key %s: %s", key, str(e))
             return None
     
     def set(self, key: str, value: Any) -> bool:
@@ -120,10 +120,10 @@ class CacheManager:
                 serialized_value
             )
             
-            logger.debug(f"Cache set: {key} (TTL: {self.ttl})")
+            logger.debug("Cache set: %s (TTL: %s)", key, self.ttl)
             return True
         except Exception as e:
-            logger.error(f"Cache set failed for key {key}: {str(e)}")
+            logger.error("Cache set failed for key %s: %s", key, str(e))
             return False
     
     def delete(self, key: str) -> bool:
@@ -141,10 +141,10 @@ class CacheManager:
         
         try:
             self.redis_client.delete(key)
-            logger.debug(f"Cache delete: {key}")
+            logger.debug("Cache delete: %s", key)
             return True
         except Exception as e:
-            logger.error(f"Cache delete failed for key {key}: {str(e)}")
+            logger.error("Cache delete failed for key %s: %s", key, str(e))
             return False
     
     def clear_video_cache(self, video_id: str) -> int:
@@ -167,13 +167,13 @@ class CacheManager:
             
             if keys:
                 deleted = self.redis_client.delete(*keys)
-                logger.info(f"Cleared {deleted} cache entries for video {video_id}")
+                logger.info("Cleared %s cache entries for video %s", deleted, video_id)
                 return deleted
             else:
-                logger.debug(f"No cache entries found for video {video_id}")
+                logger.debug("No cache entries found for video %s", video_id)
                 return 0
         except Exception as e:
-            logger.error(f"Failed to clear cache for video {video_id}: {str(e)}")
+            logger.error("Failed to clear cache for video %s: %s", video_id, str(e))
             return 0
     
     def clear_all(self) -> bool:
@@ -193,13 +193,13 @@ class CacheManager:
             
             if keys:
                 deleted = self.redis_client.delete(*keys)
-                logger.info(f"Cleared {deleted} total cache entries")
+                logger.info("Cleared %s total cache entries", deleted)
             else:
                 logger.info("No cache entries to clear")
             
             return True
         except Exception as e:
-            logger.error(f"Failed to clear all cache: {str(e)}")
+            logger.error("Failed to clear all cache: %s", str(e))
             return False
     
     def get_stats(self) -> Dict[str, Any]:
@@ -231,7 +231,7 @@ class CacheManager:
                 "ttl_hours": Config.CACHE_TTL_HOURS
             }
         except Exception as e:
-            logger.error(f"Failed to get cache stats: {str(e)}")
+            logger.error("Failed to get cache stats: %s", str(e))
             return {
                 "enabled": True,
                 "error": str(e)
@@ -244,4 +244,4 @@ class CacheManager:
                 self.redis_client.close()
                 logger.info("Redis connection closed")
             except Exception as e:
-                logger.error(f"Failed to close Redis connection: {str(e)}")
+                logger.error("Failed to close Redis connection: %s", str(e))
