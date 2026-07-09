@@ -1,0 +1,64 @@
+# .gitattributes — drive GitHub language stats and line-ending policy.
+
+# Python: enforce LF, normalize on checkout.
+*.py          text eol=lf
+*.pyi         text eol=lf
+
+# Shell scripts: LF only (CRLF breaks them).
+*.sh          text eol=lf
+
+# Windows batch: CRLF is required.
+*.bat         text eol=crlf
+*.cmd         text eol=crlf
+
+# Markdown / docs: LF.
+*.md          text eol=lf
+
+# Config: LF.
+*.toml        text eol=lf
+*.yml         text eol=lf
+*.yaml        text eol=lf
+*.json        text eol=lf
+*.ini         text eol=lf
+*.cfg         text eol=lf
+
+# Binary by extension (defensive). SVGs are text so diffs render.
+*.png         binary
+*.jpg         binary
+*.jpeg        binary
+*.gif         binary
+*.ico         binary
+*.webp        binary
+*.svg         text
+*.woff        binary
+*.woff2       binary
+
+# ---------------------------------------------------------------------------
+# linguist-generated — directories that hold generated artifacts.
+# These paths should never contribute to GitHub language statistics
+# or code-search results.
+# ---------------------------------------------------------------------------
+data/**        linguist-generated=true linguist-vendored=true
+logs/**        linguist-generated=true linguist-vendored=true
+models/**      linguist-generated=true
+coverage/**    linguist-generated=true linguist-vendored=true
+htmlcov/**     linguist-generated=true linguist-vendored=true
+docs/build/**  linguist-generated=true linguist-vendored=true
+docs/site/**   linguist-generated=true linguist-vendored=true
+site/**        linguist-generated=true linguist-vendored=true
+dist/**        linguist-generated=true linguist-vendored=true
+build/**       linguist-generated=true linguist-vendored=true
+
+# Generated Python bytecode and caches.
+__pycache__/** linguist-generated=true linguist-vendored=true
+*.pyc          binary
+*.pyo          binary
+*.pyd          binary
+*.egg-info/**  linguist-generated=true linguist-vendored=true
+
+# Tool caches.
+.pytest_cache/**    linguist-generated=true linguist-vendored=true
+.mypy_cache/**      linguist-generated=true linguist-vendored=true
+.ruff_cache/**      linguist-generated=true linguist-vendored=true
+.coverage           linguist-generated=true
+coverage.xml        linguist-generated=true
