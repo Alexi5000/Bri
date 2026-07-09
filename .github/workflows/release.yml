@@ -1,0 +1,129 @@
+# .github/workflows/release.yml
+# Multi-arch image publish to GHCR + auto-generated release notes on tag v*.
+
+name: release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release (e.g. v1.1.0)"
+        required: true
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_OWNER: alexi5000
+
+jobs:
+  build-images:
+    name: build + push images (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: mcp
+            dockerfile: Dockerfile.mcp
+            image: bri-mcp
+          - target: ui
+            dockerfile: Dockerfile.ui
+            image: bri-ui
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version
+        id: version
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            VERSION="${GITHUB_REF_NAME}"
+          else
+            VERSION="$(date +%Y%m%d-%H%M%S)-${GITHUB_SHA::7}"
+          fi
+          echo "VERSION=${VERSION}" >> "${GITHUB_OUTPUT}"
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ matrix.image }}:${{ steps.version.outputs.VERSION }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/${{ matrix.image }}:latest
+          labels: |
+            org.opencontainers.image.title=BRI ${{ matrix.image }}
+            org.opencontainers.image.source=https://github.com/Alexi5000/Bri
+            org.opencontainers.image.version=${{ steps.version.outputs.VERSION }}
+          sbom: true
+          provenance: true
+
+  generate-notes:
+    name: generate release notes
+    needs: build-images
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Conventional Changelog
+        if: hashFiles('cliff.toml') != ''
+        uses: oras-project/git-cliff-action@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          config: cliff.toml
+          args: --latest --strip header
+        id: cliff
+
+      - name: Fallback release body
+        if: hashFiles('cliff.toml') == ''
+        run: |
+          {
+            echo "## What's Changed"
+            echo ""
+            echo "Full diff since previous tag:"
+            echo ""
+            echo '```'
+            git log --no-merges --pretty=format:'- %s (%h)' "$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || HEAD~10)..HEAD" 2>/dev/null || true
+            echo ""
+            echo '```'
+          } >> "$GITHUB_OUTPUT"
+          echo "content<<EOF" >> "$GITHUB_OUTPUT"
+          cat "${RUNNER_TEMP:-/tmp}/release-body.md" >> "$GITHUB_OUTPUT" 2>/dev/null || true
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          generate_release_notes: false
+          body: ${{ steps.cliff.outputs.content || 'See commit history since previous tag.' }}
+          files: |
+            LICENSE
+            README.md
