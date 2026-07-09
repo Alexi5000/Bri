@@ -96,9 +96,13 @@ jobs:
         env:
           APP_ENV: test
           ALLOW_MISSING_GROQ_FOR_TESTS: "true"
+        # Initialise a local SQLite database so storage-touching tests
+        # find their tables; tests that need a live LLM skip themselves
+        # via Config.GROQ_API_KEY being unset.
         # Single-line pytest invocation; PowerShell on windows-latest
         # chokes on bash-style backslash continuations.
         run: >
+          python scripts/init_db.py &&
           pytest tests/
           --cov=mcp_server --cov=services --cov=tools --cov=storage --cov=ui --cov=models
           --cov-report=xml --cov-report=term-missing
