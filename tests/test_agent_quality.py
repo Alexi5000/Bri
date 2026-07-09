@@ -15,6 +15,21 @@ from storage.database import Database
 class TestAgentQuality:
     """Test agent response quality."""
 
+    @pytest.fixture(autouse=True)
+    def _require_groq_key(self):
+        """Skip the whole class when no live GROQ_API_KEY is configured.
+
+        Every test in this class instantiates :class:`GroqAgent`, which
+        validates the API key at __init__ time. Without a key the
+        constructor raises and every test in the class errors. Skip the
+        whole class once instead of guarding each test in isolation.
+        """
+        from config import Config
+
+        Config.reset_cache()
+        if not Config.GROQ_API_KEY or Config.ALLOW_MISSING_GROQ_FOR_TESTS:
+            pytest.skip("No live GROQ_API_KEY configured for this run")
+
     @pytest.fixture
     def db(self):
         """Get database connection."""
@@ -113,15 +128,8 @@ class TestAgentQuality:
         """Test that responses include timestamps when relevant."""
         if not processed_video_id:
             pytest.skip("No processed video available")
-        # The test fires three live LLM round-trips and asserts a 90% pass
-        # rate. Without a working API key the run is doomed to flake; the
-        # CI gate should skip rather than fail. ``ALLOW_MISSING_GROQ_FOR_TESTS``
-        # is the canonical opt-in that production config respects.
-        from config import Config
-
-        Config.reset_cache()
-        if not Config.GROQ_API_KEY or Config.ALLOW_MISSING_GROQ_FOR_TESTS:
-            pytest.skip("No live GROQ_API_KEY configured for live LLM assertions")
+        # The GROQ_API_KEY gate is enforced by the autouse class fixture;
+        # no per-test skip is needed.
 
         print(f"\n{'=' * 60}")
         print("Testing Timestamp Inclusion")
