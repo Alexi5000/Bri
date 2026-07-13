@@ -98,7 +98,7 @@ pillow==12.3.0
     #   streamlit
 protobuf==7.35.1
     # via streamlit
-pyarrow==24.0.0
+pyarrow==25.0.0
     # via streamlit
 pydantic==2.13.4
     # via
