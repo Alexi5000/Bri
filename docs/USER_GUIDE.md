@@ -325,7 +325,7 @@ If you want to start fresh:
 If you encounter issues not covered in this guide:
 
 1. **Check the README**: See [README.md](../README.md) for setup and configuration help
-2. **Review Requirements**: See [requirements.md](../.kiro/specs/bri-video-agent/requirements.md) for feature details
+2. **Review Requirements**: See [the feature overview](../README.md) for feature details
 3. **Check Logs**: Look at the application logs for error messages
 4. **Report Issues**: Open a GitHub issue with details about your problem
 

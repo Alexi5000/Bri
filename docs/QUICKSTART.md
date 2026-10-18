@@ -111,8 +111,8 @@ Navigate to: `http://localhost:8501`
 ## Need Help?
 
 - Run `python scripts/validate_setup.py` to diagnose issues
-- Check the [Requirements](.kiro/specs/bri-video-agent/requirements.md) document
-- Review the [Design](.kiro/specs/bri-video-agent/design.md) document
+- Check the [feature overview](../README.md) document
+- Review the [architecture](ARCHITECTURE.md) document
 
 ---
 
