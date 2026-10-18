@@ -257,8 +257,8 @@ class Config(metaclass=ConfigMeta):
                 logger.warning("Configuration warning: %s", warning)
 
     @classmethod
-    def as_dict(cls, *, include_secrets: bool = False) -> dict[str, Any]:
-        values = {
+    def _public_values(cls) -> dict[str, Any]:
+        return {
             "app_name": cls.APP_NAME,
             "app_env": cls.APP_ENV,
             "app_version": cls.APP_VERSION,
@@ -274,13 +274,17 @@ class Config(metaclass=ConfigMeta):
             "request_timeout": cls.REQUEST_TIMEOUT,
             "log_level": cls.LOG_LEVEL,
         }
+
+    @classmethod
+    def as_dict(cls, *, include_secrets: bool = False) -> dict[str, Any]:
+        values = cls._public_values()
         if include_secrets:
             values["groq_api_key"] = cls.GROQ_API_KEY
         return values
 
     @classmethod
     def display_config(cls) -> None:
-        masked = cls.as_dict(include_secrets=False)
+        masked = cls._public_values()
         logger = _get_logger()
         for key, value in masked.items():
             logger.info("%s: %s", key, value)
