@@ -280,7 +280,7 @@ async def list_tools(request: Request, version: APIVersion = Depends(get_api_ver
         logger.error("Failed to list tools: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list tools: {str(e)}",
+            detail="Failed to list tools",
         )
 
 
@@ -442,7 +442,7 @@ async def execute_tool(
             success=False,
             data={
                 "status": "error",
-                "error": str(e),
+                "error": "Tool execution failed",
                 "cached": False,
                 "tool_name": tool_name,
                 "video_id": exec_request.video_id,
@@ -584,7 +584,7 @@ async def process_video(
         logger.error("Video processing failed: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Video processing failed: {str(e)}",
+            detail="Video processing failed",
         )
 
 
@@ -661,7 +661,7 @@ async def get_cache_stats():
         logger.error("Failed to get cache stats: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get cache stats: {str(e)}",
+            detail="Failed to get cache stats",
         )
 
 
@@ -684,7 +684,7 @@ async def clear_video_cache(video_id: str):
         logger.error("Failed to clear video cache: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to clear video cache: {str(e)}",
+            detail="Failed to clear video cache",
         )
 
 
@@ -707,7 +707,7 @@ async def clear_all_cache():
         logger.error("Failed to clear cache: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to clear cache: {str(e)}",
+            detail="Failed to clear cache",
         )
 
 
@@ -763,7 +763,7 @@ async def get_video_data_status(video_id: str, request: Request):
         logger.error("Failed to get video status: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get video status: {str(e)}",
+            detail="Failed to get video status",
         )
 
 
@@ -847,7 +847,7 @@ async def process_video_progressive(
         logger.error("Failed to queue progressive processing: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to queue processing: {str(e)}",
+            detail="Failed to queue processing",
         )
 
 
@@ -910,7 +910,7 @@ async def get_processing_progress(video_id: str, request: Request):
         logger.error("Failed to get processing progress: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get progress: {str(e)}",
+            detail="Failed to get progress",
         )
 
 
@@ -1007,7 +1007,7 @@ async def get_queue_status():
         logger.error("Failed to get queue status: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get queue status: {str(e)}",
+            detail="Failed to get queue status",
         )
 
 
@@ -1041,7 +1041,7 @@ async def get_job_status(video_id: str):
         logger.error("Failed to get job status: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get job status: {str(e)}",
+            detail="Failed to get job status",
         )
 
 
@@ -1071,7 +1071,11 @@ async def global_exception_handler(request, exc):
     logger.error("Unhandled exception: %s", str(exc), exc_info=True)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"status": "error", "detail": "An unexpected error occurred", "error": str(exc)},
+        content={
+            "status": "error",
+            "detail": "An unexpected error occurred",
+            "error": "Internal server error",
+        },
     )
 
 

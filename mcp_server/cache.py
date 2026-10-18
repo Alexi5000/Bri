@@ -218,7 +218,7 @@ class CacheManager:
             }
         except Exception as e:
             logger.error("Failed to get cache stats: %s", str(e))
-            return {"enabled": True, "error": str(e)}
+            return {"enabled": True, "error": "Cache statistics unavailable"}
 
     def close(self) -> None:
         """Close Redis connection."""
