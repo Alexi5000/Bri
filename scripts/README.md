@@ -5,15 +5,18 @@ This directory contains utility scripts for development, deployment, and databas
 ## Development Scripts
 
 ### `start_dev.sh` (Linux/Mac)
+
 Starts BRI in development mode with all services running locally.
 
 **Usage:**
+
 ```bash
 chmod +x scripts/start_dev.sh
 ./scripts/start_dev.sh
 ```
 
 **What it does:**
+
 - Validates environment variables
 - Creates necessary directories
 - Initializes database
@@ -22,9 +25,11 @@ chmod +x scripts/start_dev.sh
 - Starts Streamlit UI on port 8501
 
 ### `start_dev.bat` (Windows)
+
 Windows version of the development startup script.
 
 **Usage:**
+
 ```cmd
 scripts\start_dev.bat
 ```
@@ -32,15 +37,18 @@ scripts\start_dev.bat
 ## Production Scripts
 
 ### `start_prod.sh`
+
 Starts BRI in production mode using Docker Compose.
 
 **Usage:**
+
 ```bash
 chmod +x scripts/start_prod.sh
 ./scripts/start_prod.sh
 ```
 
 **What it does:**
+
 - Validates environment variables
 - Creates data directories
 - Builds Docker images
@@ -49,9 +57,11 @@ chmod +x scripts/start_prod.sh
 - Displays service URLs
 
 ### `stop_prod.sh`
+
 Stops all production Docker services.
 
 **Usage:**
+
 ```bash
 chmod +x scripts/stop_prod.sh
 ./scripts/stop_prod.sh
@@ -60,23 +70,28 @@ chmod +x scripts/stop_prod.sh
 ## Database Scripts
 
 ### `init_db.py`
+
 Initializes the SQLite database with required tables for local development.
 
 **Usage:**
+
 ```bash
 python scripts/init_db.py
 ```
 
 **What it does:**
+
 - Creates `data/bri.db` if it doesn't exist
 - Creates tables: `videos`, `memory`, `video_context`
 - Creates indexes for performance
 - Validates schema
 
 ### `init_docker_db.py`
+
 Database initialization script for Docker deployments.
 
 **Usage:**
+
 ```bash
 # Inside Docker container
 python scripts/init_docker_db.py
@@ -88,6 +103,7 @@ docker-compose exec mcp-server python scripts/init_docker_db.py
 ## Testing Scripts
 
 ### `test_*.py`
+
 Various test scripts for validating components:
 
 - `test_audio_transcriber.py` - Test Whisper audio transcription
@@ -109,19 +125,23 @@ Various test scripts for validating components:
 - `test_video_upload.py` - Test video upload functionality
 
 **Usage:**
+
 ```bash
 python scripts/test_<component>.py
 ```
 
 ### `validate_setup.py`
+
 Validates that all dependencies and configurations are correct.
 
 **Usage:**
+
 ```bash
 python scripts/validate_setup.py
 ```
 
 **What it checks:**
+
 - Python version
 - Required packages installed
 - Environment variables set
@@ -132,14 +152,17 @@ python scripts/validate_setup.py
 ## Demo Scripts
 
 ### `demo_error_handler.py`
+
 Demonstrates error handling capabilities.
 
 ### `demo_suggestions_integration.py`
+
 Demonstrates follow-up suggestion generation.
 
 ## Common Tasks
 
 ### First-time Setup
+
 ```bash
 # Linux/Mac
 chmod +x scripts/*.sh
@@ -152,6 +175,7 @@ scripts\start_dev.bat
 ```
 
 ### Running Tests
+
 ```bash
 # Run all tests
 pytest tests/
@@ -161,6 +185,7 @@ python scripts/test_frame_extractor.py
 ```
 
 ### Production Deployment
+
 ```bash
 # Start services
 ./scripts/start_prod.sh
@@ -173,6 +198,7 @@ docker-compose logs -f
 ```
 
 ### Database Management
+
 ```bash
 # Initialize database
 python scripts/init_db.py
@@ -188,11 +214,13 @@ python scripts/init_db.py
 ## Troubleshooting
 
 ### Permission Denied (Linux/Mac)
+
 ```bash
 chmod +x scripts/*.sh
 ```
 
 ### Port Already in Use
+
 ```bash
 # Find process using port
 lsof -i :8501  # Streamlit
@@ -204,6 +232,7 @@ kill -9 <PID>
 ```
 
 ### Database Locked
+
 ```bash
 # Stop all services
 ./scripts/stop_prod.sh  # or Ctrl+C for dev
@@ -216,6 +245,7 @@ rm data/bri.db-journal
 ```
 
 ### Redis Not Available
+
 The application will work without Redis, but caching will be disabled. To install Redis:
 
 ```bash
@@ -244,6 +274,7 @@ All scripts respect these environment variables from `.env`:
 ## Contributing
 
 When adding new scripts:
+
 1. Add clear comments explaining what the script does
 2. Include error handling
 3. Make scripts executable: `chmod +x script.sh`

@@ -5,31 +5,33 @@ This directory contains the video processing tools used by BRI for multimodal vi
 ## Available Tools
 
 ### 1. Frame Extractor (`frame_extractor.py`)
+
 Extracts frames from videos using OpenCV.
 
 **Features:**
+
 - Extract frames at regular intervals
 - Extract specific frames at timestamps
 - Adaptive interval calculation based on video length
 - Video metadata retrieval (duration, fps, resolution, codec)
 
 **Usage:**
+
 ```python
 from tools.frame_extractor import FrameExtractor
 
 extractor = FrameExtractor()
 frames = extractor.extract_frames(
-    video_path="path/to/video.mp4",
-    video_id="video_123",
-    interval_seconds=2.0,
-    max_frames=100
+    video_path="path/to/video.mp4", video_id="video_123", interval_seconds=2.0, max_frames=100
 )
 ```
 
 ### 2. Image Captioner (`image_captioner.py`)
+
 Generates natural language descriptions of video frames using BLIP.
 
 **Features:**
+
 - Single frame captioning
 - Efficient batch processing (10 frames at a time)
 - Confidence scoring for captions
@@ -39,29 +41,28 @@ Generates natural language descriptions of video frames using BLIP.
 **Model:** Salesforce/blip-image-captioning-large
 
 **Usage:**
+
 ```python
 from tools.image_captioner import ImageCaptioner
 
 captioner = ImageCaptioner()
 
 # Single frame
-caption = captioner.caption_frame(
-    image_path="path/to/frame.jpg",
-    timestamp=2.5
-)
+caption = captioner.caption_frame(image_path="path/to/frame.jpg", timestamp=2.5)
 print(f"Caption: {caption.text} (confidence: {caption.confidence})")
 
 # Batch processing
 captions = captioner.caption_frames_batch(
-    image_paths=["frame1.jpg", "frame2.jpg", "frame3.jpg"],
-    timestamps=[0.0, 2.0, 4.0]
+    image_paths=["frame1.jpg", "frame2.jpg", "frame3.jpg"], timestamps=[0.0, 2.0, 4.0]
 )
 ```
 
 ### 3. Audio Transcriber (`audio_transcriber.py`)
+
 Transcribes audio from videos using OpenAI Whisper.
 
 **Features:**
+
 - Full video transcription with timestamps
 - Segment transcription for specific time ranges
 - Automatic language detection (99 languages supported)
@@ -71,6 +72,7 @@ Transcribes audio from videos using OpenAI Whisper.
 **Model:** OpenAI Whisper (base model by default)
 
 **Usage:**
+
 ```python
 from tools.audio_transcriber import AudioTranscriber
 
@@ -87,17 +89,17 @@ for segment in transcript.segments:
 
 # Transcribe specific time range
 segment = transcriber.transcribe_segment(
-    video_path="path/to/video.mp4",
-    start_time=10.0,
-    end_time=20.0
+    video_path="path/to/video.mp4", start_time=10.0, end_time=20.0
 )
 print(f"Segment: {segment.text}")
 ```
 
 ### 4. Object Detector (`object_detector.py`)
+
 Detects and tracks objects in video frames using YOLOv8.
 
 **Features:**
+
 - Batch object detection across multiple frames
 - Search for specific object classes
 - Single frame detection
@@ -107,6 +109,7 @@ Detects and tracks objects in video frames using YOLOv8.
 **Model:** YOLOv8n (optimized for speed)
 
 **Usage:**
+
 ```python
 from tools.object_detector import ObjectDetector
 
@@ -114,17 +117,12 @@ detector = ObjectDetector(model_name="yolov8n.pt")
 
 # Batch detection
 detections = detector.detect_objects_in_frames(
-    frame_paths=["frame1.jpg", "frame2.jpg"],
-    timestamps=[0.0, 2.5],
-    confidence_threshold=0.3
+    frame_paths=["frame1.jpg", "frame2.jpg"], timestamps=[0.0, 2.5], confidence_threshold=0.3
 )
 
 # Search for specific object
 dog_frames = detector.search_for_object(
-    frame_paths=frame_paths,
-    timestamps=timestamps,
-    object_class="dog",
-    confidence_threshold=0.3
+    frame_paths=frame_paths, timestamps=timestamps, object_class="dog", confidence_threshold=0.3
 )
 
 # Get available classes
@@ -143,6 +141,7 @@ python scripts/test_object_detector.py
 ```
 
 The test script will:
+
 - Initialize the YOLOv8 model
 - Extract frames from a test video
 - Test batch object detection
@@ -161,6 +160,7 @@ python scripts/test_audio_transcriber.py
 ```
 
 The test script will:
+
 - Initialize the Whisper model
 - Test full video transcription (if test video exists)
 - Test segment transcription (if test video exists)
@@ -173,16 +173,19 @@ The test script will:
 To test the Image Captioner tool:
 
 1. **Ensure you have frames extracted:**
+
    ```bash
    python scripts/test_frame_extractor.py
    ```
 
 2. **Run the captioner test:**
+
    ```bash
    python scripts/test_image_captioner.py
    ```
 
 The test script will:
+
 - Initialize the BLIP model
 - Test single frame captioning
 - Test batch frame captioning
@@ -201,9 +204,7 @@ from tools.frame_extractor import FrameExtractor
 # Extract frames from a video
 extractor = FrameExtractor()
 frames = extractor.extract_frames(
-    video_path="data/videos/sample.mp4",
-    video_id="test_video",
-    max_frames=5
+    video_path="data/videos/sample.mp4", video_id="test_video", max_frames=5
 )
 
 # Caption the frames
@@ -220,6 +221,7 @@ for caption in captions:
 ## Performance Considerations
 
 ### Object Detector
+
 - **Model Size:** yolov8n (~6MB), yolov8s (~22MB), yolov8m (~52MB), yolov8l (~88MB), yolov8x (~136MB)
 - **Processing Speed:** ~50-100 FPS on GPU, ~5-10 FPS on CPU
 - **GPU Acceleration:** Automatically uses CUDA if available
@@ -227,6 +229,7 @@ for caption in captions:
 - **Classes:** Detects 80 COCO classes (person, car, dog, cat, etc.)
 
 ### Audio Transcriber
+
 - **Model Size:** base (~140MB), small (~240MB), medium (~770MB), large (~1.5GB)
 - **Processing Speed:** ~1x realtime on CPU (1 min video = ~1 min processing)
 - **GPU Acceleration:** 5-10x faster with CUDA
@@ -234,12 +237,14 @@ for caption in captions:
 - **Languages:** Supports 99 languages with automatic detection
 
 ### Image Captioner
+
 - **GPU Acceleration:** Automatically uses CUDA if available
 - **Batch Size:** Processes 10 frames at a time for optimal performance
 - **Memory:** BLIP model requires ~2GB GPU memory or ~4GB RAM
 - **Speed:** ~1-2 seconds per frame on CPU, ~0.1-0.3 seconds on GPU
 
 ### Optimization Tips
+
 1. Use batch processing for multiple frames (10x faster than individual)
 2. Enable GPU acceleration for significant speedup
 3. Consider using smaller BLIP model for faster inference:
@@ -271,13 +276,13 @@ See `requirements.txt` for full list. Key dependencies:
 On first use, models will be automatically downloaded:
 
 - **BLIP:** ~2GB (Hugging Face cache: `~/.cache/huggingface/`)
-- **Whisper:** 
+- **Whisper:**
   - tiny: ~40MB
   - base: ~140MB (default)
   - small: ~240MB
   - medium: ~770MB
   - large: ~1.5GB
-- **YOLO:** 
+- **YOLO:**
   - yolov8n: ~6MB (default, fastest)
   - yolov8s: ~22MB
   - yolov8m: ~52MB

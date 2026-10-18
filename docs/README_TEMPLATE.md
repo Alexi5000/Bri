@@ -1,24 +1,30 @@
 # README_TEMPLATE.md
 
-> **Audience:** the next person writing or rewriting `README.md` for this project.
-> **Goal:** every README follows the same ten sections, in this exact order.
-> **Editing rule:** sections can be added at the *end*; their order is fixed.
+> **Audience:** the next person writing or rewriting `README.md` for this project. **Goal:** every README follows the
+> same ten sections, in this exact order. **Editing rule:** sections can be added at the _end_; their order is fixed.
 
-The BRI README is a customer-facing document. Newcomers should be able to clone, run, ship a PR, and understand the project's stance on contributions without ever leaving the README.
+The BRI README is a customer-facing document. Newcomers should be able to clone, run, ship a PR, and understand the
+project's stance on contributions without ever leaving the README.
 
 ---
 
 ## Section order
 
 1. **Tagline** — one line, ≤ 80 characters, no period. The product's elevator pitch.
-2. **Badges** — `shields.io` badges for: build status, license, Python version, downloads, container, coverage, and any project-defining dependency.
+2. **Badges** — `shields.io` badges for: build status, license, Python version, downloads, container, coverage, and any
+   project-defining dependency.
 3. **One-paragraph positioning** — what the project is, who it's for, and what it replaces. Three sentences, max.
-4. **Hero** — either a screenshot of the running application or an ASCII / Mermaid diagram of the architecture. Place directly under the positioning paragraph.
+4. **Hero** — either a screenshot of the running application or an ASCII / Mermaid diagram of the architecture. Place
+   directly under the positioning paragraph.
 5. **30-second quickstart** — copy-paste-runnable instructions for the simplest viable deployment. One terminal block.
-6. **5-minute tutorial** — slightly longer path: clone, configure, run, hit the first endpoint, query the first video. Three or four terminal blocks at most.
-7. **Architecture diagram** — Mermaid `flowchart` or `sequence` showing user → UI → middle layer → API → tools → storage. The diagram MUST be Mermaid, not an image, so it stays reviewable in PRs.
-8. **API surface table** — every public endpoint, every public tool, every public CLI command. Markdown table with columns: name, kind, description.
-9. **Configuration table** — every environment variable documented in `.env.example`, plus a column describing default and side effects.
+6. **5-minute tutorial** — slightly longer path: clone, configure, run, hit the first endpoint, query the first video.
+   Three or four terminal blocks at most.
+7. **Architecture diagram** — Mermaid `flowchart` or `sequence` showing user → UI → middle layer → API → tools →
+   storage. The diagram MUST be Mermaid, not an image, so it stays reviewable in PRs.
+8. **API surface table** — every public endpoint, every public tool, every public CLI command. Markdown table with
+   columns: name, kind, description.
+9. **Configuration table** — every environment variable documented in `.env.example`, plus a column describing default
+   and side effects.
 10. **Contributing pointer** — single link to `CONTRIBUTING.md` and a one-line summary.
 11. **License** — single link to `LICENSE` and a one-line summary.
 
@@ -40,7 +46,7 @@ That is the entire template. Eleven sections.
 
 ## Template skeleton
 
-```markdown
+````markdown
 <div align="center">
   <img src="assets/icon.svg" alt="<Project> logo" width="112" />
 
@@ -62,60 +68,49 @@ That is the entire template. Eleven sections.
 
 ## Hero
 
-\```mermaid
-flowchart LR
-  A[User] --> B[UI]
-  B --> C[API]
-  C --> D[Tools]
-\```
+\```mermaid flowchart LR A[User] --> B[UI] B --> C[API] C --> D[Tools] \```
 
 ## 30-second quickstart
 
-\```bash
-git clone https://github.com/<owner>/<repo>.git
-cd <repo>
-cp .env.example .env       # add <REQUIRED_KEY> for live responses
-docker compose up --build
-\```
+\```bash git clone https://github.com/<owner>/<repo>.git cd <repo> cp .env.example .env # add <REQUIRED_KEY> for live
+responses docker compose up --build \```
 
 Open the UI at <http://localhost:8501> and the API at <http://localhost:8000>.
 
 ## 5-minute tutorial
 
 \```bash
+
 # 1. Install the package and dev extras.
-python -m venv .venv && source .venv/bin/activate
-pip install -e .[dev]
+
+python -m venv .venv && source .venv/bin/activate pip install -e .[dev]
 
 # 2. Initialize local state.
+
 python scripts/init_db.py
 
 # 3. Start the API and UI in two terminals.
-uvicorn mcp_server.main:app --reload --port 8000
-streamlit run app.py
-\```
 
-Upload a short video on the welcome screen, then ask the chat panel
-"what happens at 0:15?" to see the tool chain in action.
+uvicorn mcp_server.main:app --reload --port 8000 streamlit run app.py \```
+
+Upload a short video on the welcome screen, then ask the chat panel "what happens at 0:15?" to see the tool chain in
+action.
 
 ## Architecture
 
-\```mermaid
-flowchart LR
-  ...
-\```
+\```mermaid flowchart LR ... \```
 
 ## API surface
 
-| Endpoint | Kind | Description |
-|---|---|---|
+| Endpoint      | Kind | Description                           |
+| ------------- | ---- | ------------------------------------- |
 | `GET /health` | HTTP | Liveness probe and dependency status. |
 
 ## Configuration
 
-| Variable | Default | Effect |
-|---|---|---|
-| `<KEY>` | `<default>` | <Side effect.> |
+| Variable | Default     | Effect         |
+| -------- | ----------- | -------------- |
+| `<KEY>`  | `<default>` | <Side effect.> |
 
 ## Contributing
 
@@ -124,7 +119,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 ## License
 
 Released under the [<SPDX> License](LICENSE).
-```
+````
 
 ---
 

@@ -2,7 +2,9 @@
 
 ## Overview
 
-Implemented comprehensive API hardening features for the BRI MCP Server to ensure production-ready reliability, security, and maintainability. This includes request validation, response standardization, circuit breaker pattern, and API versioning.
+Implemented comprehensive API hardening features for the BRI MCP Server to ensure production-ready reliability,
+security, and maintainability. This includes request validation, response standardization, circuit breaker pattern, and
+API versioning.
 
 ## Completed Subtasks
 
@@ -44,6 +46,7 @@ Implemented comprehensive API hardening features for the BRI MCP Server to ensur
    - Duplicate detection in tool lists
 
 **Example Usage**:
+
 ```python
 # Rate limiting
 await check_rate_limit(request, tool_execution_limiter)
@@ -62,6 +65,7 @@ VideoIdValidator.validate_or_raise(video_id)
 **Features Implemented**:
 
 1. **Standardized Response Format**
+
    ```json
    {
      "success": true,
@@ -124,11 +128,12 @@ VideoIdValidator.validate_or_raise(video_id)
    ```
 
 **Example Usage**:
+
 ```python
 return create_standard_response(
     data={"result": "success"},
     execution_time=get_execution_time(request),
-    request_id=get_request_id(request)
+    request_id=get_request_id(request),
 )
 ```
 
@@ -174,23 +179,18 @@ return create_standard_response(
    - Protects downstream services
 
 **Example Usage**:
+
 ```python
 # Using circuit breaker
 try:
-    result = await database_breaker.call_async(
-        db.execute_query,
-        "SELECT * FROM videos"
-    )
+    result = await database_breaker.call_async(db.execute_query, "SELECT * FROM videos")
 except CircuitBreakerOpenError as e:
     # Circuit is open, service unavailable
     raise HTTPException(status_code=503, detail=str(e))
 
 # Retry with exponential backoff
 result = await retry_with_backoff(
-    func=async_operation,
-    max_retries=3,
-    base_delay=1.0,
-    max_delay=60.0
+    func=async_operation, max_retries=3, base_delay=1.0, max_delay=60.0
 )
 ```
 
@@ -237,25 +237,24 @@ result = await retry_with_backoff(
    - HTTP 426 for unsupported versions (future)
 
 **Example Usage**:
+
 ```python
 # In endpoint
 @app.get("/v1/tools")
-async def list_tools(
-    request: Request,
-    version: APIVersion = get_api_version
-):
+async def list_tools(request: Request, version: APIVersion = get_api_version):
     # version is automatically extracted and validated
     logger.info(f"API v{version.value} request")
     ...
 
+
 # Version information
-GET /version
+GET / version
 {
-  "current_version": "1.0",
-  "supported_versions": ["1.0", "2.0"],
-  "deprecated_versions": {},
-  "min_supported_version": "1.0",
-  "version_header": "Accept-Version or API-Version"
+    "current_version": "1.0",
+    "supported_versions": ["1.0", "2.0"],
+    "deprecated_versions": {},
+    "min_supported_version": "1.0",
+    "version_header": "Accept-Version or API-Version",
 }
 ```
 
@@ -264,6 +263,7 @@ GET /version
 ### Updated Endpoints
 
 All major endpoints now include:
+
 - Rate limiting
 - Request validation
 - Standardized responses
@@ -272,6 +272,7 @@ All major endpoints now include:
 - Execution time tracking
 
 **Updated Endpoints**:
+
 - `GET /health` - Enhanced with circuit breaker status
 - `GET /tools` - Standardized response, versioned
 - `POST /tools/{tool_name}/execute` - Full validation, versioned
@@ -280,6 +281,7 @@ All major endpoints now include:
 - `GET /videos/{video_id}/progress` - Validation, standardized
 
 **New Endpoints**:
+
 - `GET /version` - API version information
 - `GET /circuit-breakers` - Circuit breaker status
 - `POST /circuit-breakers/{name}/reset` - Reset circuit breaker
@@ -320,6 +322,7 @@ curl http://localhost:8000/circuit-breakers
 ### Integration with Existing Code
 
 All changes are backward compatible:
+
 - Existing endpoints continue to work
 - New validation is additive
 - Response format enhanced but compatible
@@ -360,6 +363,7 @@ All changes are backward compatible:
 ## Files Created/Modified
 
 **New Files**:
+
 - `mcp_server/validation.py` - Request validation and rate limiting
 - `mcp_server/response_models.py` - Standardized response models
 - `mcp_server/middleware.py` - Custom middleware
@@ -367,6 +371,7 @@ All changes are backward compatible:
 - `mcp_server/versioning.py` - API versioning support
 
 **Modified Files**:
+
 - `mcp_server/main.py` - Integrated all hardening features
 
 ## Success Criteria
@@ -378,8 +383,10 @@ All changes are backward compatible:
 ✅ **Circuit Breakers**: Protect against cascading failures  
 ✅ **Health Checks**: Detailed health status with circuit breaker info  
 ✅ **API Versioning**: Support for multiple versions with deprecation strategy  
-✅ **Backward Compatibility**: All changes are additive and non-breaking  
+✅ **Backward Compatibility**: All changes are additive and non-breaking
 
 ## Conclusion
 
-Task 46 successfully hardened the BRI MCP Server API with production-ready features for security, reliability, and maintainability. The implementation follows industry best practices and provides a solid foundation for scaling the service.
+Task 46 successfully hardened the BRI MCP Server API with production-ready features for security, reliability, and
+maintainability. The implementation follows industry best practices and provides a solid foundation for scaling the
+service.

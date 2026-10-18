@@ -139,12 +139,7 @@ from ui.library import render_video_library
 render_video_library()
 
 # Helper functions available
-from ui.library import (
-    generate_thumbnail,
-    format_duration,
-    format_upload_date,
-    get_status_emoji
-)
+from ui.library import generate_thumbnail, format_duration, format_upload_date, get_status_emoji
 ```
 
 ## 📈 Performance

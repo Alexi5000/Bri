@@ -18,9 +18,9 @@ Task 17 has been successfully implemented with all requirements met. The video u
 ```python
 uploaded_file = st.file_uploader(
     "Choose a video file",
-    type=['mp4', 'avi', 'mov', 'mkv'],
+    type=["mp4", "avi", "mov", "mkv"],
     help="Supported formats: MP4, AVI, MOV, MKV",
-    label_visibility="collapsed"
+    label_visibility="collapsed",
 )
 ```
 
@@ -46,7 +46,7 @@ uploaded_file = st.file_uploader(
 - Friendly error message: "This video is a bit too big for me right now (600.0MB). Can you try one under 500MB?"
 
 ```python
-SUPPORTED_FORMATS = {'.mp4', '.avi', '.mov', '.mkv'}
+SUPPORTED_FORMATS = {".mp4", ".avi", ".mov", ".mkv"}
 MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024  # 500 MB
 ```
 
@@ -196,7 +196,7 @@ DATABASE_PATH=data/bri.db
 
 ### Constants
 ```python
-SUPPORTED_FORMATS = {'.mp4', '.avi', '.mov', '.mkv'}
+SUPPORTED_FORMATS = {".mp4", ".avi", ".mov", ".mkv"}
 MAX_FILE_SIZE_BYTES = 500 * 1024 * 1024  # 500 MB
 ```
 
@@ -209,9 +209,7 @@ video_service = get_video_service()
 
 # Upload video
 video, error = video_service.upload_video(
-    file_data=uploaded_file,
-    filename="my_video.mp4",
-    file_size=uploaded_file.size
+    file_data=uploaded_file, filename="my_video.mp4", file_size=uploaded_file.size
 )
 
 if error:

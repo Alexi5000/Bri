@@ -45,10 +45,7 @@ perf_logger = get_performance_logger(__name__)
 start = time.time()
 result = expensive_operation()
 perf_logger.log_execution_time(
-    "expensive_operation",
-    time.time() - start,
-    success=True,
-    video_id="vid_123"
+    "expensive_operation", time.time() - start, success=True, video_id="vid_123"
 )
 
 # Log cache hit/miss
@@ -64,11 +61,7 @@ api_logger = get_api_logger(__name__)
 
 # Log API call
 api_logger.log_api_call(
-    "Groq",
-    "/chat/completions",
-    method="POST",
-    status_code=200,
-    execution_time=0.523
+    "Groq", "/chat/completions", method="POST", status_code=200, execution_time=0.523
 )
 ```
 

@@ -4,7 +4,7 @@
 
 # BRI — Conversational video intelligence that feels human
 
-### Empathetic multimodal video analysis: upload, watch, ask, remember.
+## Empathetic multimodal video analysis: upload, watch, ask, remember
 
 [![Build](https://img.shields.io/badge/build-passing-22c55e)](https://github.com/Alexi5000/Bri/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -20,7 +20,10 @@
 <img src="assets/cover.svg" alt="BRI cover" width="100%" />
 <img src="assets/cover.png" alt="BRI cover (raster fallback)" width="100%" />
 
-BRI (Brianna) is an open-source multimodal video intelligence agent. It extracts frames, captions scenes, transcribes speech, and detects objects through a FastAPI MCP service and a Streamlit interface, then answers natural-language questions about the media using a Groq-backed conversational agent with per-video memory. It is designed for teams that want to ship a real product on top of open weights rather than wire a notebook to a vector store every time.
+BRI (Brianna) is an open-source multimodal video intelligence agent. It extracts frames, captions scenes, transcribes
+speech, and detects objects through a FastAPI MCP service and a Streamlit interface, then answers natural-language
+questions about the media using a Groq-backed conversational agent with per-video memory. It is designed for teams that
+want to ship a real product on top of open weights rather than wire a notebook to a vector store every time.
 
 ## Hero
 
@@ -59,7 +62,8 @@ cp .env.example .env          # add GROQ_API_KEY for live conversational respons
 docker compose up --build
 ```
 
-Open the Streamlit application at `http://localhost:8501` and the FastAPI service at `http://localhost:8000`. Upload a video on the welcome screen and ask the chat panel a question about it.
+Open the Streamlit application at `http://localhost:8501` and the FastAPI service at `http://localhost:8000`. Upload a
+video on the welcome screen and ask the chat panel a question about it.
 
 ## 5-minute tutorial
 
@@ -78,9 +82,12 @@ uvicorn mcp_server.main:app --reload --port 8000
 streamlit run app.py
 ```
 
-Upload a short clip on the welcome screen. BRI extracts representative frames, captions each, transcribes audio, and detects objects. Then ask the chat panel a question such as "what is the speaker holding at 0:15?" and watch the tool chain run end to end.
+Upload a short clip on the welcome screen. BRI extracts representative frames, captions each, transcribes audio, and
+detects objects. Then ask the chat panel a question such as "what is the speaker holding at 0:15?" and watch the tool
+chain run end to end.
 
-If you want to opt into the full local multimodal pipeline (BLIP captioning, Whisper transcription, YOLOv8 detection), install the `ai` extra:
+If you want to opt into the full local multimodal pipeline (BLIP captioning, Whisper transcription, YOLOv8 detection),
+install the `ai` extra:
 
 ```bash
 pip install -e .[ai,dev]
@@ -109,66 +116,67 @@ flowchart LR
   Agent --> Middle
 ```
 
-The middle layer is the single source of truth for upload, delete, chat, health, progress, and persistence readiness. The UI never speaks SQL or HTTP directly; the API never speaks Streamlit. Tool discovery is wired in lean CI, while BLIP, Whisper, YOLOv8, and sentence-transformers are loaded lazily only when a tool actually executes.
+The middle layer is the single source of truth for upload, delete, chat, health, progress, and persistence readiness.
+The UI never speaks SQL or HTTP directly; the API never speaks Streamlit. Tool discovery is wired in lean CI, while
+BLIP, Whisper, YOLOv8, and sentence-transformers are loaded lazily only when a tool actually executes.
 
 ## API surface
 
-| Endpoint | Kind | Description |
-|---|---|---|
-| `GET /health` | HTTP | Liveness probe, dependency status, version, and operational metadata. |
-| `GET /tools` | HTTP | Lists registered MCP-style video tools and their JSON schemas. |
-| `GET /v1/tools` | HTTP | Versioned variant of `/tools`. |
-| `POST /tools/{tool_name}/execute` | HTTP | Executes a validated video tool request. |
-| `POST /videos/{video_id}/process` | HTTP | Runs the standard processing plan for one stored video. |
-| `POST /videos/{video_id}/process-progressive` | HTTP | Starts staged processing with progress tracking. |
-| `GET /videos/{video_id}/status` | HTTP | Reads stored processing state and context availability. |
-| `bri-video-agent` | CLI | Console entry point installed by `pip install bri-video-agent`. |
+| Endpoint                                      | Kind | Description                                                           |
+| --------------------------------------------- | ---- | --------------------------------------------------------------------- |
+| `GET /health`                                 | HTTP | Liveness probe, dependency status, version, and operational metadata. |
+| `GET /tools`                                  | HTTP | Lists registered MCP-style video tools and their JSON schemas.        |
+| `GET /v1/tools`                               | HTTP | Versioned variant of `/tools`.                                        |
+| `POST /tools/{tool_name}/execute`             | HTTP | Executes a validated video tool request.                              |
+| `POST /videos/{video_id}/process`             | HTTP | Runs the standard processing plan for one stored video.               |
+| `POST /videos/{video_id}/process-progressive` | HTTP | Starts staged processing with progress tracking.                      |
+| `GET /videos/{video_id}/status`               | HTTP | Reads stored processing state and context availability.               |
+| `bri-video-agent`                             | CLI  | Console entry point installed by `pip install bri-video-agent`.       |
 
 ## Configuration
 
-| Variable | Default | Effect |
-|---|---|---|
-| `APP_ENV` | `development` | Selects runtime mode (`development`, `test`, `production`). |
-| `GROQ_API_KEY` | _unset_ | Enables live conversational AI responses. |
-| `DATABASE_PATH` | `data/bri.db` | SQLite database location. |
-| `VIDEO_STORAGE_PATH` | `data/videos` | Where uploaded videos are stored. |
-| `FRAME_STORAGE_PATH` | `data/frames` | Where extracted frame images are stored. |
-| `MCP_SERVER_HOST` | `localhost` | MCP service host. |
-| `MCP_SERVER_PORT` | `8000` | MCP service port. |
-| `REDIS_ENABLED` | `false` | Enables optional Redis-backed caching when configured. |
-| `MAX_FRAMES_PER_VIDEO` | `20` | Caps frame extraction per video (lower for speed). |
-| `TOOL_EXECUTION_TIMEOUT` | `60` | Per-tool timeout in seconds. |
+| Variable                 | Default       | Effect                                                      |
+| ------------------------ | ------------- | ----------------------------------------------------------- |
+| `APP_ENV`                | `development` | Selects runtime mode (`development`, `test`, `production`). |
+| `GROQ_API_KEY`           | _unset_       | Enables live conversational AI responses.                   |
+| `DATABASE_PATH`          | `data/bri.db` | SQLite database location.                                   |
+| `VIDEO_STORAGE_PATH`     | `data/videos` | Where uploaded videos are stored.                           |
+| `FRAME_STORAGE_PATH`     | `data/frames` | Where extracted frame images are stored.                    |
+| `MCP_SERVER_HOST`        | `localhost`   | MCP service host.                                           |
+| `MCP_SERVER_PORT`        | `8000`        | MCP service port.                                           |
+| `REDIS_ENABLED`          | `false`       | Enables optional Redis-backed caching when configured.      |
+| `MAX_FRAMES_PER_VIDEO`   | `20`          | Caps frame extraction per video (lower for speed).          |
+| `TOOL_EXECUTION_TIMEOUT` | `60`          | Per-tool timeout in seconds.                                |
 
-See [`.env.example`](.env.example) for the full list. The defaults are test-friendly; set `APP_ENV=production` and provide `GROQ_API_KEY` for live responses.
+See [`.env.example`](.env.example) for the full list. The defaults are test-friendly; set `APP_ENV=production` and
+provide `GROQ_API_KEY` for live responses.
 
 ## Documentation
 
-| Guide | Link |
-|---|---|
-| Architecture | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
-| API reference | [docs/API.md](docs/API.md) |
-| Testing strategy | [docs/TESTING.md](docs/TESTING.md) |
-| Configuration reference | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) |
-| Deployment guide | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) |
-| Operations runbook | [docs/OPERATIONS_RUNBOOK.md](docs/OPERATIONS_RUNBOOK.md) |
-| Troubleshooting | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) |
+| Guide                   | Link                                                     |
+| ----------------------- | -------------------------------------------------------- |
+| Architecture            | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)             |
+| API reference           | [docs/API.md](docs/API.md)                               |
+| Testing strategy        | [docs/TESTING.md](docs/TESTING.md)                       |
+| Configuration reference | [docs/CONFIGURATION.md](docs/CONFIGURATION.md)           |
+| Deployment guide        | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)                 |
+| Operations runbook      | [docs/OPERATIONS_RUNBOOK.md](docs/OPERATIONS_RUNBOOK.md) |
+| Troubleshooting         | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)       |
 
 ## Quality bar
 
 BRI follows the **Uncle Bob** clean-code review documented in
-[`docs/architecture/UNCLE_BOB_CLEAN_CODE_REVIEW.md`](docs/architecture/UNCLE_BOB_CLEAN_CODE_REVIEW.md).
-Every module in `mcp_server/`, `services/`, `tools/`, `storage/`, `ui/`,
-`models/`, and `utils/` declares its responsibility in a module-level
-docstring; every public function declares its contract in a one-line
-docstring; every exception subclasses `services.errors.BriError`; every
-logger call uses lazy `%-format`; every public API surface is generated
-from docstrings by `mkdocstrings` and deployed with the release. The
-data-flow and database-schema reasoning lives alongside the code in the
-`docs/architecture/` directory.
+[`docs/architecture/UNCLE_BOB_CLEAN_CODE_REVIEW.md`](docs/architecture/UNCLE_BOB_CLEAN_CODE_REVIEW.md). Every module in
+`mcp_server/`, `services/`, `tools/`, `storage/`, `ui/`, `models/`, and `utils/` declares its responsibility in a
+module-level docstring; every public function declares its contract in a one-line docstring; every exception subclasses
+`services.errors.BriError`; every logger call uses lazy `%-format`; every public API surface is generated from
+docstrings by `mkdocstrings` and deployed with the release. The data-flow and database-schema reasoning lives alongside
+the code in the `docs/architecture/` directory.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for environment setup, branch naming, commit message format, and review SLA. Bug reports and feature requests go through the issue templates under `.github/ISSUE_TEMPLATE/`.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for environment setup, branch naming, commit message format, and review SLA. Bug
+reports and feature requests go through the issue templates under `.github/ISSUE_TEMPLATE/`.
 
 ## License
 

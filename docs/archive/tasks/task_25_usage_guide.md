@@ -82,11 +82,7 @@ db.initialize_schema()  # Creates indexes automatically
 
 ```python
 # Good: Uses index
-history = memory.get_conversation_history(
-    video_id="vid_123",
-    limit=10,
-    offset=0
-)
+history = memory.get_conversation_history(video_id="vid_123", limit=10, offset=0)
 
 # Good: Uses index
 query = """
@@ -111,18 +107,10 @@ from services.memory import Memory
 memory = Memory()
 
 # Get first page (most recent 10 messages)
-page1 = memory.get_conversation_history(
-    video_id="vid_123",
-    limit=10,
-    offset=0
-)
+page1 = memory.get_conversation_history(video_id="vid_123", limit=10, offset=0)
 
 # Get second page (next 10 messages)
-page2 = memory.get_conversation_history(
-    video_id="vid_123",
-    limit=10,
-    offset=10
-)
+page2 = memory.get_conversation_history(video_id="vid_123", limit=10, offset=10)
 
 # Get total count for pagination
 total = memory.count_messages("vid_123")
@@ -143,7 +131,7 @@ loader.render_lazy_images(
     image_paths=frame_paths,
     timestamps=timestamps,
     columns=3,
-    on_timestamp_click=lambda ts: handle_timestamp_click(ts)
+    on_timestamp_click=lambda ts: handle_timestamp_click(ts),
 )
 
 # Reset loader state (e.g., when switching videos)
@@ -158,15 +146,15 @@ from ui.lazy_loader import LazyListLoader
 # Create loader
 loader = LazyListLoader(items_per_page=10)
 
+
 # Define item renderer
 def render_conversation(session):
     st.markdown(f"**Conversation**: {session[0].content[:50]}...")
 
+
 # Render paginated list
 loader.render_paginated_list(
-    items=conversation_sessions,
-    render_item=render_conversation,
-    key_prefix="conversations"
+    items=conversation_sessions, render_item=render_conversation, key_prefix="conversations"
 )
 ```
 
@@ -175,25 +163,23 @@ loader.render_paginated_list(
 ```python
 import asyncio
 
+
 async def process_video_parallel(video_id: str, tools: list):
     """Process video with parallel tool execution."""
-    
+
     # Create tasks for each tool
-    tasks = [
-        tool.execute(video_id, {})
-        for tool in tools
-    ]
-    
+    tasks = [tool.execute(video_id, {}) for tool in tools]
+
     # Execute in parallel
     results = await asyncio.gather(*tasks, return_exceptions=True)
-    
+
     # Process results
     for tool, result in zip(tools, results):
         if isinstance(result, Exception):
             print(f"Tool {tool.name} failed: {result}")
         else:
             print(f"Tool {tool.name} succeeded")
-    
+
     return results
 ```
 
@@ -201,6 +187,7 @@ async def process_video_parallel(video_id: str, tools: list):
 
 ```python
 import asyncio
+
 
 async def execute_with_timeout(coro, timeout_seconds: int):
     """Execute coroutine with timeout."""
@@ -210,10 +197,10 @@ async def execute_with_timeout(coro, timeout_seconds: int):
     except asyncio.TimeoutError:
         raise TimeoutError(f"Operation timed out after {timeout_seconds}s")
 
+
 # Usage
 result = await execute_with_timeout(
-    tool.execute(video_id, params),
-    timeout_seconds=Config.TOOL_EXECUTION_TIMEOUT
+    tool.execute(video_id, params), timeout_seconds=Config.TOOL_EXECUTION_TIMEOUT
 )
 ```
 
@@ -243,7 +230,7 @@ start = time.time()
 results = memory.get_conversation_history(video_id, limit=10)
 elapsed = time.time() - start
 
-print(f"Query took {elapsed*1000:.2f}ms")
+print(f"Query took {elapsed * 1000:.2f}ms")
 ```
 
 ### Monitoring Tool Execution
@@ -283,6 +270,7 @@ curl http://localhost:8000/cache/stats
 3. Run VACUUM to optimize database:
    ```python
    from storage.database import Database
+
    db = Database()
    db.get_connection().execute("VACUUM")
    ```

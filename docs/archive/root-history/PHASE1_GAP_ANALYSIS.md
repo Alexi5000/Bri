@@ -338,7 +338,7 @@ cp .env.example .env
 from tools.frame_extractor import FrameExtractor
 
 extractor = FrameExtractor()
-frames = extractor.extract_frames('data/videos/test_video.mp4', interval=1.0)
+frames = extractor.extract_frames("data/videos/test_video.mp4", interval=1.0)
 print(f"Extracted {len(frames)} frames")
 # Expected: 5-10 frames
 ```
@@ -358,7 +358,7 @@ print(f"Generated {len(captions)} captions")
 from tools.audio_transcriber import AudioTranscriber
 
 transcriber = AudioTranscriber()
-transcript = transcriber.transcribe_video('data/videos/test_video.mp4')
+transcript = transcriber.transcribe_video("data/videos/test_video.mp4")
 print(f"Transcribed: {len(transcript['text'])} characters")
 # Expected: Full transcript with timestamps
 ```
@@ -377,7 +377,7 @@ print(f"Detected objects in {len(detections)} frames")
 ```python
 import sqlite3
 
-conn = sqlite3.connect('data/bri.db')
+conn = sqlite3.connect("data/bri.db")
 cursor = conn.cursor()
 
 # Check all data stored
@@ -419,6 +419,7 @@ from typing import Optional
 import time
 from collections import defaultdict, deque
 
+
 class RateLimiter:
     def __init__(self, requests_per_minute: int = 60, window_size: int = 60):
         self.requests_per_minute = requests_per_minute
@@ -437,20 +438,20 @@ class RateLimiter:
         if len(window) < self.requests_per_minute:
             window.append(now)
             return True, {
-                'limit': self.requests_per_minute,
-                'remaining': self.requests_per_minute - len(window),
-                'reset': int(now + self.window_size)
+                "limit": self.requests_per_minute,
+                "remaining": self.requests_per_minute - len(window),
+                "reset": int(now + self.window_size),
             }
         else:
             return False, {
-                'limit': self.requests_per_minute,
-                'remaining': 0,
-                'reset': int(window[0] + self.window_size)
+                "limit": self.requests_per_minute,
+                "remaining": 0,
+                "reset": int(window[0] + self.window_size),
             }
 
     def get_remaining_requests(self, client_id: str) -> int:
         allowed, info = self.check_rate_limit(client_id)
-        return info['remaining']
+        return info["remaining"]
 ```
 
 #### Subtask 2.4.2: Add Redis Support (Optional, 1-2 hours)
@@ -458,6 +459,7 @@ class RateLimiter:
 # Add Redis backend for distributed rate limiting
 
 import redis
+
 
 class RedisRateLimiter(RateLimiter):
     def __init__(self, redis_url: str, **kwargs):
@@ -477,6 +479,7 @@ from .rate_limiter import RateLimiter
 
 rate_limiter = RateLimiter(requests_per_minute=60)
 
+
 @app.middleware("http")
 async def rate_limit_middleware(request, call_next):
     client_id = request.client.host
@@ -486,17 +489,20 @@ async def rate_limit_middleware(request, call_next):
         raise HTTPException(status_code=429, detail=info)
 
     response = await call_next(request)
-    response.headers.update({
-        'X-RateLimit-Limit': str(info['limit']),
-        'X-RateLimit-Remaining': str(info['remaining']),
-        'X-RateLimit-Reset': str(info['reset'])
-    })
+    response.headers.update(
+        {
+            "X-RateLimit-Limit": str(info["limit"]),
+            "X-RateLimit-Remaining": str(info["remaining"]),
+            "X-RateLimit-Reset": str(info["reset"]),
+        }
+    )
     return response
 ```
 
 #### Subtask 2.4.4: Unit Tests (1 hour)
 ```python
 # tests/test_rate_limiter.py
+
 
 def test_rate_limit_enforced():
     limiter = RateLimiter(requests_per_minute=2)
@@ -606,11 +612,7 @@ memory = Memory(db=db)
 context_builder = ContextBuilder(db=db)
 router = ToolRouter()
 
-agent = GroqAgent(
-    memory=memory,
-    context_builder=context_builder,
-    router=router
-)
+agent = GroqAgent(memory=memory, context_builder=context_builder, router=router)
 print("Agent initialized successfully")
 ```
 
@@ -655,7 +657,7 @@ queries = [
     "What's in this video?",
     "What's happening at 2:30?",
     "How many people are there?",
-    "Tell me more about that object"
+    "Tell me more about that object",
 ]
 
 for query in queries:
@@ -751,14 +753,14 @@ streamlit run app.py
 #### Subtask 2.8.1: Upload Test Video (15 minutes)
 ```python
 # Upload video through UI or API
-video_id = upload_video('data/videos/test_video.mp4')
+video_id = upload_video("data/videos/test_video.mp4")
 print(f"Uploaded video: {video_id}")
 ```
 
 #### Subtask 2.8.2: Verify Processing (1-2 hours)
 ```python
 # Monitor processing status
-while get_video_status(video_id) != 'complete':
+while get_video_status(video_id) != "complete":
     print(f"Status: {get_video_status(video_id)}")
     time.sleep(5)
 
@@ -790,10 +792,10 @@ response = agent.process_query(video_id=video_id, query=query)
 print(f"Response: {response}")
 
 # Query via API
-response = requests.post('http://localhost:8000/tools/search_context/execute', json={
-    'video_id': video_id,
-    'query': query
-})
+response = requests.post(
+    "http://localhost:8000/tools/search_context/execute",
+    json={"video_id": video_id, "query": query},
+)
 print(f"API Response: {response.json()}")
 ```
 

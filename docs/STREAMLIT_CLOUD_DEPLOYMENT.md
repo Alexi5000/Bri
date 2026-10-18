@@ -15,6 +15,7 @@ This guide will help you deploy BRI to Streamlit Cloud's free tier for online te
 ### Step 1: Prepare Your Repository
 
 Your repository is already prepared with:
+
 - ✅ `app.py` - Main application file
 - ✅ `requirements.txt` - Python dependencies
 - ✅ `packages.txt` - System packages (FFmpeg, OpenCV dependencies)
@@ -24,7 +25,8 @@ Your repository is already prepared with:
 ### Step 2: Push to GitHub
 
 Your code is already pushed to GitHub at:
-```
+
+```text
 https://github.com/Alexi5000/Bri.git
 ```
 
@@ -77,7 +79,8 @@ LOG_LEVEL = "INFO"
 ### Step 7: Access Your App
 
 Once deployed, you'll get a URL like:
-```
+
+```text
 https://your-app-name.streamlit.app
 ```
 
@@ -104,6 +107,7 @@ Share this URL with anyone for testing!
 ### Optimizations for Free Tier
 
 We've already optimized the app:
+
 - ✅ Reduced max frames to 15 (from 20)
 - ✅ Increased frame interval to 3.0s (from 2.0s)
 - ✅ Disabled Redis caching
@@ -131,12 +135,14 @@ We've already optimized the app:
 
 ### Deployment Fails
 
-**Error: "Requirements installation failed"**
+Error: "Requirements installation failed"
+
 - Check `requirements.txt` for incompatible packages
 - Some packages may not work on Streamlit Cloud
 - Try removing optional dependencies
 
-**Error: "App crashed"**
+Error: "App crashed"
+
 - Check the logs in Streamlit Cloud dashboard
 - Look for missing dependencies
 - Verify secrets are configured correctly
@@ -144,6 +150,7 @@ We've already optimized the app:
 ### App is Slow
 
 **Solutions**:
+
 1. Use shorter videos (30-60 seconds)
 2. Reduce MAX_FRAMES_PER_VIDEO in secrets
 3. Increase FRAME_EXTRACTION_INTERVAL
@@ -152,6 +159,7 @@ We've already optimized the app:
 ### GROQ_API_KEY Not Found
 
 **Solution**:
+
 1. Go to Streamlit Cloud dashboard
 2. Click on your app
 3. Click "Settings" → "Secrets"
@@ -161,7 +169,8 @@ We've already optimized the app:
 
 ### Models Not Loading
 
-**Error: "Model download failed"**
+Error: "Model download failed"
+
 - Streamlit Cloud may have network restrictions
 - Models are downloaded on first run
 - Wait for initial deployment to complete
@@ -180,6 +189,7 @@ We've already optimized the app:
 ### Recommended Test Videos
 
 For Streamlit Cloud free tier:
+
 - **Duration**: 30-60 seconds
 - **Format**: MP4
 - **Size**: < 50 MB
@@ -191,11 +201,13 @@ For Streamlit Cloud free tier:
 
 1. Make changes locally
 2. Commit and push to GitHub:
+
    ```bash
    git add .
    git commit -m "Update app"
    git push origin master
    ```
+
 3. Streamlit Cloud auto-deploys on push
 
 ### Method 2: Manual Reboot
@@ -255,6 +267,7 @@ For Streamlit Cloud free tier:
 ### Upgrade Options
 
 If you need more resources:
+
 - **Starter**: $20/month - More resources
 - **Team**: $250/month - Private apps, more resources
 - **Enterprise**: Custom pricing
@@ -264,24 +277,28 @@ If you need more resources:
 If Streamlit Cloud free tier is too limited:
 
 ### Option 1: Heroku
+
 - More resources
 - Persistent storage
 - Can run MCP server
 - Free tier available
 
 ### Option 2: Railway
+
 - Modern platform
 - Good free tier
 - Easy deployment
 - Persistent storage
 
 ### Option 3: Render
+
 - Free tier available
 - Persistent storage
 - Can run multiple services
 - Good performance
 
 ### Option 4: Self-Hosted
+
 - Full control
 - No resource limits
 - Requires server management

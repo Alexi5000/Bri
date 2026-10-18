@@ -113,17 +113,12 @@ metadata = extractor.get_video_metadata("video.mp4")
 
 # Extract frames
 frames = extractor.extract_frames(
-    video_path="video.mp4",
-    video_id="abc123",
-    interval_seconds=2.0,
-    max_frames=100
+    video_path="video.mp4", video_id="abc123", interval_seconds=2.0, max_frames=100
 )
 
 # Extract specific frame
 frame = extractor.extract_frame_at_timestamp(
-    video_path="video.mp4",
-    video_id="abc123",
-    timestamp=5.0
+    video_path="video.mp4", video_id="abc123", timestamp=5.0
 )
 ```
 
@@ -268,8 +263,7 @@ captioner = ImageCaptioner()
 
 # Caption a single frame
 caption = captioner.caption_frame(
-    image_path="data/frames/video_123/frame_0001_2.50s.jpg",
-    timestamp=2.5
+    image_path="data/frames/video_123/frame_0001_2.50s.jpg", timestamp=2.5
 )
 print(f"[{caption.frame_timestamp}s] {caption.text}")
 print(f"Confidence: {caption.confidence:.2f}")
@@ -278,7 +272,7 @@ print(f"Confidence: {caption.confidence:.2f}")
 image_paths = [
     "data/frames/video_123/frame_0001_2.50s.jpg",
     "data/frames/video_123/frame_0002_4.50s.jpg",
-    "data/frames/video_123/frame_0003_6.50s.jpg"
+    "data/frames/video_123/frame_0003_6.50s.jpg",
 ]
 timestamps = [2.5, 4.5, 6.5]
 
@@ -482,11 +476,7 @@ for segment in transcript.segments:
     print(f"[{segment.start:.2f}s - {segment.end:.2f}s]: {segment.text}")
 
 # Transcribe specific time range
-segment = transcriber.transcribe_segment(
-    video_path="video.mp4",
-    start_time=10.0,
-    end_time=20.0
-)
+segment = transcriber.transcribe_segment(video_path="video.mp4", start_time=10.0, end_time=20.0)
 print(f"[{segment.start:.2f}s - {segment.end:.2f}s]: {segment.text}")
 ```
 
@@ -698,7 +688,7 @@ detector = ObjectDetector(model_name="yolov8n.pt")
 detections = detector.detect_objects_in_frames(
     frame_paths=["frame1.jpg", "frame2.jpg", "frame3.jpg"],
     timestamps=[0.0, 2.5, 5.0],
-    confidence_threshold=0.3
+    confidence_threshold=0.3,
 )
 
 # Display results
@@ -709,10 +699,7 @@ for detection in detections:
 
 # Search for specific object
 dog_frames = detector.search_for_object(
-    frame_paths=frame_paths,
-    timestamps=timestamps,
-    object_class="dog",
-    confidence_threshold=0.3
+    frame_paths=frame_paths, timestamps=timestamps, object_class="dog", confidence_threshold=0.3
 )
 
 print(f"Found dogs in {len(dog_frames)} frames")

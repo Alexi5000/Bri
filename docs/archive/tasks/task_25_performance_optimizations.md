@@ -40,7 +40,7 @@ This document describes the performance optimizations implemented in Task 25 to 
 
 **Configuration**:
 ```python
-MAX_CONVERSATION_HISTORY=10  # Messages per page
+MAX_CONVERSATION_HISTORY = 10  # Messages per page
 ```
 
 **Location**: 
@@ -65,7 +65,7 @@ MAX_CONVERSATION_HISTORY=10  # Messages per page
 
 **Configuration**:
 ```python
-LAZY_LOAD_BATCH_SIZE=3  # Images per batch
+LAZY_LOAD_BATCH_SIZE = 3  # Images per batch
 ```
 
 **Usage Example**:
@@ -73,11 +73,7 @@ LAZY_LOAD_BATCH_SIZE=3  # Images per batch
 from ui.lazy_loader import LazyImageLoader
 
 loader = LazyImageLoader(batch_size=3)
-loader.render_lazy_images(
-    image_paths=frame_paths,
-    timestamps=timestamps,
-    columns=3
-)
+loader.render_lazy_images(image_paths=frame_paths, timestamps=timestamps, columns=3)
 ```
 
 **Location**: `ui/lazy_loader.py`
@@ -120,8 +116,8 @@ loader.render_lazy_images(
 
 **Configuration**:
 ```python
-TOOL_EXECUTION_TIMEOUT=120  # seconds
-REQUEST_TIMEOUT=30  # seconds
+TOOL_EXECUTION_TIMEOUT = 120  # seconds
+REQUEST_TIMEOUT = 30  # seconds
 ```
 
 **Location**: 
@@ -191,6 +187,7 @@ This tests:
 2. **Use Lazy Loading**: For image-heavy UIs, use lazy loading
    ```python
    from ui.lazy_loader import LazyImageLoader
+
    loader = LazyImageLoader(batch_size=3)
    loader.render_lazy_images(images, timestamps)
    ```
@@ -212,11 +209,9 @@ This tests:
    ```python
    # Good
    results = await asyncio.gather(
-       tool1.execute(video_id),
-       tool2.execute(video_id),
-       tool3.execute(video_id)
+       tool1.execute(video_id), tool2.execute(video_id), tool3.execute(video_id)
    )
-   
+
    # Avoid
    result1 = await tool1.execute(video_id)
    result2 = await tool2.execute(video_id)

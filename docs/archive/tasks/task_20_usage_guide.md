@@ -17,16 +17,18 @@ memory = Memory()
 video_id = "vid_123"
 conversation_history = memory.get_conversation_history(video_id)
 
+
 # Define message handler
 def handle_send_message(message: str):
     # Process message (integrate with agent)
     response = f"You said: {message}"
-    
+
     # Store in memory
     memory.add_memory_pair(video_id, message, response)
-    
+
     # Refresh UI
     st.rerun()
+
 
 # Render chat window
 render_chat_window(video_id, conversation_history, handle_send_message)
@@ -49,18 +51,20 @@ memory = Memory()
 video_id = st.session_state.get("current_video_id")
 conversation_history = memory.get_conversation_history(video_id)
 
+
 # Message handler with agent
 def handle_send_message(message: str):
     # Show loading state
     with st.spinner("BRI is thinking... 💭"):
         # Get agent response
         response = agent.chat(message, video_id)
-        
+
         # Store in memory
         memory.add_memory_pair(video_id, message, response.message)
-    
+
     # Refresh to show new message
     st.rerun()
+
 
 # Render chat
 render_chat_window(video_id, conversation_history, handle_send_message)
@@ -77,11 +81,7 @@ response = AssistantMessageResponse(
     message="I found a dog at 0:45! 🐕",
     frames=["data/frames/vid_123/frame_045.jpg"],
     timestamps=[45.0],
-    suggestions=[
-        "What breed is the dog?",
-        "Are there other animals?",
-        "What happens next?"
-    ]
+    suggestions=["What breed is the dog?", "Are there other animals?", "What happens next?"],
 )
 
 # Render the response
@@ -111,19 +111,22 @@ You can customize message appearance by modifying the CSS in `ui/chat.py`:
 
 ```python
 # In render_chat_window function
-st.markdown("""
+st.markdown(
+    """
     <style>
     .user-message .message-content {
         background: linear-gradient(135deg, #YOUR_COLOR 0%, #YOUR_COLOR_2 100%);
         color: white;
     }
-    
+
     .assistant-message .message-content {
         background: #YOUR_BG_COLOR;
         border: 2px solid #YOUR_BORDER_COLOR;
     }
     </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 ```
 
 ### Custom Timestamp Format
@@ -142,12 +145,15 @@ Modify `_render_empty_state()` to show custom content:
 
 ```python
 def _render_empty_state() -> None:
-    st.markdown("""
+    st.markdown(
+        """
         <div style="text-align: center; padding: 3rem;">
             <h3>Your Custom Message Here</h3>
             <p>Custom description...</p>
         </div>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
 ```
 
 ## Integration Examples
@@ -171,22 +177,18 @@ conversation_history = [
         video_id="vid_test",
         role=msg["role"],
         content=msg["content"],
-        timestamp=datetime.now()
+        timestamp=datetime.now(),
     )
     for i, msg in enumerate(st.session_state.messages)
 ]
 
+
 # Message handler
 def handle_message(message: str):
-    st.session_state.messages.append({
-        "role": "user",
-        "content": message
-    })
-    st.session_state.messages.append({
-        "role": "assistant",
-        "content": f"Echo: {message}"
-    })
+    st.session_state.messages.append({"role": "user", "content": message})
+    st.session_state.messages.append({"role": "assistant", "content": f"Echo: {message}"})
     st.rerun()
+
 
 # Render
 render_chat_window("vid_test", conversation_history, handle_message)
@@ -202,25 +204,24 @@ from services.context import ContextBuilder
 context_builder = ContextBuilder()
 video_context = context_builder.build_video_context(video_id)
 
+
 # Enhanced message handler
 def handle_message_with_context(message: str):
     # Check if message references timestamp
     if "at" in message.lower() or ":" in message:
         # Extract timestamp and get context
         timestamp = extract_timestamp(message)
-        context = context_builder.get_context_at_timestamp(
-            video_id, 
-            timestamp
-        )
-        
+        context = context_builder.get_context_at_timestamp(video_id, timestamp)
+
         # Generate response with context
         response = f"At {timestamp}s: {context.captions[0].text}"
     else:
         response = "General response"
-    
+
     # Store and refresh
     memory.add_memory_pair(video_id, message, response)
     st.rerun()
+
 
 render_chat_window(video_id, conversation_history, handle_message_with_context)
 ```
@@ -254,15 +255,16 @@ def handle_send_message(message: str):
     # Validate input
     if not message.strip():
         return
-    
+
     # Process with agent
     response = agent.chat(message, video_id)
-    
+
     # Store in memory
     memory.add_memory_pair(video_id, message, response.message)
-    
+
     # Update UI
     st.rerun()
+
 
 # ✗ Bad: Mixing concerns
 def handle_send_message(message: str):
@@ -313,11 +315,7 @@ if "chat_initialized" not in st.session_state:
 
 # Use unique keys per video
 video_id = st.session_state.current_video_id
-render_chat_window(
-    video_id,
-    conversation_history,
-    handle_send_message
-)
+render_chat_window(video_id, conversation_history, handle_send_message)
 ```
 
 ## Troubleshooting
@@ -328,10 +326,10 @@ render_chat_window(
 ```python
 message = MemoryRecord(
     message_id="msg_123",  # Required
-    video_id="vid_456",    # Required
-    role="user",           # Required: "user" or "assistant"
-    content="Hello",       # Required
-    timestamp=datetime.now()  # Required
+    video_id="vid_456",  # Required
+    role="user",  # Required: "user" or "assistant"
+    content="Hello",  # Required
+    timestamp=datetime.now(),  # Required
 )
 ```
 
@@ -371,7 +369,7 @@ st.markdown("Hello 👋", unsafe_allow_html=True)
 # Retrieve only recent messages
 conversation_history = memory.get_conversation_history(
     video_id,
-    limit=20  # Last 20 messages only
+    limit=20,  # Last 20 messages only
 )
 ```
 

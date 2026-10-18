@@ -1,33 +1,39 @@
 # BRI Video Agent - Deployment Guide
 
-This guide covers deployment options for the BRI Video Agent, including local development and production Docker deployments.
+This guide covers deployment options for the BRI Video Agent, including local development and production Docker
+deployments.
 
 ## Prerequisites
 
 ### For Local Development
+
 - Python 3.11+
 - Redis (optional, for caching)
 - FFmpeg (for video processing)
 - Git
 
 ### For Docker Deployment
+
 - Docker 20.10+
 - Docker Compose 2.0+
 
 ## Environment Setup
 
 1. **Clone the repository**
+
 ```bash
 git clone <repository-url>
 cd bri-video-agent
 ```
 
-2. **Create environment file**
+1. **Create environment file**
+
 ```bash
 cp .env.example .env
 ```
 
-3. **Edit `.env` and add your API keys**
+1. **Edit `.env` and add your API keys**
+
 ```bash
 # Required
 GROQ_API_KEY=your_groq_api_key_here
@@ -42,23 +48,27 @@ LOG_LEVEL=INFO
 ### Linux/Mac
 
 1. **Make scripts executable**
+
 ```bash
 chmod +x scripts/start_dev.sh
 chmod +x scripts/start_prod.sh
 chmod +x scripts/stop_prod.sh
 ```
 
-2. **Install Python dependencies**
+1. **Install Python dependencies**
+
 ```bash
 pip install -r requirements.txt
 ```
 
-3. **Start development server**
+1. **Start development server**
+
 ```bash
 ./scripts/start_dev.sh
 ```
 
 This script will:
+
 - Check environment variables
 - Create necessary directories
 - Initialize the database
@@ -66,59 +76,66 @@ This script will:
 - Start MCP server on port 8000
 - Start Streamlit UI on port 8501
 
-4. **Access the application**
+1. **Access the application**
+
 - Streamlit UI: http://localhost:8501
 - MCP Server: http://localhost:8000
 
-5. **Stop services**
-Press `Ctrl+C` in the terminal where the script is running.
+1. **Stop services** Press `Ctrl+C` in the terminal where the script is running.
 
 ### Windows
 
 1. **Install Python dependencies**
+
 ```cmd
 pip install -r requirements.txt
 ```
 
-2. **Start development server**
+1. **Start development server**
+
 ```cmd
 scripts\start_dev.bat
 ```
 
-3. **Access the application**
+1. **Access the application**
+
 - Streamlit UI: http://localhost:8501
 - MCP Server: http://localhost:8000
 
-4. **Stop services**
-Press `Ctrl+C` in the command prompt.
+1. **Stop services** Press `Ctrl+C` in the command prompt.
 
 ## Production Docker Deployment
 
 ### Quick Start
 
 1. **Start production services**
+
 ```bash
 ./scripts/start_prod.sh
 ```
 
 This script will:
+
 - Validate environment variables
 - Build Docker images
 - Start all services (Redis, MCP Server, Streamlit UI)
 - Initialize the database
 - Display service URLs
 
-2. **Access the application**
+1. **Access the application**
+
 - Streamlit UI: http://localhost:8501
 - MCP Server: http://localhost:8000
 - Redis: localhost:6379
 
-3. **Stop services**
+1. **Stop services**
+
 ```bash
 ./scripts/stop_prod.sh
 ```
 
 Or manually:
+
 ```bash
 docker-compose down
 ```
@@ -126,16 +143,19 @@ docker-compose down
 ### Manual Docker Deployment
 
 1. **Build images**
+
 ```bash
 docker-compose build
 ```
 
-2. **Start services**
+1. **Start services**
+
 ```bash
 docker-compose up -d
 ```
 
-3. **View logs**
+1. **View logs**
+
 ```bash
 # All services
 docker-compose logs -f
@@ -146,12 +166,14 @@ docker-compose logs -f mcp-server
 docker-compose logs -f redis
 ```
 
-4. **Check service status**
+1. **Check service status**
+
 ```bash
 docker-compose ps
 ```
 
-5. **Restart services**
+1. **Restart services**
+
 ```bash
 # All services
 docker-compose restart
@@ -160,7 +182,8 @@ docker-compose restart
 docker-compose restart streamlit-ui
 ```
 
-6. **Stop and remove containers**
+1. **Stop and remove containers**
+
 ```bash
 # Stop services
 docker-compose down
@@ -174,16 +197,19 @@ docker-compose down -v
 The Docker deployment consists of three services:
 
 ### 1. Redis (Port 6379)
+
 - Caching layer for tool results
 - Improves response times for repeated queries
 - Data persisted in Docker volume
 
 ### 2. MCP Server (Port 8000)
+
 - FastAPI server exposing video processing tools
 - Handles frame extraction, captioning, transcription, object detection
 - Health check endpoint: http://localhost:8000/health
 
 ### 3. Streamlit UI (Port 8501)
+
 - User interface for video upload and chat
 - Communicates with MCP server for processing
 - Health check endpoint: http://localhost:8501/_stcore/health
@@ -191,11 +217,13 @@ The Docker deployment consists of three services:
 ## Data Persistence
 
 ### Docker Volumes
+
 - `redis-data`: Redis cache data
 - `./data`: Video files, frames, database (bind mount)
 - `./logs`: Application logs (bind mount)
 
 ### Database Location
+
 - Development: `./data/bri.db`
 - Docker: `/app/data/bri.db` (mounted from host)
 
@@ -203,16 +231,16 @@ The Docker deployment consists of three services:
 
 ### Environment Variables
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `GROQ_API_KEY` | Yes | - | Groq API key for LLM |
-| `REDIS_URL` | No | `redis://localhost:6379` | Redis connection URL |
-| `DATABASE_PATH` | No | `./data/bri.db` | SQLite database path |
-| `VIDEO_STORAGE_PATH` | No | `./data/videos` | Video storage directory |
-| `FRAME_STORAGE_PATH` | No | `./data/frames` | Frame storage directory |
-| `CACHE_STORAGE_PATH` | No | `./data/cache` | Cache storage directory |
-| `LOG_LEVEL` | No | `INFO` | Logging level (DEBUG, INFO, WARNING, ERROR) |
-| `MCP_SERVER_URL` | No | `http://localhost:8000` | MCP server URL (for UI) |
+| Variable             | Required | Default                  | Description                                 |
+| -------------------- | -------- | ------------------------ | ------------------------------------------- |
+| `GROQ_API_KEY`       | Yes      | -                        | Groq API key for LLM                        |
+| `REDIS_URL`          | No       | `redis://localhost:6379` | Redis connection URL                        |
+| `DATABASE_PATH`      | No       | `./data/bri.db`          | SQLite database path                        |
+| `VIDEO_STORAGE_PATH` | No       | `./data/videos`          | Video storage directory                     |
+| `FRAME_STORAGE_PATH` | No       | `./data/frames`          | Frame storage directory                     |
+| `CACHE_STORAGE_PATH` | No       | `./data/cache`           | Cache storage directory                     |
+| `LOG_LEVEL`          | No       | `INFO`                   | Logging level (DEBUG, INFO, WARNING, ERROR) |
+| `MCP_SERVER_URL`     | No       | `http://localhost:8000`  | MCP server URL (for UI)                     |
 
 ### Port Configuration
 
@@ -222,11 +250,11 @@ To change default ports, edit `docker-compose.yml`:
 services:
   streamlit-ui:
     ports:
-      - "8080:8501"  # Change 8080 to your desired port
-  
+      - "8080:8501" # Change 8080 to your desired port
+
   mcp-server:
     ports:
-      - "9000:8000"  # Change 9000 to your desired port
+      - "9000:8000" # Change 9000 to your desired port
 ```
 
 ## Troubleshooting
@@ -234,6 +262,7 @@ services:
 ### Services won't start
 
 1. **Check if ports are already in use**
+
 ```bash
 # Linux/Mac
 lsof -i :8501
@@ -246,12 +275,14 @@ netstat -ano | findstr :8000
 netstat -ano | findstr :6379
 ```
 
-2. **Check Docker logs**
+1. **Check Docker logs**
+
 ```bash
 docker-compose logs
 ```
 
-3. **Verify environment variables**
+1. **Verify environment variables**
+
 ```bash
 docker-compose config
 ```
@@ -311,16 +342,17 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2'
+          cpus: "2"
           memory: 4G
         reservations:
-          cpus: '1'
+          cpus: "1"
           memory: 2G
 ```
 
 ### Redis Configuration
 
 For production, consider:
+
 - Increasing Redis memory limit
 - Configuring persistence settings
 - Setting up Redis replication
@@ -344,6 +376,7 @@ For production, consider:
 ### Health Checks
 
 All services include health checks:
+
 - Redis: `redis-cli ping`
 - MCP Server: `GET /health`
 - Streamlit UI: `GET /_stcore/health`
@@ -351,6 +384,7 @@ All services include health checks:
 ### Logs
 
 View logs in real-time:
+
 ```bash
 # All services
 docker-compose logs -f
@@ -362,6 +396,7 @@ docker-compose logs -f --timestamps streamlit-ui
 ### Metrics
 
 Consider adding:
+
 - Prometheus for metrics collection
 - Grafana for visualization
 - Application performance monitoring (APM)
@@ -401,6 +436,7 @@ For production deployments with multiple users:
 ## Support
 
 For issues and questions:
+
 - Check logs: `docker-compose logs`
 - Review documentation: `README.md`
 - Open an issue on GitHub
@@ -411,7 +447,8 @@ For issues and questions:
 
 ## Production quick path
 
-Use Docker Compose when you need the Streamlit UI, FastAPI service, Redis cache, and shared data volumes to run together.
+Use Docker Compose when you need the Streamlit UI, FastAPI service, Redis cache, and shared data volumes to run
+together.
 
 ```bash
 cp .env.example .env
@@ -419,4 +456,6 @@ cp .env.example .env
 docker compose up --build
 ```
 
-For platform deployments, run `uvicorn mcp_server.main:app --host 0.0.0.0 --port 8000` for the API service and `streamlit run app.py --server.port 8501` for the UI. Mount persistent volumes for `data/` and `logs/`, configure Redis for cache reuse, and keep `.env` outside source control.
+For platform deployments, run `uvicorn mcp_server.main:app --host 0.0.0.0 --port 8000` for the API service and
+`streamlit run app.py --server.port 8501` for the UI. Mount persistent volumes for `data/` and `logs/`, configure Redis
+for cache reuse, and keep `.env` outside source control.

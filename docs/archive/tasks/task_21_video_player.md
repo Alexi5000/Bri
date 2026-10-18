@@ -71,14 +71,14 @@ The player recognizes multiple timestamp formats:
 st.session_state[f"player_{video_id}"] = {
     "current_time": 0.0,
     "is_playing": False,
-    "selected_timestamp": None
+    "selected_timestamp": None,
 }
 ```
 
 #### Timestamp Extraction
 Uses regex pattern matching to find timestamps in conversation:
 ```python
-pattern = r'\b(\d{1,2}):(\d{2})(?::(\d{2}))?\b'
+pattern = r"\b(\d{1,2}):(\d{2})(?::(\d{2}))?\b"
 ```
 
 ### UI/UX Design
@@ -128,7 +128,7 @@ render_video_player(
     video_path="data/videos/video_123.mp4",
     video_id="video_123",
     current_timestamp=65.5,  # Start at 1:05
-    timestamps=[30.0, 65.5, 120.0]  # Relevant moments
+    timestamps=[30.0, 65.5, 120.0],  # Relevant moments
 )
 ```
 
@@ -139,7 +139,7 @@ from ui.player import render_video_player_with_context
 render_video_player_with_context(
     video_path="data/videos/video_123.mp4",
     video_id="video_123",
-    conversation_timestamps=[30.0, 65.5, 120.0]
+    conversation_timestamps=[30.0, 65.5, 120.0],
 )
 ```
 

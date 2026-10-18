@@ -1,10 +1,9 @@
 # CLAUDE.md - AI Assistant Guide for BRI Video Agent
 
-> **Last Updated**: November 13, 2025
-> **Version**: 1.0
-> **Status**: Active Development
+> **Last Updated**: November 13, 2025 **Version**: 1.0 **Status**: Active Development
 
-This document provides AI assistants with comprehensive context about the BRI (Brianna) video agent codebase, including architecture, conventions, workflows, and guidelines for effective contribution.
+This document provides AI assistants with comprehensive context about the BRI (Brianna) video agent codebase, including
+architecture, conventions, workflows, and guidelines for effective contribution.
 
 ---
 
@@ -24,11 +23,14 @@ This document provides AI assistants with comprehensive context about the BRI (B
 
 ---
 
+<a id="project-overview"></a>
+
 ## 🎯 Project Overview
 
 ### What is BRI?
 
-BRI (Brianna) is an **empathetic multimodal agent** for video analysis that enables users to upload videos and ask natural language questions to receive context-aware, conversational responses.
+BRI (Brianna) is an **empathetic multimodal agent** for video analysis that enables users to upload videos and ask
+natural language questions to receive context-aware, conversational responses.
 
 ### Core Capabilities
 
@@ -45,6 +47,7 @@ BRI (Brianna) is an **empathetic multimodal agent** for video analysis that enab
 ### Design Philosophy
 
 BRI is designed to be:
+
 - **Empathetic**: Warm, supportive tone with playful personality
 - **Accessible**: No technical knowledge required
 - **Conversational**: Like discussing content with a knowledgeable friend
@@ -63,11 +66,13 @@ BRI is designed to be:
 
 ---
 
+<a id="codebase-structure"></a>
+
 ## 📁 Codebase Structure
 
 ### Directory Layout
 
-```
+```text
 bri-video-agent/
 ├── app.py                      # Main Streamlit application entry point
 ├── config.py                   # Configuration management (lazy loading)
@@ -159,11 +164,13 @@ bri-video-agent/
 
 ---
 
+<a id="architecture--design-patterns"></a>
+
 ## 🏗️ Architecture & Design Patterns
 
 ### Layered Architecture
 
-```
+```text
 ┌─────────────────────────────────────────┐
 │         Streamlit UI Layer              │
 │  (Chat, Library, Player, History)       │
@@ -193,37 +200,44 @@ bri-video-agent/
 ### Key Design Patterns
 
 #### 1. **Database-First Approach**
+
 - Always check database for existing processed data before calling MCP tools
 - Prioritize existing data: captions > transcripts > objects > frames
 - Reduces redundant processing and API calls
 
 #### 2. **Graceful Degradation**
+
 - Agent works with partial data (frames-only, captions-only, or full intelligence)
 - Friendly fallback messages when tools fail
 - Continues operation even if optional services (Redis) are unavailable
 
 #### 3. **Context Manager Pattern**
+
 - Database, Memory, and ContextBuilder use context managers (`with` statements)
 - Ensures proper resource cleanup
 - Automatic transaction management
 
 #### 4. **Singleton Pattern**
+
 - Services like `get_file_store()` and `get_semantic_search_service()` use singletons
 - Lazy initialization with caching
 - Prevents duplicate resource allocation
 
 #### 5. **Factory Pattern**
+
 - Tool registry dynamically creates tool instances
 - Configuration-driven service instantiation
 - Extensible for new tools
 
 #### 6. **Multi-Tier Caching**
+
 - **L1 (LRU)**: In-memory cache with thread safety
 - **L2 (Redis)**: Optional shared cache across instances
 - **L3 (DB)**: Database-level query caching
 - Hit rate tracking for performance monitoring
 
 #### 7. **Separation of Concerns**
+
 - **Models**: Data structures only (Pydantic)
 - **Services**: Business logic
 - **Storage**: Data persistence
@@ -231,12 +245,15 @@ bri-video-agent/
 - **UI**: User interface
 
 #### 8. **Error Handling Strategy**
+
 - Custom exceptions per domain (`AgentError`, `MemoryError`, `DatabaseError`, etc.)
 - `ErrorHandler` service converts technical errors to warm, empathetic messages
 - Tool-specific error messages maintain BRI's personality
 - Logging at multiple levels (DEBUG, INFO, WARNING, ERROR)
 
 ---
+
+<a id="development-workflows"></a>
 
 ## 🔄 Development Workflows
 
@@ -328,6 +345,7 @@ streamlit run ui/logging_dashboard.py --server.port 8503
 **Current Status**: No pre-commit hooks or CI/CD configured
 
 **Branch Strategy**: Feature branches recommended
+
 ```bash
 git checkout -b feature/your-feature-name
 # Make changes
@@ -336,6 +354,8 @@ git push origin feature/your-feature-name
 ```
 
 ---
+
+<a id="key-conventions--standards"></a>
 
 ## 📏 Key Conventions & Standards
 
@@ -348,6 +368,7 @@ git push origin feature/your-feature-name
 - **Private Methods**: `_leading_underscore()`
 
 **Examples**:
+
 ```python
 # Files
 video_processing_service.py
@@ -373,6 +394,7 @@ def _validate_input():
 ### Code Organization
 
 #### Module Structure
+
 ```python
 """Module docstring explaining purpose."""
 
@@ -391,13 +413,16 @@ from services.memory import Memory
 # 4. Constants
 DEFAULT_TIMEOUT = 30
 
+
 # 5. Classes and functions
 class MyService:
     """Service docstring."""
+
     pass
 ```
 
 #### Function/Method Documentation
+
 ```python
 def process_video(video_id: str, max_frames: int = 100) -> VideoMetadata:
     """Process a video and extract metadata.
@@ -419,6 +444,7 @@ def process_video(video_id: str, max_frames: int = 100) -> VideoMetadata:
 ### Error Handling Patterns
 
 #### Use Custom Exceptions
+
 ```python
 # Good
 if not video_exists(video_id):
@@ -430,13 +456,16 @@ if not video_exists(video_id):
 ```
 
 #### Provide Context in Error Messages
+
 ```python
 # Good
 try:
     result = process_frame(frame_id)
 except ProcessingError as e:
-    logger.error(f"Failed to process frame {frame_id} for video {video_id}",
-                 extra={'frame_id': frame_id, 'video_id': video_id, 'error': str(e)})
+    logger.error(
+        f"Failed to process frame {frame_id} for video {video_id}",
+        extra={"frame_id": frame_id, "video_id": video_id, "error": str(e)},
+    )
     raise
 
 # Avoid
@@ -446,6 +475,7 @@ except ProcessingError as e:
 ```
 
 #### Use ErrorHandler for User-Facing Messages
+
 ```python
 from services.error_handler import ErrorHandler
 
@@ -454,30 +484,33 @@ error_handler = ErrorHandler()
 try:
     captions = caption_frames(video_id)
 except CaptioningError as e:
-    friendly_message = error_handler.handle_tool_error('image_captioner', e)
+    friendly_message = error_handler.handle_tool_error("image_captioner", e)
     return {"error": friendly_message}
 ```
 
 ### Logging Patterns
 
 #### Structured Logging
+
 ```python
 from utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
 # Use structured logging with context
-logger.info("Processing video",
-            extra={'video_id': video_id, 'frame_count': len(frames)})
+logger.info("Processing video", extra={"video_id": video_id, "frame_count": len(frames)})
 
 # Performance logging
 from utils.logging_config import get_performance_logger
+
 perf_logger = get_performance_logger(__name__)
-perf_logger.info("Frame extraction completed",
-                 extra={'duration_ms': duration, 'frame_count': count})
+perf_logger.info(
+    "Frame extraction completed", extra={"duration_ms": duration, "frame_count": count}
+)
 ```
 
 #### Log Levels
+
 - **DEBUG**: Detailed diagnostic information
 - **INFO**: General informational messages (operations, state changes)
 - **WARNING**: Unexpected but handled situations
@@ -487,30 +520,34 @@ perf_logger.info("Frame extraction completed",
 ### Data Validation Patterns
 
 #### Always Validate Before Database Insertion
+
 ```python
 from services.data_validator import DataValidator
 
 validator = DataValidator()
 
 # Validate single record
-errors = validator.validate_caption({
-    'video_id': video_id,
-    'frame_number': 1,
-    'timestamp': 0.5,
-    'caption_text': "A cat sitting on a table"
-})
+errors = validator.validate_caption(
+    {
+        "video_id": video_id,
+        "frame_number": 1,
+        "timestamp": 0.5,
+        "caption_text": "A cat sitting on a table",
+    }
+)
 
 if errors:
     raise ValidationError(f"Invalid caption data: {errors}")
 
 # Validate batch
 captions_batch = [...]
-batch_errors = validator.validate_batch(captions_batch, 'caption')
+batch_errors = validator.validate_batch(captions_batch, "caption")
 ```
 
 ### Database Patterns
 
 #### Use Transactions
+
 ```python
 from storage.database import Database
 
@@ -524,12 +561,10 @@ with db.transaction():
 ```
 
 #### Use Prepared Statements
+
 ```python
 # Good - prevents SQL injection
-cursor.execute(
-    "SELECT * FROM videos WHERE video_id = ?",
-    (video_id,)
-)
+cursor.execute("SELECT * FROM videos WHERE video_id = ?", (video_id,))
 
 # Avoid - SQL injection risk
 cursor.execute(f"SELECT * FROM videos WHERE video_id = '{video_id}'")
@@ -538,29 +573,34 @@ cursor.execute(f"SELECT * FROM videos WHERE video_id = '{video_id}'")
 ### Testing Patterns
 
 #### Use Fixtures for Test Data
+
 ```python
 import pytest
 import tempfile
 
+
 @pytest.fixture
 def temp_db():
     """Create temporary database for testing."""
-    fd, path = tempfile.mkstemp(suffix='.db')
+    fd, path = tempfile.mkstemp(suffix=".db")
     db = Database(path)
     db.initialize_schema()
     yield db
     os.close(fd)
     os.unlink(path)
 
+
 def test_insert_video(temp_db):
     """Test video insertion."""
-    video_data = {'video_id': 'test-123', 'filename': 'test.mp4'}
+    video_data = {"video_id": "test-123", "filename": "test.mp4"}
     temp_db.insert_video(video_data)
-    result = temp_db.get_video('test-123')
-    assert result['filename'] == 'test.mp4'
+    result = temp_db.get_video("test-123")
+    assert result["filename"] == "test.mp4"
 ```
 
 ---
+
+<a id="configuration-management"></a>
 
 ## ⚙️ Configuration Management
 
@@ -569,11 +609,13 @@ def test_insert_video(temp_db):
 BRI uses a **lazy-loading metaclass-based configuration** system in `config.py`.
 
 #### Priority Order
+
 1. Streamlit secrets (for Streamlit Cloud deployment)
 2. Environment variables
 3. Default values
 
 #### Usage
+
 ```python
 from config import Config
 
@@ -600,9 +642,11 @@ Config.display_config()
 See `.env.example` for all available configuration options.
 
 #### Required Configuration
+
 - **`GROQ_API_KEY`**: Groq API key (get from console.groq.com)
 
 #### Important Optional Configuration
+
 - **`REDIS_ENABLED`**: Enable/disable Redis caching (default: `true`)
 - **`MAX_FRAMES_PER_VIDEO`**: Maximum frames to extract (default: `100`)
 - **`FRAME_EXTRACTION_INTERVAL`**: Seconds between frames (default: `2.0`)
@@ -610,6 +654,7 @@ See `.env.example` for all available configuration options.
 - **`LOG_LEVEL`**: Logging level (default: `INFO`)
 
 #### Configuration in Code
+
 ```python
 # Don't hardcode configuration values
 # Bad
@@ -617,6 +662,7 @@ max_frames = 100
 
 # Good
 from config import Config
+
 max_frames = Config.MAX_FRAMES_PER_VIDEO
 ```
 
@@ -629,11 +675,13 @@ max_frames = Config.MAX_FRAMES_PER_VIDEO
 
 ---
 
+<a id="testing-approach"></a>
+
 ## 🧪 Testing Approach
 
 ### Test Structure
 
-```
+```text
 tests/
 ├── unit/              # Unit tests for individual components
 ├── integration/       # Integration tests
@@ -660,6 +708,7 @@ tests/
 import pytest
 from services.memory import Memory
 
+
 @pytest.fixture
 def memory_service():
     """Create memory service with temp database."""
@@ -671,6 +720,7 @@ def memory_service():
 
     # Teardown
     cleanup_temp_database(db)
+
 
 def test_store_and_retrieve_message(memory_service):
     """Test message storage and retrieval."""
@@ -689,6 +739,8 @@ def test_store_and_retrieve_message(memory_service):
 
 ---
 
+<a id="deployment--operations"></a>
+
 ## 🚀 Deployment & Operations
 
 ### Deployment Status
@@ -700,6 +752,7 @@ def test_store_and_retrieve_message(memory_service):
 ### Starting the Application
 
 #### Development Mode
+
 ```bash
 # Terminal 1
 python mcp_server/main.py
@@ -709,6 +762,7 @@ streamlit run app.py
 ```
 
 #### Production Mode (Streamlit Cloud)
+
 - Configure secrets in Streamlit Cloud dashboard
 - Secrets take priority over environment variables
 - See `DEPLOYMENT_STATUS.md` for details
@@ -742,6 +796,7 @@ python scripts/restore_database.py data/backups/bri_backup_YYYYMMDD_HHMMSS.db
 ### Operations
 
 See `docs/OPERATIONS_RUNBOOK.md` for detailed operational procedures including:
+
 - Incident response
 - Database maintenance
 - Performance optimization
@@ -749,11 +804,14 @@ See `docs/OPERATIONS_RUNBOOK.md` for detailed operational procedures including:
 
 ---
 
+<a id="common-tasks"></a>
+
 ## 🛠️ Common Tasks
 
 ### Adding a New Video Processing Tool
 
 1. **Create tool file** in `tools/`
+
    ```python
    # tools/my_new_tool.py
    class MyNewTool:
@@ -763,10 +821,11 @@ See `docs/OPERATIONS_RUNBOOK.md` for detailed operational procedures including:
    ```
 
 2. **Register in MCP server** (`mcp_server/registry.py`)
+
    ```python
    from tools.my_new_tool import MyNewTool
 
-   registry.register_tool('my_new_tool', MyNewTool())
+   registry.register_tool("my_new_tool", MyNewTool())
    ```
 
 3. **Add to router** (`services/router.py`)
@@ -792,16 +851,18 @@ See `docs/OPERATIONS_RUNBOOK.md` for detailed operational procedures including:
 
 1. **Update `storage/schema.sql`** with new schema
 2. **Create migration** in `storage/migrations.py`
+
    ```python
    MIGRATIONS = [
        # ... existing migrations
        {
-           'version': 5,
-           'description': 'Add new column',
-           'sql': 'ALTER TABLE videos ADD COLUMN new_field TEXT;'
+           "version": 5,
+           "description": "Add new column",
+           "sql": "ALTER TABLE videos ADD COLUMN new_field TEXT;",
        }
    ]
    ```
+
 3. **Run migration**: `python scripts/migrate_db.py`
 4. **Update models** in `models/`
 5. **Test thoroughly**
@@ -838,6 +899,8 @@ python scripts/utils/list_videos.py
 
 ---
 
+<a id="ai-assistant-guidelines"></a>
+
 ## 🤖 AI Assistant Guidelines
 
 When working on this codebase as an AI assistant, follow these guidelines:
@@ -845,12 +908,14 @@ When working on this codebase as an AI assistant, follow these guidelines:
 ### 1. **Maintain BRI's Personality**
 
 BRI has a warm, empathetic, playful personality. This should be reflected in:
+
 - User-facing messages
 - Error messages
 - UI text
 - Comments and documentation
 
 **Examples**:
+
 ```python
 # Good
 "I'm having a little trouble with the visual descriptions right now, but I can tell you what was said! 🎵"
@@ -862,21 +927,23 @@ BRI has a warm, empathetic, playful personality. This should be reflected in:
 ### 2. **Database-First Approach**
 
 Always check the database for existing data before calling tools:
+
 ```python
 # Good
 captions = db.get_captions(video_id)
 if not captions:
     # Only call tool if no data exists
-    captions = mcp_client.call_tool('caption_frames', {'video_id': video_id})
+    captions = mcp_client.call_tool("caption_frames", {"video_id": video_id})
     db.store_captions(video_id, captions)
 
 # Avoid - Always calling tools
-captions = mcp_client.call_tool('caption_frames', {'video_id': video_id})
+captions = mcp_client.call_tool("caption_frames", {"video_id": video_id})
 ```
 
 ### 3. **Graceful Degradation**
 
 Design features to work with partial data:
+
 ```python
 # Good - works with what's available
 context = []
@@ -894,19 +961,18 @@ context = f"Visual: {captions}, Audio: {transcripts}"  # Fails if either is None
 ### 4. **Comprehensive Logging**
 
 Use structured logging with appropriate context:
+
 ```python
 from utils.logging_config import get_logger
 
 logger = get_logger(__name__)
 
 # Good
-logger.info("Starting video processing",
-            extra={'video_id': video_id, 'frame_count': len(frames)})
+logger.info("Starting video processing", extra={"video_id": video_id, "frame_count": len(frames)})
 
 # Better
 with log_context(video_id=video_id):
-    logger.info("Starting video processing",
-                extra={'frame_count': len(frames)})
+    logger.info("Starting video processing", extra={"frame_count": len(frames)})
 ```
 
 ### 5. **Use Type Hints Consistently**
@@ -915,12 +981,15 @@ with log_context(video_id=video_id):
 from typing import Optional, List, Dict
 from models.video import VideoMetadata
 
+
 # Good
 def get_video(video_id: str) -> Optional[VideoMetadata]:
     pass
 
+
 def get_frames(video_id: str) -> List[Dict[str, any]]:
     pass
+
 
 # Avoid
 def get_video(video_id):
@@ -937,7 +1006,7 @@ validator = DataValidator()
 # Good
 errors = validator.validate_caption(caption_data)
 if errors:
-    logger.error("Invalid caption data", extra={'errors': errors})
+    logger.error("Invalid caption data", extra={"errors": errors})
     raise ValidationError(errors)
 db.insert_caption(caption_data)
 
@@ -956,8 +1025,8 @@ error_handler = ErrorHandler()
 try:
     result = process_video(video_id)
 except ProcessingError as e:
-    logger.error("Video processing failed", extra={'video_id': video_id, 'error': str(e)})
-    friendly_msg = error_handler.handle_tool_error('frame_extractor', e)
+    logger.error("Video processing failed", extra={"video_id": video_id, "error": str(e)})
+    friendly_msg = error_handler.handle_tool_error("frame_extractor", e)
     return {"error": friendly_msg}
 
 # Avoid - technical error exposed to user
@@ -976,13 +1045,13 @@ db = Database()
 with db.transaction():
     db.insert_video(video_data)
     db.insert_frames(frames_data)
-    db.update_processing_status(video_id, 'completed')
+    db.update_processing_status(video_id, "completed")
     # All or nothing
 
 # Avoid
 db.insert_video(video_data)
 db.insert_frames(frames_data)  # Could fail leaving inconsistent state
-db.update_processing_status(video_id, 'completed')
+db.update_processing_status(video_id, "completed")
 ```
 
 ### 9. **Document Your Changes**
@@ -1001,11 +1070,14 @@ db.update_processing_status(video_id, 'completed')
 
 ---
 
+<a id="current-state--roadmap"></a>
+
 ## 📊 Current State & Roadmap
 
 ### Current Status (November 2025)
 
 **Phase 1-3: Complete** (Tasks 1-30)
+
 - ✅ ML Pipeline implemented (BLIP, Whisper, YOLO)
 - ✅ Database schema created
 - ✅ Agent architecture built
@@ -1014,6 +1086,7 @@ db.update_processing_status(video_id, 'completed')
 - ✅ Basic testing (37/50 tests passing - 74%)
 
 **Issues**:
+
 - ⚠️ Data persistence partially broken (MCP server not storing results consistently)
 - ⚠️ 13 tests failing (26%)
 - ⚠️ No progressive processing (user waits for full processing)
@@ -1021,7 +1094,9 @@ db.update_processing_status(video_id, 'completed')
 ### Roadmap
 
 #### **Phase 4: Data Pipeline Fix** (Week 1 - CRITICAL)
+
 Tasks 40-43:
+
 - Fix data persistence with transactions
 - Add progressive processing (frames → captions → transcripts → objects)
 - Improve agent intelligence
@@ -1029,7 +1104,9 @@ Tasks 40-43:
 - **Target**: 90%+ test pass rate
 
 #### **Phase 5: Data Engineering** (Weeks 2-3 - HIGH)
+
 Tasks 44-50:
+
 - Database optimization (constraints, migrations, archival)
 - API hardening (validation, circuit breakers, versioning)
 - Data flow optimization (multi-tier caching, query optimization)
@@ -1041,12 +1118,14 @@ Tasks 44-50:
 ### Success Metrics
 
 **Phase 4 Complete**:
+
 - 100% data persistence
 - 90%+ test pass rate
 - <30s to chat availability
 - Zero silent failures
 
 **Phase 5 Complete**:
+
 - ACID compliance
 - <100ms for 95% of queries
 - 99.9% uptime
@@ -1056,15 +1135,16 @@ Tasks 44-50:
 ### Getting Involved
 
 **For Critical Fixes**:
+
 ```bash
 python scripts/diagnose_system.py
 python scripts/utils/quick_fix.py
 ```
 
-**For Full Implementation**:
-See `.kiro/specs/bri-video-agent/tasks.md` for complete task list.
+**For Full Implementation**: See `.kiro/specs/bri-video-agent/tasks.md` for complete task list.
 
 **For Understanding**:
+
 - `PROJECT_STRUCTURE.md` - Directory structure
 - `README.md` - User-facing documentation
 - `docs/` - Comprehensive guides
@@ -1106,12 +1186,14 @@ See `.kiro/specs/bri-video-agent/tasks.md` for complete task list.
 ## ✅ Checklist for AI Assistants
 
 Before starting work, review:
+
 - [ ] This CLAUDE.md file
 - [ ] PROJECT_STRUCTURE.md for directory layout
 - [ ] FINAL_TASK_SUMMARY.md for current status
 - [ ] Relevant documentation in `docs/`
 
 When making changes:
+
 - [ ] Follow naming conventions
 - [ ] Add appropriate logging
 - [ ] Validate data before database operations
@@ -1122,6 +1204,7 @@ When making changes:
 - [ ] Maintain BRI's empathetic personality
 
 Before committing:
+
 - [ ] Run tests: `pytest`
 - [ ] Check logs for errors
 - [ ] Verify functionality manually
@@ -1129,8 +1212,6 @@ Before committing:
 
 ---
 
-**Version**: 1.0
-**Last Updated**: November 13, 2025
-**Maintainer**: BRI Development Team
+**Version**: 1.0 **Last Updated**: November 13, 2025 **Maintainer**: BRI Development Team
 
 For questions or clarifications, refer to the documentation in `docs/` or run diagnostic scripts in `scripts/`.

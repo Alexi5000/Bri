@@ -2,7 +2,8 @@
 
 ## Overview
 
-BRI includes a comprehensive database backup system with automated backups, point-in-time recovery, and backup verification. This guide covers all backup and restore operations.
+BRI includes a comprehensive database backup system with automated backups, point-in-time recovery, and backup
+verification. This guide covers all backup and restore operations.
 
 ## Features
 
@@ -61,6 +62,7 @@ python scripts/verify_backups.py
 Set up a scheduled task to run daily backups:
 
 **Windows (Task Scheduler)**:
+
 1. Open Task Scheduler
 2. Create Basic Task
 3. Set trigger: Daily at 2:00 AM
@@ -70,6 +72,7 @@ Set up a scheduled task to run daily backups:
 7. Start in: `C:\path\to\bri-video-agent`
 
 **Linux/Mac (cron)**:
+
 ```bash
 # Edit crontab
 crontab -e
@@ -85,6 +88,7 @@ crontab -e
 - **Safety backups**: Never auto-deleted
 
 Configure retention in `storage/backup.py`:
+
 ```python
 backup_manager = DatabaseBackup(retention_days=30)
 ```
@@ -97,7 +101,7 @@ Backups are stored in: `data/backups/`
 
 ### File Structure
 
-```
+```text
 data/backups/
 ├── bri_backup_20251016_143000.db       # Backup file
 ├── bri_backup_20251016_143000.db.meta  # Metadata
@@ -109,12 +113,14 @@ data/backups/
 ### Metadata File
 
 Each backup has a `.meta` file with:
+
 - Backup timestamp
 - File size and checksum
 - Table record counts
 - Source database path
 
 Example:
+
 ```json
 {
   "backup_time": "2025-10-16T14:30:00",
@@ -175,6 +181,7 @@ is_valid = backup_manager.verify_backup(backup_path)
 
 # Verify all backups
 from storage.backup import verify_all_backups
+
 valid, invalid = verify_all_backups()
 print(f"Valid: {valid}, Invalid: {invalid}")
 ```
@@ -295,7 +302,8 @@ stats = backup_manager.get_backup_stats()
 
 # Alert if no recent backups
 from datetime import datetime, timedelta
-newest = datetime.fromisoformat(stats['newest_backup'])
+
+newest = datetime.fromisoformat(stats["newest_backup"])
 if datetime.now() - newest > timedelta(days=2):
     print("⚠️  Warning: No recent backups!")
 ```
@@ -331,6 +339,7 @@ python scripts/restore_database.py data/backups/before_update_v1.5.db
 ### Backup Creation Fails
 
 **Error**: `Database file not found`
+
 ```bash
 # Check database path
 ls -la data/bri.db
@@ -340,6 +349,7 @@ python scripts/init_db.py
 ```
 
 **Error**: `Permission denied`
+
 ```bash
 # Check backup directory permissions
 mkdir -p data/backups
@@ -349,6 +359,7 @@ chmod 755 data/backups
 ### Restore Fails
 
 **Error**: `Backup verification failed`
+
 ```bash
 # Check backup integrity
 python scripts/verify_backups.py
@@ -358,6 +369,7 @@ python scripts/restore_database.py --no-verify
 ```
 
 **Error**: `Database is locked`
+
 ```bash
 # Stop all BRI processes
 # Then retry restore
@@ -389,7 +401,7 @@ backup_manager = DatabaseBackup()
 stats = backup_manager.get_backup_stats()
 
 # Check if backups are current
-newest = datetime.fromisoformat(stats['newest_backup'])
+newest = datetime.fromisoformat(stats["newest_backup"])
 age_hours = (datetime.now() - newest).total_seconds() / 3600
 
 if age_hours > 24:
@@ -398,7 +410,7 @@ else:
     print(f"✓ Backups are current (latest: {age_hours:.1f} hours ago)")
 
 # Check backup count
-if stats['total_backups'] < 7:
+if stats["total_backups"] < 7:
     print(f"⚠️  Warning: Only {stats['total_backups']} backups available")
 else:
     print(f"✓ {stats['total_backups']} backups available")

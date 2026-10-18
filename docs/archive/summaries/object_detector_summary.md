@@ -57,15 +57,12 @@ detector = ObjectDetector(model_name="yolov8n.pt")
 detections = detector.detect_objects_in_frames(
     frame_paths=["/path/to/frame1.jpg", "/path/to/frame2.jpg"],
     timestamps=[0.0, 2.5],
-    confidence_threshold=0.3
+    confidence_threshold=0.3,
 )
 
 # Search for specific object
 dog_frames = detector.search_for_object(
-    frame_paths=frame_paths,
-    timestamps=timestamps,
-    object_class="dog",
-    confidence_threshold=0.3
+    frame_paths=frame_paths, timestamps=timestamps, object_class="dog", confidence_threshold=0.3
 )
 
 # Get available classes

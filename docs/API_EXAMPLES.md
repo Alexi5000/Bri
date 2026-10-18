@@ -20,7 +20,7 @@ This guide provides practical examples for interacting with the BRI MCP Server A
 
 ### Base URL
 
-```
+```text
 http://localhost:8000
 ```
 
@@ -45,6 +45,7 @@ curl http://localhost:8000/
 ```
 
 **Response:**
+
 ```json
 {
   "name": "BRI MCP Server",
@@ -61,6 +62,7 @@ curl http://localhost:8000/health
 ```
 
 **Response:**
+
 ```json
 {
   "status": "healthy",
@@ -78,6 +80,7 @@ curl http://localhost:8000/tools | jq
 ```
 
 **Response:**
+
 ```json
 {
   "tools": [
@@ -122,6 +125,7 @@ curl -X POST http://localhost:8000/tools/extract_frames/execute \
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -165,6 +169,7 @@ curl -X POST http://localhost:8000/tools/extract_frames/execute \
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -201,6 +206,7 @@ curl -X POST http://localhost:8000/tools/caption_frames/execute \
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -243,6 +249,7 @@ curl -X POST http://localhost:8000/tools/transcribe_audio/execute \
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -286,6 +293,7 @@ curl -X POST http://localhost:8000/tools/transcribe_audio/execute \
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -323,6 +331,7 @@ curl -X POST http://localhost:8000/tools/detect_objects/execute \
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -381,6 +390,7 @@ curl -X POST http://localhost:8000/tools/detect_objects/execute \
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -419,6 +429,7 @@ curl -X POST http://localhost:8000/videos/video_123/process \
 ```
 
 **Response:**
+
 ```json
 {
   "status": "complete",
@@ -484,6 +495,7 @@ curl http://localhost:8000/cache/stats | jq
 ```
 
 **Response:**
+
 ```json
 {
   "enabled": true,
@@ -502,6 +514,7 @@ curl -X DELETE http://localhost:8000/cache/videos/video_123 | jq
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -518,6 +531,7 @@ curl -X DELETE http://localhost:8000/cache | jq
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -540,6 +554,7 @@ curl -X POST http://localhost:8000/tools/invalid_tool/execute \
 ```
 
 **Response (404):**
+
 ```json
 {
   "detail": "Tool 'invalid_tool' not found"
@@ -558,6 +573,7 @@ curl -X POST http://localhost:8000/tools/extract_frames/execute \
 ```
 
 **Response (500):**
+
 ```json
 {
   "status": "error",
@@ -583,6 +599,7 @@ curl -X POST http://localhost:8000/tools/extract_frames/execute \
 ```
 
 **Response (422):**
+
 ```json
 {
   "detail": [
@@ -603,44 +620,37 @@ curl -X POST http://localhost:8000/tools/extract_frames/execute \
 import requests
 import json
 
+
 class BRIClient:
     def __init__(self, base_url="http://localhost:8000"):
         self.base_url = base_url
         self.session = requests.Session()
-    
+
     def health_check(self):
         """Check if server is healthy"""
         response = self.session.get(f"{self.base_url}/health")
         return response.json()
-    
+
     def list_tools(self):
         """Get all available tools"""
         response = self.session.get(f"{self.base_url}/tools")
         return response.json()
-    
+
     def execute_tool(self, tool_name, video_id, parameters=None):
         """Execute a specific tool"""
-        payload = {
-            "video_id": video_id,
-            "parameters": parameters or {}
-        }
-        response = self.session.post(
-            f"{self.base_url}/tools/{tool_name}/execute",
-            json=payload
-        )
+        payload = {"video_id": video_id, "parameters": parameters or {}}
+        response = self.session.post(f"{self.base_url}/tools/{tool_name}/execute", json=payload)
         return response.json()
-    
+
     def process_video(self, video_id, tools=None):
         """Process video with multiple tools"""
         payload = {
-            "tools": tools or ["extract_frames", "caption_frames", 
-                              "transcribe_audio", "detect_objects"]
+            "tools": tools
+            or ["extract_frames", "caption_frames", "transcribe_audio", "detect_objects"]
         }
-        response = self.session.post(
-            f"{self.base_url}/videos/{video_id}/process",
-            json=payload
-        )
+        response = self.session.post(f"{self.base_url}/videos/{video_id}/process", json=payload)
         return response.json()
+
 
 # Usage
 client = BRIClient()
@@ -655,9 +665,7 @@ print(f"Available tools: {len(tools['tools'])}")
 
 # Extract frames
 result = client.execute_tool(
-    "extract_frames",
-    "video_123",
-    {"interval_seconds": 2.0, "max_frames": 50}
+    "extract_frames", "video_123", {"interval_seconds": 2.0, "max_frames": 50}
 )
 print(f"Extracted {result['result']['count']} frames")
 ```
@@ -667,44 +675,38 @@ print(f"Extracted {result['result']['count']} frames")
 ```python
 def extract_and_caption(client, video_id):
     """Extract frames and generate captions"""
-    
+
     # Step 1: Extract frames
     print("Extracting frames...")
     frames_result = client.execute_tool(
-        "extract_frames",
-        video_id,
-        {"interval_seconds": 5.0, "max_frames": 20}
+        "extract_frames", video_id, {"interval_seconds": 5.0, "max_frames": 20}
     )
-    
+
     if frames_result["status"] != "success":
         print(f"Error: {frames_result['result']['error']}")
         return
-    
+
     frames = frames_result["result"]["frames"]
     print(f"Extracted {len(frames)} frames")
-    
+
     # Step 2: Caption frames
     print("Generating captions...")
     frame_paths = [f["image_path"] for f in frames]
     timestamps = [f["timestamp"] for f in frames]
-    
+
     captions_result = client.execute_tool(
-        "caption_frames",
-        video_id,
-        {
-            "frame_paths": frame_paths,
-            "timestamps": timestamps
-        }
+        "caption_frames", video_id, {"frame_paths": frame_paths, "timestamps": timestamps}
     )
-    
+
     if captions_result["status"] != "success":
         print(f"Error: {captions_result['result']['error']}")
         return
-    
+
     # Display results
     captions = captions_result["result"]["captions"]
     for caption in captions:
         print(f"[{caption['frame_timestamp']:.1f}s] {caption['text']}")
+
 
 # Usage
 client = BRIClient()
@@ -716,42 +718,35 @@ extract_and_caption(client, "video_123")
 ```python
 def find_object_in_video(client, video_id, object_class):
     """Find all occurrences of an object in a video"""
-    
+
     # First, extract frames
-    frames_result = client.execute_tool(
-        "extract_frames",
-        video_id,
-        {"interval_seconds": 2.0}
-    )
-    
+    frames_result = client.execute_tool("extract_frames", video_id, {"interval_seconds": 2.0})
+
     if frames_result["status"] != "success":
         return []
-    
+
     frames = frames_result["result"]["frames"]
     frame_paths = [f["image_path"] for f in frames]
     timestamps = [f["timestamp"] for f in frames]
-    
+
     # Detect objects
     detection_result = client.execute_tool(
         "detect_objects",
         video_id,
-        {
-            "frame_paths": frame_paths,
-            "timestamps": timestamps,
-            "object_class": object_class
-        }
+        {"frame_paths": frame_paths, "timestamps": timestamps, "object_class": object_class},
     )
-    
+
     if detection_result["status"] != "success":
         return []
-    
+
     occurrences = detection_result["result"]["occurrences"]
-    
+
     print(f"Found {len(occurrences)} occurrences of '{object_class}':")
     for occ in occurrences:
         print(f"  - At {occ['timestamp']:.1f}s (confidence: {occ['confidence']:.2f})")
-    
+
     return occurrences
+
 
 # Usage
 client = BRIClient()
@@ -764,22 +759,19 @@ find_object_in_video(client, "video_123", "cat")
 import aiohttp
 import asyncio
 
+
 class AsyncBRIClient:
     def __init__(self, base_url="http://localhost:8000"):
         self.base_url = base_url
-    
+
     async def execute_tool(self, session, tool_name, video_id, parameters=None):
         """Execute a tool asynchronously"""
-        payload = {
-            "video_id": video_id,
-            "parameters": parameters or {}
-        }
+        payload = {"video_id": video_id, "parameters": parameters or {}}
         async with session.post(
-            f"{self.base_url}/tools/{tool_name}/execute",
-            json=payload
+            f"{self.base_url}/tools/{tool_name}/execute", json=payload
         ) as response:
             return await response.json()
-    
+
     async def process_video_parallel(self, video_id):
         """Process video with multiple tools in parallel"""
         async with aiohttp.ClientSession() as session:
@@ -790,11 +782,13 @@ class AsyncBRIClient:
             results = await asyncio.gather(*tasks)
             return results
 
+
 # Usage
 async def main():
     client = AsyncBRIClient()
     results = await client.process_video_parallel("video_123")
     print(f"Completed {len(results)} tasks")
+
 
 asyncio.run(main())
 ```
@@ -862,6 +856,7 @@ client.session.delete(f"{client.base_url}/cache/videos/{video_id}")
 ---
 
 For more information, see:
+
 - [MCP Server README](../mcp_server/README.md) - Complete API reference
 - [User Guide](USER_GUIDE.md) - Using BRI through the UI
 - [Configuration](CONFIGURATION.md) - Server configuration options

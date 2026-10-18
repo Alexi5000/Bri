@@ -170,18 +170,10 @@ file_store = get_file_store()
 is_valid, error = file_store.validate_video_file(filename, file_size)
 
 if is_valid:
-    video_id, file_path = file_store.save_uploaded_video(
-        file_data,
-        filename
-    )
-    
+    video_id, file_path = file_store.save_uploaded_video(file_data, filename)
+
     # Create database record
-    insert_video(
-        video_id=video_id,
-        filename=filename,
-        file_path=file_path,
-        duration=duration
-    )
+    insert_video(video_id=video_id, filename=filename, file_path=file_path, duration=duration)
 ```
 
 ## Error Handling

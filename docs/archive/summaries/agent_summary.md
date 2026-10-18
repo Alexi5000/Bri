@@ -19,8 +19,8 @@ Main agent class that handles all conversational interactions.
 ```python
 agent = GroqAgent(
     groq_api_key=None,  # Uses Config.GROQ_API_KEY if not provided
-    memory=None,        # Creates new Memory instance if not provided
-    context_builder=None  # Creates new ContextBuilder if not provided
+    memory=None,  # Creates new Memory instance if not provided
+    context_builder=None,  # Creates new ContextBuilder if not provided
 )
 ```
 
@@ -194,10 +194,7 @@ from services.agent import GroqAgent
 agent = GroqAgent()
 
 # General greeting
-response = await agent.chat(
-    message="Hello! What can you do?",
-    video_id="video_123"
-)
+response = await agent.chat(message="Hello! What can you do?", video_id="video_123")
 print(response.message)
 print(response.suggestions)
 ```
@@ -205,10 +202,7 @@ print(response.suggestions)
 ### Video Analysis Query
 ```python
 # Query about video content
-response = await agent.chat(
-    message="What's happening at 1:30?",
-    video_id="video_123"
-)
+response = await agent.chat(message="What's happening at 1:30?", video_id="video_123")
 print(response.message)
 print(f"Frames: {response.frames}")
 print(f"Timestamps: {response.timestamps}")
@@ -217,16 +211,10 @@ print(f"Timestamps: {response.timestamps}")
 ### Follow-up Question
 ```python
 # First question
-response1 = await agent.chat(
-    message="What's in this video?",
-    video_id="video_123"
-)
+response1 = await agent.chat(message="What's in this video?", video_id="video_123")
 
 # Follow-up (uses conversation context)
-response2 = await agent.chat(
-    message="Can you tell me more about that?",
-    video_id="video_123"
-)
+response2 = await agent.chat(message="Can you tell me more about that?", video_id="video_123")
 ```
 
 ## Integration Points

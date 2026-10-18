@@ -113,9 +113,9 @@ query_type = self._classify_query_type(message_lower)
 ### Template Generation
 ```python
 # Each query type has specific templates
-if query_type == 'visual_description':
+if query_type == "visual_description":
     suggestions = self._suggest_visual_followups(...)
-elif query_type == 'audio_transcript':
+elif query_type == "audio_transcript":
     suggestions = self._suggest_audio_followups(...)
 # ... etc
 ```

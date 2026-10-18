@@ -247,7 +247,7 @@ Tests cover:
 Extend `render_video_card()` to display additional fields:
 ```python
 # Add custom field
-custom_data = video.get('custom_field', 'default')
+custom_data = video.get("custom_field", "default")
 st.caption(f"🏷️ {custom_data}")
 ```
 

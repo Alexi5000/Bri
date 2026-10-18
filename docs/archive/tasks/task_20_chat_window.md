@@ -117,6 +117,7 @@ def handle_send_message(message: str):
     # Refresh display
     st.rerun()
 
+
 # Render chat window
 conversation_history = memory.get_conversation_history(video_id)
 render_chat_window(video_id, conversation_history, handle_send_message)

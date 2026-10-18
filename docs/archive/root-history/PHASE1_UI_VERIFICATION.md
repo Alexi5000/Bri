@@ -254,26 +254,21 @@ Expected Custom CSS Features:
 ```python
 st.session_state = {
     # Navigation
-    'current_page': 'welcome',  # welcome, library, chat, player
-
+    "current_page": "welcome",  # welcome, library, chat, player
     # Video selection
-    'selected_video_id': None,
-
+    "selected_video_id": None,
     # Chat
-    'chat_messages': [],
-    'user_input': '',
-
+    "chat_messages": [],
+    "user_input": "",
     # Player
-    'current_timestamp': 0.0,
-    'is_playing': False,
-
+    "current_timestamp": 0.0,
+    "is_playing": False,
     # Library
-    'library_refresh_trigger': 0,
-    'filter_status': 'all',
-
+    "library_refresh_trigger": 0,
+    "filter_status": "all",
     # User preferences
-    'show_welcome': True,
-    'theme': 'light',
+    "show_welcome": True,
+    "theme": "light",
 }
 ```
 

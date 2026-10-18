@@ -22,6 +22,7 @@ This guide helps you diagnose and resolve common issues with BRI.
 **Problem**: `SyntaxError` or compatibility errors during installation
 
 **Solution**:
+
 ```bash
 # Check Python version (must be 3.9+)
 python --version
@@ -40,29 +41,32 @@ pip install -r requirements.txt
 **Common Issues**:
 
 1. **OpenCV Installation Fails**
+
    ```bash
    # Try installing system dependencies first (Linux)
    sudo apt-get install python3-opencv
-   
+
    # Or use headless version
    pip install opencv-python-headless
    ```
 
 2. **Whisper Installation Fails**
+
    ```bash
    # Install ffmpeg first
    # Mac: brew install ffmpeg
    # Linux: sudo apt-get install ffmpeg
    # Windows: Download from ffmpeg.org
-   
+
    pip install openai-whisper
    ```
 
 3. **PyTorch/Transformers Issues**
+
    ```bash
    # Install PyTorch first
    pip install torch torchvision torchaudio
-   
+
    # Then install transformers
    pip install transformers
    ```
@@ -72,6 +76,7 @@ pip install -r requirements.txt
 **Problem**: `ModuleNotFoundError` when running the application
 
 **Solution**:
+
 ```bash
 # Ensure you're in the project root directory
 cd bri-video-agent
@@ -93,6 +98,7 @@ python scripts/validate_setup.py
 **Problem**: `GROQ_API_KEY is required` error
 
 **Solution**:
+
 ```bash
 # 1. Create .env file from example
 cp .env.example .env
@@ -111,6 +117,7 @@ python -c "from dotenv import load_dotenv; import os; load_dotenv(); print('Key 
 **Problem**: Application fails to start with configuration errors
 
 **Solution**:
+
 ```bash
 # Run configuration validation
 python scripts/validate_setup.py
@@ -131,6 +138,7 @@ cp .env.example .env
 **Problem**: Configuration changes in `.env` not taking effect
 
 **Solution**:
+
 ```bash
 # 1. Verify .env file exists in project root
 ls -la .env
@@ -153,6 +161,7 @@ python -c "from dotenv import load_dotenv; load_dotenv(); import os; print(os.en
 **Problem**: `python mcp_server/main.py` fails or exits immediately
 
 **Diagnostic Steps**:
+
 ```bash
 # 1. Check if port 8000 is already in use
 # Linux/Mac:
@@ -171,6 +180,7 @@ pip install fastapi uvicorn redis
 ```
 
 **Common Causes**:
+
 - Port already in use → Change port or kill existing process
 - Missing dependencies → Run `pip install -r requirements.txt`
 - Database not initialized → Run `python scripts/init_db.py`
@@ -181,6 +191,7 @@ pip install fastapi uvicorn redis
 **Problem**: `streamlit run app.py` fails
 
 **Diagnostic Steps**:
+
 ```bash
 # 1. Check if port 8501 is in use
 # Linux/Mac:
@@ -203,6 +214,7 @@ python -m py_compile app.py
 **Problem**: UI can't connect to MCP server
 
 **Solution**:
+
 ```bash
 # 1. Verify MCP server is running
 curl http://localhost:8000/health
@@ -229,6 +241,7 @@ curl http://127.0.0.1:8000/health
 **Problem**: Upload doesn't complete or shows error
 
 **Diagnostic Steps**:
+
 ```bash
 # 1. Check video format
 ffprobe your_video.mp4
@@ -245,12 +258,16 @@ df -h
 ```
 
 **Solutions**:
+
 - **Unsupported format**: Convert to MP4 using ffmpeg
+
   ```bash
   ffmpeg -i input.avi -c:v libx264 -c:a aac output.mp4
   ```
+
 - **File too large**: Compress video or increase size limit
 - **Permission denied**: Fix directory permissions
+
   ```bash
   chmod 755 data/videos/
   ```
@@ -260,6 +277,7 @@ df -h
 **Problem**: Video processing never completes
 
 **Diagnostic Steps**:
+
 ```bash
 # 1. Check MCP server logs for progress
 # Look for tool execution messages
@@ -278,6 +296,7 @@ python scripts/test_object_detector.py
 ```
 
 **Solutions**:
+
 - **Long video**: Reduce `MAX_FRAMES_PER_VIDEO` in `.env`
 - **Low memory**: Close other applications or increase `FRAME_EXTRACTION_INTERVAL`
 - **Tool failure**: Check logs and disable problematic tools temporarily
@@ -288,6 +307,7 @@ python scripts/test_object_detector.py
 **Problem**: "I had trouble extracting frames" error
 
 **Diagnostic Steps**:
+
 ```bash
 # Test frame extraction directly
 python scripts/test_frame_extractor.py
@@ -300,12 +320,16 @@ python -c "import cv2; print(cv2.__version__)"
 ```
 
 **Solutions**:
+
 - **Codec not supported**: Re-encode video
+
   ```bash
   ffmpeg -i input.mp4 -c:v libx264 -preset fast output.mp4
   ```
+
 - **Corrupted video**: Try a different video file
 - **OpenCV issue**: Reinstall opencv-python
+
   ```bash
   pip uninstall opencv-python
   pip install opencv-python
@@ -316,6 +340,7 @@ python -c "import cv2; print(cv2.__version__)"
 **Problem**: Audio transcription errors or no transcript
 
 **Diagnostic Steps**:
+
 ```bash
 # Test transcription
 python scripts/test_audio_transcriber.py
@@ -328,10 +353,12 @@ python -c "import whisper; print(whisper.__version__)"
 ```
 
 **Solutions**:
+
 - **No audio track**: Video has no audio (expected behavior)
 - **Whisper not installed**: Install with `pip install openai-whisper`
 - **ffmpeg missing**: Install ffmpeg (required by Whisper)
 - **Out of memory**: Use smaller Whisper model
+
   ```python
   # In tools/audio_transcriber.py, change model size
   self.model = whisper.load_model("tiny")  # or "base" instead of "small"
@@ -342,6 +369,7 @@ python -c "import whisper; print(whisper.__version__)"
 **Problem**: Object detection errors or no objects found
 
 **Diagnostic Steps**:
+
 ```bash
 # Test object detection
 python scripts/test_object_detector.py
@@ -354,13 +382,18 @@ python -c "from ultralytics import YOLO; print('OK')"
 ```
 
 **Solutions**:
+
 - **Model not found**: Download YOLOv8 model
+
   ```python
   from ultralytics import YOLO
+
   model = YOLO("yolov8n.pt")  # Auto-downloads if missing
   ```
+
 - **No objects detected**: Lower confidence threshold in query
 - **GPU issues**: Force CPU mode
+
   ```python
   # In tools/object_detector.py
   self.model = YOLO("yolov8n.pt", device="cpu")
@@ -373,15 +406,18 @@ python -c "from ultralytics import YOLO; print('OK')"
 **Problem**: BRI says it can't find what you're asking about
 
 **Diagnostic Steps**:
+
 1. Verify the video actually contains what you're asking about
 2. Check if processing completed successfully
 3. Try a more general query first
 4. Check database for processed data:
+
    ```bash
    sqlite3 data/bri.db "SELECT context_type, COUNT(*) FROM video_context WHERE video_id='your_video_id' GROUP BY context_type;"
    ```
 
 **Solutions**:
+
 - **Processing incomplete**: Wait for processing to finish
 - **Query too specific**: Broaden your search terms
 - **Wrong video selected**: Check you're querying the right video
@@ -392,12 +428,14 @@ python -c "from ultralytics import YOLO; print('OK')"
 **Problem**: BRI's answers don't match the video content
 
 **Possible Causes**:
+
 1. **Low video quality**: Captions may be inaccurate
 2. **Poor audio quality**: Transcription errors
 3. **Small objects**: Detection may miss them
 4. **Ambiguous query**: BRI misunderstood the question
 
 **Solutions**:
+
 - Ask more specific questions
 - Reference timestamps if you know them
 - Try different phrasing
@@ -408,6 +446,7 @@ python -c "from ultralytics import YOLO; print('OK')"
 **Problem**: Queries take too long to respond
 
 **Diagnostic Steps**:
+
 ```bash
 # 1. Check if Redis is enabled and working
 redis-cli ping
@@ -423,6 +462,7 @@ curl -X POST https://api.groq.com/openai/v1/chat/completions \
 ```
 
 **Solutions**:
+
 - **Enable Redis**: Set `REDIS_ENABLED=true` in `.env`
 - **Use faster model**: Change to `llama-3-8b-8192` in `.env`
 - **Reduce context**: Lower `MAX_CONVERSATION_HISTORY`
@@ -433,6 +473,7 @@ curl -X POST https://api.groq.com/openai/v1/chat/completions \
 **Problem**: BRI doesn't remember previous conversation
 
 **Diagnostic Steps**:
+
 ```bash
 # Check memory storage
 sqlite3 data/bri.db "SELECT COUNT(*) FROM memory WHERE video_id='your_video_id';"
@@ -442,6 +483,7 @@ sqlite3 data/bri.db "SELECT COUNT(*) FROM memory WHERE video_id='your_video_id';
 ```
 
 **Solutions**:
+
 - **Database error**: Check database permissions
 - **Memory limit reached**: Increase `MAX_CONVERSATION_HISTORY`
 - **Wrong video**: Ensure you're on the same video
@@ -454,6 +496,7 @@ sqlite3 data/bri.db "SELECT COUNT(*) FROM memory WHERE video_id='your_video_id';
 **Problem**: Application uses too much RAM
 
 **Solutions**:
+
 ```bash
 # In .env, reduce these values:
 MAX_FRAMES_PER_VIDEO=50          # Default: 100
@@ -472,6 +515,7 @@ MAX_CONVERSATION_HISTORY=5       # Default: 10
 **Expected Behavior**: High CPU during video processing is normal
 
 **Solutions**:
+
 - Process videos one at a time
 - Increase `FRAME_EXTRACTION_INTERVAL` to extract fewer frames
 - Use GPU acceleration if available (for YOLO and BLIP)
@@ -482,6 +526,7 @@ MAX_CONVERSATION_HISTORY=5       # Default: 10
 **Problem**: Running out of disk space
 
 **Diagnostic Steps**:
+
 ```bash
 # Check space usage
 du -sh data/*
@@ -491,6 +536,7 @@ find data/ -type f -size +100M -exec ls -lh {} \;
 ```
 
 **Solutions**:
+
 ```bash
 # Delete old videos and their data
 # Through UI: Use delete button in video library
@@ -513,6 +559,7 @@ rm -rf data/cache/*
 **Problem**: `database is locked` error
 
 **Solutions**:
+
 ```bash
 # 1. Close all connections to the database
 # Stop both MCP server and Streamlit UI
@@ -532,6 +579,7 @@ python scripts/init_db.py
 **Problem**: Database errors or inconsistent data
 
 **Solutions**:
+
 ```bash
 # 1. Check database integrity
 sqlite3 data/bri.db "PRAGMA integrity_check;"
@@ -549,6 +597,7 @@ python scripts/init_db.py
 **Problem**: Database schema doesn't match application
 
 **Solution**:
+
 ```bash
 # Backup existing database
 cp data/bri.db data/bri.db.backup
@@ -567,6 +616,7 @@ python scripts/init_db.py
 **Problem**: `Connection refused` to Redis
 
 **Solutions**:
+
 ```bash
 # Option 1: Disable Redis (application will work without it)
 # In .env:
@@ -594,6 +644,7 @@ REDIS_URL=redis://your-redis-host:6379
 **Problem**: Queries aren't using cached results
 
 **Diagnostic Steps**:
+
 ```bash
 # 1. Verify Redis is running
 redis-cli ping
@@ -610,6 +661,7 @@ curl http://localhost:8000/cache/stats
 ```
 
 **Solutions**:
+
 - Ensure `REDIS_ENABLED=true` in `.env`
 - Verify Redis URL is correct
 - Check Redis memory limits: `redis-cli INFO memory`
@@ -620,6 +672,7 @@ curl http://localhost:8000/cache/stats
 **Problem**: Getting outdated results from cache
 
 **Solutions**:
+
 ```bash
 # Clear cache for specific video
 curl -X DELETE http://localhost:8000/cache/videos/your_video_id
@@ -638,30 +691,30 @@ CACHE_TTL_HOURS=12  # Default: 24
 
 ### User-Facing Errors
 
-| Error Message | Cause | Solution |
-|--------------|-------|----------|
-| "Oops! I can only work with MP4, AVI, MOV, or MKV files" | Unsupported video format | Convert video to supported format |
-| "This video is a bit too big for me right now" | File size exceeds limit | Compress video or split into parts |
-| "Hmm, something went wrong with the upload" | Upload failed | Check network, disk space, permissions |
-| "I had trouble extracting frames" | Frame extraction failed | Check video codec, try re-encoding |
-| "The audio was a bit tricky" | Transcription failed | Check audio quality, ensure ffmpeg installed |
-| "I couldn't spot specific objects this time" | Object detection failed | Lower confidence threshold, check video quality |
-| "I'm having trouble thinking right now" | Groq API error | Check API key, wait and retry |
-| "My tools are taking a break" | MCP server down | Restart MCP server |
-| "I'm having trouble remembering" | Database error | Check database permissions, restart application |
+| Error Message                                            | Cause                    | Solution                                        |
+| -------------------------------------------------------- | ------------------------ | ----------------------------------------------- |
+| "Oops! I can only work with MP4, AVI, MOV, or MKV files" | Unsupported video format | Convert video to supported format               |
+| "This video is a bit too big for me right now"           | File size exceeds limit  | Compress video or split into parts              |
+| "Hmm, something went wrong with the upload"              | Upload failed            | Check network, disk space, permissions          |
+| "I had trouble extracting frames"                        | Frame extraction failed  | Check video codec, try re-encoding              |
+| "The audio was a bit tricky"                             | Transcription failed     | Check audio quality, ensure ffmpeg installed    |
+| "I couldn't spot specific objects this time"             | Object detection failed  | Lower confidence threshold, check video quality |
+| "I'm having trouble thinking right now"                  | Groq API error           | Check API key, wait and retry                   |
+| "My tools are taking a break"                            | MCP server down          | Restart MCP server                              |
+| "I'm having trouble remembering"                         | Database error           | Check database permissions, restart application |
 
 ### System Errors
 
-| Error | Cause | Solution |
-|-------|-------|----------|
-| `GROQ_API_KEY is required` | Missing API key | Add key to `.env` file |
-| `ModuleNotFoundError` | Missing dependency | Run `pip install -r requirements.txt` |
-| `Address already in use` | Port conflict | Change port or kill existing process |
-| `Permission denied` | File/directory permissions | Fix permissions with `chmod` |
-| `No such file or directory` | Missing file/path | Create directory or check path |
-| `database is locked` | Concurrent access | Close other connections, restart |
-| `Connection refused` | Server not running | Start the server |
-| `Out of memory` | Insufficient RAM | Reduce processing parameters |
+| Error                       | Cause                      | Solution                              |
+| --------------------------- | -------------------------- | ------------------------------------- |
+| `GROQ_API_KEY is required`  | Missing API key            | Add key to `.env` file                |
+| `ModuleNotFoundError`       | Missing dependency         | Run `pip install -r requirements.txt` |
+| `Address already in use`    | Port conflict              | Change port or kill existing process  |
+| `Permission denied`         | File/directory permissions | Fix permissions with `chmod`          |
+| `No such file or directory` | Missing file/path          | Create directory or check path        |
+| `database is locked`        | Concurrent access          | Close other connections, restart      |
+| `Connection refused`        | Server not running         | Start the server                      |
+| `Out of memory`             | Insufficient RAM           | Reduce processing parameters          |
 
 ## Diagnostic Tools
 
@@ -737,8 +790,8 @@ SELECT COUNT(*) FROM videos;
 SELECT COUNT(*) FROM memory;
 
 # Check processed context
-SELECT video_id, context_type, COUNT(*) 
-FROM video_context 
+SELECT video_id, context_type, COUNT(*)
+FROM video_context
 GROUP BY video_id, context_type;
 
 # Exit
@@ -775,6 +828,7 @@ quit
 If you've tried the solutions above and still have issues:
 
 1. **Enable Debug Mode**:
+
    ```bash
    # In .env:
    DEBUG=true

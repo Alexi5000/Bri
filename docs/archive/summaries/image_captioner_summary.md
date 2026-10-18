@@ -24,8 +24,7 @@ caption = captioner.caption_frame("frame.jpg", timestamp=2.5)
 ✅ **Batch Processing** (10x faster)
 ```python
 captions = captioner.caption_frames_batch(
-    image_paths=["frame1.jpg", "frame2.jpg", "frame3.jpg"],
-    timestamps=[0.0, 2.0, 4.0]
+    image_paths=["frame1.jpg", "frame2.jpg", "frame3.jpg"], timestamps=[0.0, 2.0, 4.0]
 )
 # Processes 10 frames at a time for efficiency
 ```

@@ -148,6 +148,7 @@ python scripts/validate_setup.py
 ### Display Configuration
 ```python
 from config import Config
+
 Config.display_config()
 ```
 

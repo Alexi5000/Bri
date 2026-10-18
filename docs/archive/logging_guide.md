@@ -105,11 +105,7 @@ result = process_video()
 execution_time = time.time() - start_time
 
 perf_logger.log_execution_time(
-    "video_processing",
-    execution_time,
-    success=True,
-    video_id="vid_123",
-    frames_extracted=50
+    "video_processing", execution_time, success=True, video_id="vid_123", frames_extracted=50
 )
 
 # Log cache hit/miss
@@ -130,11 +126,7 @@ response = groq_client.chat.completions.create(...)
 execution_time = time.time() - start_time
 
 api_logger.log_api_call(
-    "Groq",
-    "/chat/completions",
-    method="POST",
-    status_code=200,
-    execution_time=execution_time
+    "Groq", "/chat/completions", method="POST", status_code=200, execution_time=execution_time
 )
 
 # Log failed API call
@@ -143,7 +135,7 @@ api_logger.log_api_call(
     "/tools/caption_frames/execute",
     method="POST",
     execution_time=1.234,
-    error="Connection timeout"
+    error="Connection timeout",
 )
 ```
 
@@ -269,10 +261,7 @@ result = expensive_operation()
 execution_time = time.time() - start_time
 
 perf_logger.log_execution_time(
-    "expensive_operation",
-    execution_time,
-    success=True,
-    **additional_context
+    "expensive_operation", execution_time, success=True, **additional_context
 )
 ```
 
@@ -305,6 +294,7 @@ logger.info("API key configured")
 3. Check if logging is initialized:
    ```python
    from utils.logging_config import setup_logging
+
    setup_logging()  # Call this early in your application
    ```
 
@@ -374,9 +364,9 @@ Performance logs can be parsed and exported to monitoring systems:
 # Example: Export metrics to Prometheus
 from prometheus_client import Counter, Histogram
 
-tool_execution_time = Histogram('tool_execution_seconds', 'Tool execution time')
-cache_hits = Counter('cache_hits_total', 'Total cache hits')
-cache_misses = Counter('cache_misses_total', 'Total cache misses')
+tool_execution_time = Histogram("tool_execution_seconds", "Tool execution time")
+cache_hits = Counter("cache_hits_total", "Total cache hits")
+cache_misses = Counter("cache_misses_total", "Total cache misses")
 ```
 
 ## Summary

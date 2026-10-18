@@ -9,12 +9,14 @@
 ### Key Findings
 
 ✅ **Working:**
+
 - MCP server `/videos/{video_id}/process` endpoint stores results in database
 - MCP server `/tools/{tool_name}/execute` endpoint has storage logic implemented
 - Database schema supports all data types (frames, captions, transcripts, objects)
 - Context Builder can retrieve data from database
 
 ❌ **Broken:**
+
 - Individual tool classes (FrameExtractor, ImageCaptioner, etc.) do NOT store results
 - Tools only return data in memory - no database persistence
 - Agent relies on database for context but tools don't populate it
@@ -26,7 +28,7 @@
 
 ### 1. Upload → Extract → Process → Store → Retrieve
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │ UPLOAD PHASE                                                     │
 ├─────────────────────────────────────────────────────────────────┤
@@ -107,15 +109,18 @@
 ### MCP Server Endpoints
 
 #### ✅ POST `/videos/{video_id}/process` - STORES DATA
+
 **Location:** `mcp_server/main.py:process_video()`
 
 **Flow:**
+
 1. Executes tools in parallel via `_execute_tool_with_cache()`
 2. Each tool result is cached in Redis
 3. **CRITICAL:** Calls `_store_tool_result_in_db()` for each tool ✅
 4. Stores results in `video_context` table
 
 **Storage Logic:**
+
 ```python
 def _store_tool_result_in_db(video_id: str, tool_name: str, result: dict):
     # Stores captions, transcripts, objects, frames in video_context table
@@ -127,9 +132,11 @@ def _store_tool_result_in_db(video_id: str, tool_name: str, result: dict):
 ---
 
 #### ✅ POST `/tools/{tool_name}/execute` - STORES DATA
+
 **Location:** `mcp_server/main.py:execute_tool()`
 
 **Flow:**
+
 1. Checks cache first
 2. Executes tool via `tool.execute()`
 3. Caches result
@@ -143,7 +150,9 @@ def _store_tool_result_in_db(video_id: str, tool_name: str, result: dict):
 ### Tool Classes (Individual Execution)
 
 #### ❌ `tools/frame_extractor.py` - NO STORAGE
+
 **Methods:**
+
 - `extract_frames()` - Returns `List[Frame]`, saves images to disk
 - `extract_frame_at_timestamp()` - Returns `Frame`, saves image to disk
 - `get_video_metadata()` - Returns `VideoMetadata`
@@ -153,7 +162,9 @@ def _store_tool_result_in_db(video_id: str, tool_name: str, result: dict):
 ---
 
 #### ❌ `tools/image_captioner.py` - NO STORAGE
+
 **Methods:**
+
 - `caption_frame()` - Returns `Caption`
 - `caption_frames_batch()` - Returns `List[Caption]`
 
@@ -162,7 +173,9 @@ def _store_tool_result_in_db(video_id: str, tool_name: str, result: dict):
 ---
 
 #### ❌ `tools/audio_transcriber.py` - NO STORAGE
+
 **Methods:**
+
 - `transcribe_video()` - Returns `Transcript`
 - `transcribe_segment()` - Returns `TranscriptSegment`
 
@@ -171,7 +184,9 @@ def _store_tool_result_in_db(video_id: str, tool_name: str, result: dict):
 ---
 
 #### ❌ `tools/object_detector.py` - NO STORAGE
+
 **Methods:**
+
 - `detect_objects_in_frames()` - Returns `List[DetectionResult]`
 - `search_for_object()` - Returns `List[DetectionResult]`
 
@@ -182,23 +197,23 @@ def _store_tool_result_in_db(video_id: str, tool_name: str, result: dict):
 ## 3. Data Persistence Gaps
 
 ### Gap #1: Tool Classes Don't Store Results
-**Problem:** Individual tool classes have no database integration
-**Impact:** If tools are called directly (not via MCP server), data is lost
-**Solution:** Tools should remain stateless; MCP server handles storage ✅
+
+**Problem:** Individual tool classes have no database integration **Impact:** If tools are called directly (not via MCP
+server), data is lost **Solution:** Tools should remain stateless; MCP server handles storage ✅
 
 ### Gap #2: No Validation After Storage
-**Problem:** No verification that data was actually written to database
-**Impact:** Silent failures - processing completes but data is missing
-**Solution:** Add SELECT after INSERT to confirm data persistence
+
+**Problem:** No verification that data was actually written to database **Impact:** Silent failures - processing
+completes but data is missing **Solution:** Add SELECT after INSERT to confirm data persistence
 
 ### Gap #3: No Transaction Support
-**Problem:** Multi-step operations can fail partially
-**Impact:** Inconsistent state - some data stored, some lost
+
+**Problem:** Multi-step operations can fail partially **Impact:** Inconsistent state - some data stored, some lost
 **Solution:** Wrap storage operations in database transactions
 
 ### Gap #4: No Retry Logic
-**Problem:** Database write failures are not retried
-**Impact:** Transient errors cause permanent data loss
+
+**Problem:** Database write failures are not retried **Impact:** Transient errors cause permanent data loss
 **Solution:** Implement exponential backoff retry for failed writes
 
 ---
@@ -206,7 +221,8 @@ def _store_tool_result_in_db(video_id: str, tool_name: str, result: dict):
 ## 4. Current vs Desired State
 
 ### Current State (Broken)
-```
+
+```text
 Tool Execution → Returns Data → MCP Server → Stores in DB
                                               ↓
                                          Sometimes fails
@@ -217,7 +233,8 @@ Tool Execution → Returns Data → MCP Server → Stores in DB
 ```
 
 ### Desired State (Fixed)
-```
+
+```text
 Tool Execution → Returns Data → MCP Server → Transaction Start
                                               ↓
                                          Store in DB
@@ -236,6 +253,7 @@ Tool Execution → Returns Data → MCP Server → Transaction Start
 ## 5. Recommendations
 
 ### Immediate Actions (Task 40.2)
+
 1. ✅ Keep `_store_tool_result_in_db()` in MCP server (already exists)
 2. ✅ Add transaction support to database writes
 3. ✅ Add validation after INSERT (SELECT to confirm)
@@ -243,12 +261,14 @@ Tool Execution → Returns Data → MCP Server → Transaction Start
 5. ✅ Create `VideoProcessingService` to centralize storage logic
 
 ### Verification Actions (Task 40.3)
+
 1. Create `verify_video_data()` function
 2. Check completeness: frames, captions, transcripts, objects
 3. Add GET `/videos/{video_id}/status` endpoint
 4. Return detailed status report
 
 ### Testing Actions (Task 40.4)
+
 1. Test `/tools/{tool_name}/execute` storage
 2. Test `/videos/{video_id}/process` storage
 3. Add database write confirmation logs
@@ -280,12 +300,14 @@ CREATE TABLE video_context (
 ## Conclusion
 
 **Root Cause:** Data persistence is implemented in MCP server but lacks:
+
 - Transaction support
 - Validation after writes
 - Retry logic for failures
 - Comprehensive logging
 
 **Fix Strategy:** Enhance `_store_tool_result_in_db()` with:
+
 1. Database transactions
 2. Write validation
 3. Retry logic

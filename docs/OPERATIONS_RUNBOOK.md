@@ -2,7 +2,8 @@
 
 ## Overview
 
-This runbook provides step-by-step procedures for common operational tasks, troubleshooting, and maintenance of the BRI video agent system.
+This runbook provides step-by-step procedures for common operational tasks, troubleshooting, and maintenance of the BRI
+video agent system.
 
 ## Table of Contents
 
@@ -27,6 +28,7 @@ python scripts/health_check.py
 ```
 
 **Expected Output:**
+
 - ✅ Database: Connected
 - ✅ Cache: Available
 - ✅ Groq API: Responding
@@ -34,6 +36,7 @@ python scripts/health_check.py
 - ✅ Recent Backups: <24 hours old
 
 **If any checks fail:**
+
 1. Check logs: `tail -f logs/bri.log`
 2. Review specific service logs
 3. Follow troubleshooting steps below
@@ -49,6 +52,7 @@ print(health)
 ```
 
 **Healthy System:**
+
 ```json
 {
   "overall_status": "available",
@@ -68,43 +72,54 @@ print(health)
 
 ### Routine Maintenance (Weekly)
 
-**1. Vacuum Database**
+1. Vacuum Database
+
 ```bash
 sqlite3 data/bri.db "VACUUM"
 ```
+
 Reduces database size and improves performance.
 
-**2. Analyze Tables**
+1. Analyze Tables
+
 ```bash
 sqlite3 data/bri.db "ANALYZE"
 ```
+
 Updates query optimizer statistics.
 
-**3. Check Integrity**
+1. Check Integrity
+
 ```bash
 sqlite3 data/bri.db "PRAGMA integrity_check"
 ```
+
 Expected output: `ok`
 
-**4. Review Database Size**
+1. Review Database Size
+
 ```bash
 du -sh data/bri.db
 ```
+
 Alert if >1GB without corresponding video count.
 
 ### Backup Procedures
 
 **Create Manual Backup:**
+
 ```bash
 python scripts/backup_database.py --name weekly_backup --verify --cleanup
 ```
 
 **Verify All Backups:**
+
 ```bash
 python scripts/verify_backups.py
 ```
 
 **Restore from Backup:**
+
 ```bash
 # List available backups
 python scripts/restore_database.py --list
@@ -118,6 +133,7 @@ python scripts/restore_database.py data/backups/bri_backup_20251016_143000.db
 **Symptom:** Slow queries (>1 second)
 
 **Diagnosis:**
+
 ```bash
 # Check slow queries in logs
 grep "execution_time.*[1-9]\." logs/bri_performance.log
@@ -127,14 +143,15 @@ du -sh data/bri.db
 
 # Check table sizes
 sqlite3 data/bri.db "
-SELECT name, COUNT(*) as rows 
-FROM sqlite_master 
-JOIN (SELECT name FROM sqlite_master WHERE type='table') 
+SELECT name, COUNT(*) as rows
+FROM sqlite_master
+JOIN (SELECT name FROM sqlite_master WHERE type='table')
 GROUP BY name
 "
 ```
 
 **Resolution:**
+
 1. Run VACUUM to compact database
 2. Run ANALYZE to update statistics
 3. Check for missing indexes
@@ -147,16 +164,19 @@ GROUP BY name
 ### Finding Errors
 
 **Recent Errors:**
+
 ```bash
 tail -100 logs/bri_errors.log
 ```
 
 **Errors for Specific Video:**
+
 ```bash
 grep "video_id=vid_123" logs/bri.log | grep ERROR
 ```
 
 **Error Frequency:**
+
 ```bash
 grep ERROR logs/bri.log | wc -l
 ```
@@ -164,11 +184,13 @@ grep ERROR logs/bri.log | wc -l
 ### Performance Analysis
 
 **Slow Operations:**
+
 ```bash
 grep "completed in [1-9]" logs/bri_performance.log
 ```
 
 **Cache Hit Rate:**
+
 ```bash
 hits=$(grep "Cache HIT" logs/bri_performance.log | wc -l)
 misses=$(grep "Cache MISS" logs/bri_performance.log | wc -l)
@@ -178,6 +200,7 @@ echo "Cache hit rate: ${rate}%"
 ```
 
 **API Call Times:**
+
 ```bash
 grep "Groq API" logs/bri.log | grep -oP "completed in \K[\d.]+" | sort -n
 ```
@@ -187,13 +210,16 @@ grep "Groq API" logs/bri.log | grep -oP "completed in \K[\d.]+" | sort -n
 **Symptom:** Log files not rotating
 
 **Check:**
+
 ```bash
 ls -lh logs/bri.log*
 ```
 
 **Fix:**
+
 ```python
 from utils.logging_config import setup_logging
+
 setup_logging(enable_rotation=True)
 ```
 
@@ -206,6 +232,7 @@ setup_logging(enable_rotation=True)
 **Symptom:** Video processing takes >5 minutes
 
 **Diagnosis:**
+
 ```bash
 # Check processing times by stage
 grep "Pipeline.*completed" logs/bri_pipeline.log
@@ -214,20 +241,23 @@ grep "Pipeline.*completed" logs/bri_pipeline.log
 **Tuning Options:**
 
 1. **Reduce Frame Extraction:**
+
 ```bash
 # In .env
 MAX_FRAMES_PER_VIDEO=15  # Default: 20
 FRAME_EXTRACTION_INTERVAL=3.0  # Default: 2.0
 ```
 
-2. **Enable Caching:**
+1. **Enable Caching:**
+
 ```bash
 # In .env
 REDIS_ENABLED=true
 REDIS_URL=redis://localhost:6379
 ```
 
-3. **Optimize Model Loading:**
+1. **Optimize Model Loading:**
+
 - Models are loaded once at startup
 - Restart services if memory issues occur
 
@@ -236,6 +266,7 @@ REDIS_URL=redis://localhost:6379
 **Symptom:** Memory >2GB
 
 **Diagnosis:**
+
 ```bash
 # Check current memory
 ps aux | grep python | grep bri
@@ -245,6 +276,7 @@ grep "memory_mb" logs/bri.log
 ```
 
 **Resolution:**
+
 1. Reduce MAX_FRAMES_PER_VIDEO
 2. Clear cache: `redis-cli FLUSHALL`
 3. Restart services
@@ -255,11 +287,13 @@ grep "memory_mb" logs/bri.log
 **Symptom:** Groq API calls >5 seconds
 
 **Diagnosis:**
+
 ```bash
 grep "Groq API" logs/bri_performance.log | grep -oP "completed in \K[\d.]+"
 ```
 
 **Resolution:**
+
 1. Check Groq API status
 2. Reduce GROQ_MAX_TOKENS
 3. Enable response caching
@@ -276,6 +310,7 @@ grep "Groq API" logs/bri_performance.log | grep -oP "completed in \K[\d.]+"
 **Recovery Steps:**
 
 1. **Stop all services**
+
 ```bash
 # Stop Streamlit
 pkill -f streamlit
@@ -284,17 +319,20 @@ pkill -f streamlit
 pkill -f mcp_server
 ```
 
-2. **Attempt repair**
+1. **Attempt repair**
+
 ```bash
 sqlite3 data/bri.db ".recover" | sqlite3 data/bri_recovered.db
 ```
 
-3. **If repair fails, restore from backup**
+1. **If repair fails, restore from backup**
+
 ```bash
 python scripts/restore_database.py
 ```
 
-4. **Verify restored database**
+1. **Verify restored database**
+
 ```bash
 sqlite3 data/bri.db "PRAGMA integrity_check"
 ```
@@ -304,6 +342,7 @@ sqlite3 data/bri.db "PRAGMA integrity_check"
 **Symptom:** Video uploaded but no processing results
 
 **Diagnosis:**
+
 ```python
 from storage.database import Database
 
@@ -321,8 +360,10 @@ print(f"Captions: {len(context.get('captions', []))}")
 ```
 
 **Resolution:**
+
 1. Check processing logs for errors
 2. Reprocess video:
+
 ```python
 from services.video_processing_service import VideoProcessingService
 
@@ -335,17 +376,21 @@ service.process_video(video_id)
 **Symptom:** Conversation history missing
 
 **Recovery:**
+
 1. Check if data exists in database:
+
 ```bash
 sqlite3 data/bri.db "SELECT COUNT(*) FROM memory WHERE video_id='vid_123'"
 ```
 
-2. If data exists but not showing, clear cache:
+1. If data exists but not showing, clear cache:
+
 ```bash
 redis-cli DEL "bri:memory:vid_123"
 ```
 
-3. If data lost, check backups:
+1. If data lost, check backups:
+
 ```bash
 python scripts/restore_database.py --list
 ```
@@ -359,15 +404,17 @@ python scripts/restore_database.py --list
 **Cause:** Too many API requests in short time
 
 **Solution:**
+
 1. Wait 60 seconds
 2. Reduce request frequency
 3. Enable response caching
 4. Check for retry loops in code
 
 **Prevention:**
+
 ```python
 # In .env
-GROQ_TEMPERATURE=0.7  # Lower = more cacheable
+GROQ_TEMPERATURE = 0.7  # Lower = more cacheable
 ```
 
 ### Error: "Database is locked"
@@ -375,20 +422,24 @@ GROQ_TEMPERATURE=0.7  # Lower = more cacheable
 **Cause:** Multiple processes accessing database
 
 **Solution:**
+
 1. Check for multiple running instances:
+
 ```bash
 ps aux | grep python | grep bri
 ```
 
-2. Kill duplicate processes:
+1. Kill duplicate processes:
+
 ```bash
 pkill -f "streamlit run app.py"
 pkill -f "python mcp_server/main.py"
 ```
 
-3. Restart services properly
+1. Restart services properly
 
 **Prevention:**
+
 - Use single Streamlit instance
 - Use single MCP server instance
 - Enable WAL mode (already enabled)
@@ -398,12 +449,14 @@ pkill -f "python mcp_server/main.py"
 **Cause:** Processing large video or too many frames
 
 **Solution:**
+
 1. Reduce MAX_FRAMES_PER_VIDEO
 2. Increase FRAME_EXTRACTION_INTERVAL
 3. Process video in smaller chunks
 4. Restart services to clear memory
 
 **Prevention:**
+
 ```bash
 # In .env
 MAX_FRAMES_PER_VIDEO=15
@@ -415,6 +468,7 @@ FRAME_EXTRACTION_INTERVAL=3.0
 **Cause:** ML models not downloaded
 
 **Solution:**
+
 ```bash
 # Download models
 python -c "
@@ -439,17 +493,21 @@ YOLO('yolov8n.pt')
 **Cause:** Redis not running or wrong URL
 
 **Solution:**
+
 1. Check Redis status:
+
 ```bash
 redis-cli ping
 ```
 
-2. Start Redis if not running:
+1. Start Redis if not running:
+
 ```bash
 redis-server
 ```
 
-3. Or disable Redis:
+1. Or disable Redis:
+
 ```bash
 # In .env
 REDIS_ENABLED=false
@@ -464,17 +522,20 @@ REDIS_ENABLED=false
 **Steps:**
 
 1. **Check system resources**
+
 ```bash
 top
 df -h
 ```
 
-2. **Check logs for errors**
+1. **Check logs for errors**
+
 ```bash
 tail -100 logs/bri_errors.log
 ```
 
-3. **Restart services**
+1. **Restart services**
+
 ```bash
 # Stop all
 pkill -f streamlit
@@ -490,7 +551,8 @@ python mcp_server/main.py &
 streamlit run app.py
 ```
 
-4. **Verify health**
+1. **Verify health**
+
 ```bash
 python scripts/health_check.py
 ```
@@ -500,27 +562,32 @@ python scripts/health_check.py
 **Steps:**
 
 1. **Stop all services immediately**
+
 ```bash
 pkill -f streamlit
 pkill -f mcp_server
 ```
 
-2. **Create emergency backup**
+1. **Create emergency backup**
+
 ```bash
 cp data/bri.db data/bri_emergency_$(date +%Y%m%d_%H%M%S).db
 ```
 
-3. **Check integrity**
+1. **Check integrity**
+
 ```bash
 sqlite3 data/bri.db "PRAGMA integrity_check"
 ```
 
-4. **If corrupted, restore from backup**
+1. **If corrupted, restore from backup**
+
 ```bash
 python scripts/restore_database.py
 ```
 
-5. **Verify and restart**
+1. **Verify and restart**
+
 ```bash
 python scripts/health_check.py
 ```
@@ -530,27 +597,32 @@ python scripts/health_check.py
 **Steps:**
 
 1. **Check disk usage**
+
 ```bash
 df -h
 du -sh data/*
 ```
 
-2. **Clean up old logs**
+1. **Clean up old logs**
+
 ```bash
 find logs/ -name "*.log.*" -mtime +30 -delete
 ```
 
-3. **Clean up old backups**
+1. **Clean up old backups**
+
 ```bash
 python scripts/backup_database.py --cleanup
 ```
 
-4. **Archive old videos**
+1. **Archive old videos**
+
 ```bash
 python scripts/archival_cli.py --archive-older-than 90
 ```
 
-5. **Vacuum database**
+1. **Vacuum database**
+
 ```bash
 sqlite3 data/bri.db "VACUUM"
 ```
@@ -562,30 +634,35 @@ sqlite3 data/bri.db "VACUUM"
 **Steps:**
 
 1. **Backup everything**
+
 ```bash
 python scripts/backup_database.py --name pre_reset_backup
 tar -czf data_backup_$(date +%Y%m%d).tar.gz data/
 ```
 
-2. **Stop services**
+1. **Stop services**
+
 ```bash
 pkill -f streamlit
 pkill -f mcp_server
 ```
 
-3. **Reset database**
+1. **Reset database**
+
 ```bash
 rm data/bri.db
 python scripts/init_db.py
 ```
 
-4. **Clear cache**
+1. **Clear cache**
+
 ```bash
 redis-cli FLUSHALL
 rm -rf data/cache/*
 ```
 
-5. **Restart services**
+1. **Restart services**
+
 ```bash
 python mcp_server/main.py &
 streamlit run app.py
@@ -596,18 +673,21 @@ streamlit run app.py
 ## Monitoring Checklist
 
 ### Daily
+
 - [ ] Check system health
 - [ ] Review error logs
 - [ ] Verify backups completed
 - [ ] Check disk space
 
 ### Weekly
+
 - [ ] Vacuum database
 - [ ] Verify backup integrity
 - [ ] Review performance metrics
 - [ ] Clean up old logs
 
 ### Monthly
+
 - [ ] Test backup restore
 - [ ] Review and archive old data
 - [ ] Update dependencies
@@ -632,6 +712,7 @@ For issues not covered in this runbook:
 ## Appendix: Useful Commands
 
 ### Quick Diagnostics
+
 ```bash
 # System health
 python scripts/health_check.py
@@ -650,6 +731,7 @@ ps aux | grep python | grep bri
 ```
 
 ### Quick Fixes
+
 ```bash
 # Restart everything
 pkill -f streamlit; pkill -f mcp_server; sleep 5; python mcp_server/main.py & streamlit run app.py
@@ -665,6 +747,7 @@ python scripts/backup_database.py
 ```
 
 ### Log Analysis
+
 ```bash
 # Error count by type
 grep ERROR logs/bri.log | cut -d'-' -f4 | sort | uniq -c | sort -rn

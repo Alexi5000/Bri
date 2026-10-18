@@ -189,9 +189,12 @@ def process_video(video_id):
 ```python
 # Current (No validation)
 def store_caption(caption):
-    db.insert("video_context", {
-        "data": json.dumps(caption)  # Any JSON accepted!
-    })
+    db.insert(
+        "video_context",
+        {
+            "data": json.dumps(caption)  # Any JSON accepted!
+        },
+    )
 ```
 
 **Solution:**
@@ -224,12 +227,10 @@ def verify_video_completeness(video_id):
     """Check data consistency."""
     frames = count_frames(video_id)
     captions = count_captions(video_id)
-    
+
     if frames > 0 and captions == 0:
-        raise DataInconsistencyError(
-            f"Video {video_id} has {frames} frames but no captions"
-        )
-    
+        raise DataInconsistencyError(f"Video {video_id} has {frames} frames but no captions")
+
     if captions > frames:
         raise DataInconsistencyError(
             f"Video {video_id} has more captions ({captions}) than frames ({frames})"
@@ -305,7 +306,7 @@ class DataValidator:
 ```python
 class DataConsistencyChecker:
     """Checks data consistency and integrity."""
-    
+
     def check_video_completeness(self, video_id: str) -> Dict[str, Any]:
         """Check if video has complete data."""
         report = {
@@ -314,16 +315,16 @@ class DataConsistencyChecker:
             "captions": self.count_captions(video_id),
             "transcripts": self.count_transcripts(video_id),
             "objects": self.count_objects(video_id),
-            "issues": []
+            "issues": [],
         }
-        
+
         # Check for inconsistencies
         if report["frames"] > 0 and report["captions"] == 0:
             report["issues"].append("Missing captions")
-        
+
         if report["captions"] > report["frames"]:
             report["issues"].append("More captions than frames")
-        
+
         report["complete"] = len(report["issues"]) == 0
         return report
 ```

@@ -101,17 +101,17 @@ The suggestion generation is integrated into the main `chat()` method:
 ```python
 async def chat(self, message: str, video_id: str, image_base64: Optional[str] = None):
     # ... process query and generate response ...
-    
+
     # Generate follow-up suggestions
     suggestions = self._generate_suggestions(message, response_text, video_id)
-    
+
     # Return response with suggestions
     return AssistantMessageResponse(
         message=response_text,
         frames=frames,
         timestamps=timestamps,
         suggestions=suggestions,  # 1-3 suggestions
-        frame_contexts=frame_context_objects
+        frame_contexts=frame_context_objects,
     )
 ```
 
