@@ -84,12 +84,15 @@ Responses are displayed with proper formatting:
 
 ```python
 # Message display with styling
-st.markdown(f"""
+st.markdown(
+    f"""
 <div style="padding: 1rem 1.25rem; border-radius: 20px; 
      background: white; border: 2px solid #E6E6FA;">
     {response.message}
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 ```
 
 **Features:**
@@ -179,6 +182,7 @@ with st.spinner("🤔 Thinking..."):
 
 ```python
 from services.memory import Memory
+
 memory = Memory()
 conversation_history = memory.get_conversation_history(video_id, limit=20)
 ```

@@ -137,14 +137,14 @@ Once installed, semantic search is **automatically enabled**:
 captions = builder.search_captions(
     video_id="vid_123",
     query="person walking",
-    use_semantic=False  # Force keyword-only
+    use_semantic=False,  # Force keyword-only
 )
 
 # Pure semantic search
 captions = builder.search_captions_semantic(
     video_id="vid_123",
     query="person walking",
-    min_score=0.5  # Similarity threshold
+    min_score=0.5,  # Similarity threshold
 )
 ```
 

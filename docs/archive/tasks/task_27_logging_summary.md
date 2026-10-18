@@ -163,11 +163,7 @@ result = process_video()
 execution_time = time.time() - start_time
 
 perf_logger.log_execution_time(
-    "video_processing",
-    execution_time,
-    success=True,
-    video_id="vid_123",
-    frames_extracted=50
+    "video_processing", execution_time, success=True, video_id="vid_123", frames_extracted=50
 )
 ```
 
@@ -179,11 +175,7 @@ from utils.logging_config import get_api_logger
 api_logger = get_api_logger(__name__)
 
 api_logger.log_api_call(
-    "Groq",
-    "/chat/completions",
-    method="POST",
-    status_code=200,
-    execution_time=0.523
+    "Groq", "/chat/completions", method="POST", status_code=200, execution_time=0.523
 )
 ```
 

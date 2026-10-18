@@ -122,9 +122,8 @@ render_conversation_history_panel(
     video_id=st.session_state.current_video_id,
     memory=memory,
     on_conversation_select=lambda session: load_conversation_context(
-        session,
-        st.session_state.current_video_id
-    )
+        session, st.session_state.current_video_id
+    ),
 )
 ```
 

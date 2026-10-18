@@ -128,7 +128,7 @@ VideoIdValidator.validate_or_raise(video_id)
 return create_standard_response(
     data={"result": "success"},
     execution_time=get_execution_time(request),
-    request_id=get_request_id(request)
+    request_id=get_request_id(request),
 )
 ```
 
@@ -177,20 +177,14 @@ return create_standard_response(
 ```python
 # Using circuit breaker
 try:
-    result = await database_breaker.call_async(
-        db.execute_query,
-        "SELECT * FROM videos"
-    )
+    result = await database_breaker.call_async(db.execute_query, "SELECT * FROM videos")
 except CircuitBreakerOpenError as e:
     # Circuit is open, service unavailable
     raise HTTPException(status_code=503, detail=str(e))
 
 # Retry with exponential backoff
 result = await retry_with_backoff(
-    func=async_operation,
-    max_retries=3,
-    base_delay=1.0,
-    max_delay=60.0
+    func=async_operation, max_retries=3, base_delay=1.0, max_delay=60.0
 )
 ```
 
@@ -240,22 +234,20 @@ result = await retry_with_backoff(
 ```python
 # In endpoint
 @app.get("/v1/tools")
-async def list_tools(
-    request: Request,
-    version: APIVersion = get_api_version
-):
+async def list_tools(request: Request, version: APIVersion = get_api_version):
     # version is automatically extracted and validated
     logger.info(f"API v{version.value} request")
     ...
 
+
 # Version information
-GET /version
+GET / version
 {
-  "current_version": "1.0",
-  "supported_versions": ["1.0", "2.0"],
-  "deprecated_versions": {},
-  "min_supported_version": "1.0",
-  "version_header": "Accept-Version or API-Version"
+    "current_version": "1.0",
+    "supported_versions": ["1.0", "2.0"],
+    "deprecated_versions": {},
+    "min_supported_version": "1.0",
+    "version_header": "Accept-Version or API-Version",
 }
 ```
 

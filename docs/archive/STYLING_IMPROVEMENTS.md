@@ -105,8 +105,8 @@ If you want to customize further:
 2. **Change accent colors** in `ui/styles.py`:
    ```python
    COLORS = {
-       'accent_pink': '#FF69B4',  # Change this
-       'teal': '#26C6DA',         # Or this
+       "accent_pink": "#FF69B4",  # Change this
+       "teal": "#26C6DA",  # Or this
    }
    ```
 

@@ -194,6 +194,7 @@ ls -lh logs/bri.log*
 **Fix:**
 ```python
 from utils.logging_config import setup_logging
+
 setup_logging(enable_rotation=True)
 ```
 
@@ -367,7 +368,7 @@ python scripts/restore_database.py --list
 **Prevention:**
 ```python
 # In .env
-GROQ_TEMPERATURE=0.7  # Lower = more cacheable
+GROQ_TEMPERATURE = 0.7  # Lower = more cacheable
 ```
 
 ### Error: "Database is locked"

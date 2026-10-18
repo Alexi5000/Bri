@@ -143,20 +143,17 @@ groq.RateLimitError: Rate limit exceeded. Please try again in 60 seconds.
 ```python
 # 1. Wait for rate limit to reset
 import time
+
 time.sleep(60)
 
 # 2. Enable response caching
 # In .env
-REDIS_ENABLED=true
+REDIS_ENABLED = true
 
 # 3. Implement exponential backoff
 from mcp_server.circuit_breaker import retry_with_backoff
 
-result = await retry_with_backoff(
-    api_call_function,
-    max_retries=3,
-    base_delay=1.0
-)
+result = await retry_with_backoff(api_call_function, max_retries=3, base_delay=1.0)
 ```
 
 **Prevention:**
@@ -225,6 +222,7 @@ groq.APITimeoutError: Request timed out
 ```python
 # 1. Increase timeout
 from config import Config
+
 Config.REQUEST_TIMEOUT = 60  # Increase from 30
 
 # 2. Reduce request size
@@ -233,11 +231,7 @@ Config.GROQ_MAX_TOKENS = 512  # Reduce from 1024
 # 3. Retry with backoff
 from mcp_server.circuit_breaker import retry_with_backoff
 
-result = await retry_with_backoff(
-    api_call,
-    max_retries=3,
-    base_delay=2.0
-)
+result = await retry_with_backoff(api_call, max_retries=3, base_delay=2.0)
 ```
 
 **Prevention:**
@@ -463,12 +457,8 @@ OSError: Model 'Salesforce/blip-image-captioning-large' not found
 # 1. Download model manually
 from transformers import BlipProcessor, BlipForConditionalGeneration
 
-processor = BlipProcessor.from_pretrained(
-    'Salesforce/blip-image-captioning-large'
-)
-model = BlipForConditionalGeneration.from_pretrained(
-    'Salesforce/blip-image-captioning-large'
-)
+processor = BlipProcessor.from_pretrained("Salesforce/blip-image-captioning-large")
+model = BlipForConditionalGeneration.from_pretrained("Salesforce/blip-image-captioning-large")
 
 print("Model downloaded successfully")
 ```

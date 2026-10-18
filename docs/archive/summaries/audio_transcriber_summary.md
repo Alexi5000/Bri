@@ -113,11 +113,7 @@ for segment in transcript.segments:
     print(f"[{segment.start:.2f}s - {segment.end:.2f}s]: {segment.text}")
 
 # Segment transcription
-segment = transcriber.transcribe_segment(
-    video_path="video.mp4",
-    start_time=10.0,
-    end_time=20.0
-)
+segment = transcriber.transcribe_segment(video_path="video.mp4", start_time=10.0, end_time=20.0)
 ```
 
 ### Performance

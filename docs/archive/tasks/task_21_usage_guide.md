@@ -79,7 +79,7 @@ render_video_player(
     video_path="data/videos/my_video.mp4",
     video_id="video_123",
     current_timestamp=None,  # Optional start time
-    timestamps=[30.0, 65.5, 120.0]  # Optional relevant moments
+    timestamps=[30.0, 65.5, 120.0],  # Optional relevant moments
 )
 ```
 
@@ -91,7 +91,7 @@ from ui.player import render_video_player_with_context
 render_video_player_with_context(
     video_path="data/videos/my_video.mp4",
     video_id="video_123",
-    conversation_timestamps=[30.0, 65.5, 120.0]
+    conversation_timestamps=[30.0, 65.5, 120.0],
 )
 ```
 
@@ -134,9 +134,9 @@ The player uses session state to maintain playback position:
 ```python
 # Session state structure
 st.session_state[f"player_{video_id}"] = {
-    "current_time": 0.0,          # Current playback position
-    "is_playing": False,           # Playback state
-    "selected_timestamp": None     # User-selected timestamp
+    "current_time": 0.0,  # Current playback position
+    "is_playing": False,  # Playback state
+    "selected_timestamp": None,  # User-selected timestamp
 }
 ```
 
@@ -148,7 +148,7 @@ from ui.player import _format_timestamp
 
 # Format seconds to MM:SS or HH:MM:SS
 formatted = _format_timestamp(125.5)  # Returns "02:05"
-formatted = _format_timestamp(3665)   # Returns "01:01:05"
+formatted = _format_timestamp(3665)  # Returns "01:01:05"
 ```
 
 ### Integration with Chat
@@ -179,20 +179,23 @@ The player uses BRI's color scheme. To customize:
 
 ```python
 # In ui/player.py, modify the CSS in render_video_player()
-st.markdown("""
+st.markdown(
+    """
     <style>
     .video-player-container {
         background: white;
         border-radius: 20px;
         /* Add your custom styles */
     }
-    
+
     .timestamp-chip {
         background: linear-gradient(135deg, #E6E6FA 0%, #FFB6C1 100%);
         /* Customize chip appearance */
     }
     </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 ```
 
 ### Error Handling
@@ -253,18 +256,14 @@ user_query = "Show me all the cats in this video"
 relevant_frames = [
     {"path": "frame_001.jpg", "timestamp": 30.0},
     {"path": "frame_045.jpg", "timestamp": 90.0},
-    {"path": "frame_089.jpg", "timestamp": 178.0}
+    {"path": "frame_089.jpg", "timestamp": 178.0},
 ]
 
 # Extract timestamps
 timestamps = [frame["timestamp"] for frame in relevant_frames]
 
 # Render player with these timestamps
-render_video_player(
-    video_path=video_path,
-    video_id=video_id,
-    timestamps=timestamps
-)
+render_video_player(video_path=video_path, video_id=video_id, timestamps=timestamps)
 ```
 
 ### Use Case 2: Continue from Last Position
@@ -272,16 +271,12 @@ render_video_player(
 # Get last mentioned timestamp from conversation
 last_timestamp = None
 for message in reversed(conversation_history):
-    if hasattr(message, 'timestamps') and message.timestamps:
+    if hasattr(message, "timestamps") and message.timestamps:
         last_timestamp = message.timestamps[-1]
         break
 
 # Start player at last position
-render_video_player(
-    video_path=video_path,
-    video_id=video_id,
-    current_timestamp=last_timestamp
-)
+render_video_player(video_path=video_path, video_id=video_id, current_timestamp=last_timestamp)
 ```
 
 ### Use Case 3: Timestamp-Based Search
@@ -291,12 +286,13 @@ user_query = "What happens at 2:30?"
 
 # Parse timestamp from query
 import re
-match = re.search(r'(\d+):(\d+)', user_query)
+
+match = re.search(r"(\d+):(\d+)", user_query)
 if match:
     minutes = int(match.group(1))
     seconds = int(match.group(2))
     timestamp = minutes * 60 + seconds
-    
+
     # Navigate to that timestamp
     navigate_to_timestamp(video_id, timestamp)
 ```

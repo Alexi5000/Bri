@@ -30,7 +30,7 @@ cache.set(
     f"video:{video_id}:frames",
     frames_data,
     namespace="video",
-    ttl=600  # 10 minutes
+    ttl=600,  # 10 minutes
 )
 
 # Retrieve cached frames
@@ -50,14 +50,14 @@ captions = optimizer.execute_query(
     "SELECT * FROM video_context WHERE video_id = ? AND context_type = 'caption'",
     parameters=(video_id,),
     cache_key=f"captions:{video_id}",
-    cache_ttl=300
+    cache_ttl=300,
 )
 
 # Batch insert with transaction
 optimizer.execute_batch(
     "INSERT INTO video_context (video_id, context_type, data) VALUES (?, ?, ?)",
     parameters_list=batch_data,
-    batch_size=100
+    batch_size=100,
 )
 ```
 
@@ -73,12 +73,7 @@ await prefetcher.prefetch_related_data(video_id, "frames")
 prefetcher.record_access(video_id, "captions")
 
 # Lazy load large datasets
-result = await prefetcher.lazy_load_paginated(
-    video_id,
-    "frames",
-    page_size=20,
-    page=0
-)
+result = await prefetcher.lazy_load_paginated(video_id, "frames", page_size=20, page=0)
 ```
 
 #### Data Compression
@@ -90,17 +85,10 @@ manager = get_compression_manager()
 compressed_data = manager.compress_json(large_dict)
 
 # Compress frame images to WebP
-output_path, orig_size, comp_size = manager.compress_image(
-    "frame.jpg",
-    "frame.webp"
-)
+output_path, orig_size, comp_size = manager.compress_image("frame.jpg", "frame.webp")
 
 # Check for duplicate frames
-is_dup, orig_ts = manager.check_frame_duplicate(
-    video_id,
-    timestamp,
-    frame_path
-)
+is_dup, orig_ts = manager.check_frame_duplicate(video_id, timestamp, frame_path)
 ```
 
 ## Integration with Existing Components
@@ -113,35 +101,29 @@ is_dup, orig_ts = manager.check_frame_duplicate(
 from storage.multi_tier_cache import get_multi_tier_cache
 from services.data_prefetcher import get_data_prefetcher
 
+
 class ContextBuilder:
     def __init__(self, db: Optional[Database] = None):
         self.db = db or Database()
         self.cache = get_multi_tier_cache()
         self.prefetcher = get_data_prefetcher()
-    
+
     def build_video_context(self, video_id: str) -> VideoContext:
         # Check cache first
         cache_key = f"context:{video_id}"
         cached = self.cache.get(cache_key, namespace="context")
         if cached:
             return VideoContext(**cached)
-        
+
         # Build context from database
         context = self._build_from_db(video_id)
-        
+
         # Cache the result
-        self.cache.set(
-            cache_key,
-            context.__dict__,
-            namespace="context",
-            ttl=600
-        )
-        
+        self.cache.set(cache_key, context.__dict__, namespace="context", ttl=600)
+
         # Prefetch related data
-        asyncio.create_task(
-            self.prefetcher.prefetch_related_data(video_id, "frames")
-        )
-        
+        asyncio.create_task(self.prefetcher.prefetch_related_data(video_id, "frames"))
+
         return context
 ```
 
@@ -156,25 +138,24 @@ from storage.compression import get_compression_manager
 optimizer = get_query_optimizer()
 compressor = get_compression_manager()
 
+
 @app.post("/tools/{tool_name}/execute")
 async def execute_tool(tool_name: str, request: ToolExecutionRequest):
     # Use query optimizer for database operations
     results = optimizer.execute_query(
         "SELECT * FROM video_context WHERE video_id = ?",
         parameters=(request.video_id,),
-        cache_key=f"tool:{tool_name}:{request.video_id}"
+        cache_key=f"tool:{tool_name}:{request.video_id}",
     )
-    
+
     # Compress response if large
     response_json = json.dumps(results)
     if len(response_json) > 1024:
         compressed = compressor.compress_response(response_json)
         return Response(
-            content=compressed,
-            media_type="application/json",
-            headers={"Content-Encoding": "gzip"}
+            content=compressed, media_type="application/json", headers={"Content-Encoding": "gzip"}
         )
-    
+
     return results
 ```
 
@@ -186,37 +167,31 @@ async def execute_tool(tool_name: str, request: ToolExecutionRequest):
 from storage.compression import get_compression_manager
 from storage.multi_tier_cache import get_multi_tier_cache
 
+
 class VideoProcessingService:
     def __init__(self):
         self.compressor = get_compression_manager()
         self.cache = get_multi_tier_cache()
-    
+
     def store_frames(self, video_id: str, frames: List[Frame]):
         # Check for duplicates
         unique_frames = []
         for frame in frames:
             is_dup, orig_ts = self.compressor.check_frame_duplicate(
-                video_id,
-                frame.timestamp,
-                frame.image_path
+                video_id, frame.timestamp, frame.image_path
             )
-            
+
             if not is_dup:
                 # Compress to WebP
-                webp_path, _, _ = self.compressor.compress_image(
-                    frame.image_path
-                )
+                webp_path, _, _ = self.compressor.compress_image(frame.image_path)
                 frame.image_path = webp_path
                 unique_frames.append(frame)
-        
+
         # Store unique frames
         self._store_to_db(video_id, unique_frames)
-        
+
         # Invalidate cache
-        self.cache.invalidate_pattern(
-            f"video:{video_id}:frames*",
-            namespace="video"
-        )
+        self.cache.invalidate_pattern(f"video:{video_id}:frames*", namespace="video")
 ```
 
 ## Performance Monitoring
@@ -283,22 +258,22 @@ LOG_DIR=logs
 ```python
 # Multi-tier cache
 cache = MultiTierCache(
-    l1_capacity=100,      # L1 cache size
-    l2_enabled=True,      # Enable Redis
-    l3_enabled=True       # Enable query cache
+    l1_capacity=100,  # L1 cache size
+    l2_enabled=True,  # Enable Redis
+    l3_enabled=True,  # Enable query cache
 )
 
 # Query optimizer
 optimizer = QueryOptimizer(
     db_path="data/bri.db",
-    pool_size=5           # Connection pool size
+    pool_size=5,  # Connection pool size
 )
 
 # Compression
 compressor = CompressionManager(
-    json_level=6,         # 0-9, higher = better compression
-    image_quality=85,     # 0-100, higher = better quality
-    response_level=6      # 0-9, higher = better compression
+    json_level=6,  # 0-9, higher = better compression
+    image_quality=85,  # 0-100, higher = better quality
+    response_level=6,  # 0-9, higher = better compression
 )
 ```
 
@@ -313,11 +288,7 @@ Always invalidate cache when data changes:
 cache.invalidate_pattern(f"video:{video_id}:*", namespace="video")
 
 # After batch updates
-optimizer.execute_update(
-    query,
-    parameters,
-    invalidate_pattern=f"video:{video_id}:*"
-)
+optimizer.execute_update(query, parameters, invalidate_pattern=f"video:{video_id}:*")
 ```
 
 ### 2. Prefetch Strategy
@@ -355,11 +326,7 @@ for item in items:
     db.execute("INSERT INTO table VALUES (?)", (item,))
 
 # Use batch insert
-optimizer.execute_batch(
-    "INSERT INTO table VALUES (?)",
-    [(item,) for item in items],
-    batch_size=100
-)
+optimizer.execute_batch("INSERT INTO table VALUES (?)", [(item,) for item in items], batch_size=100)
 ```
 
 ## Troubleshooting
@@ -369,15 +336,12 @@ optimizer.execute_batch(
 ```python
 # Check cache statistics
 stats = cache.get_stats()
-if float(stats['l1']['hit_rate'].rstrip('%')) < 50:
+if float(stats["l1"]["hit_rate"].rstrip("%")) < 50:
     # Increase L1 capacity
     cache.l1_cache.capacity = 200
-    
+
     # Enable cache warming
-    cache.warm_cache(
-        keys=frequently_accessed_keys,
-        loader=load_data_function
-    )
+    cache.warm_cache(keys=frequently_accessed_keys, loader=load_data_function)
 ```
 
 ### Slow Query Performance
@@ -386,9 +350,9 @@ if float(stats['l1']['hit_rate'].rstrip('%')) < 50:
 # Check query statistics
 stats = optimizer.get_query_stats()
 for query_type, metrics in stats.items():
-    if float(metrics['avg_ms']) > 100:
+    if float(metrics["avg_ms"]) > 100:
         logger.warning(f"Slow {query_type} queries: {metrics['avg_ms']}ms")
-        
+
         # Increase cache TTL
         # Add database indexes
         # Use query batching

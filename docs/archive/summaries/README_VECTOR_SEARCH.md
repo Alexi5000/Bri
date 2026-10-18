@@ -123,7 +123,7 @@ Edit `vector_search_optimizer.py`:
 ```python
 optimizer = VectorSearchOptimizer(
     cache_size=1000,  # Max cached queries
-    cache_ttl=3600    # 1 hour TTL
+    cache_ttl=3600,  # 1 hour TTL
 )
 ```
 
@@ -192,7 +192,7 @@ pip install chromadb==0.4.0 sentence-transformers==2.2.0
 ```python
 # Check cache hit rate
 stats = service.get_stats()
-hit_rate = stats['performance']['cache']['hit_rate']
+hit_rate = stats["performance"]["cache"]["hit_rate"]
 
 # If low, increase cache size/TTL
 # If query times high, use smaller model

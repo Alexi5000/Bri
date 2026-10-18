@@ -76,11 +76,7 @@ def migration_003_add_video_tags() -> Migration:
     ALTER TABLE videos ADD COLUMN tags TEXT;
     CREATE INDEX IF NOT EXISTS idx_videos_tags ON videos(tags);
     """
-    return create_migration(
-        version=3,
-        description="Add tags support to videos",
-        up_sql=up_sql
-    )
+    return create_migration(version=3, description="Add tags support to videos", up_sql=up_sql)
 ```
 
 ### 45.3 Data Archival and Cleanup Policies ✅
@@ -284,25 +280,26 @@ slow_queries = monitor.query_monitor.get_slow_queries()
 from storage.archival import get_archival_manager
 from storage.health_monitor import get_health_monitor
 
+
 # Daily maintenance task
 def daily_maintenance():
     archival = get_archival_manager()
     health = get_health_monitor()
-    
+
     # Apply retention policies
     archival.apply_retention_policies(
         archive_conversations_days=30,
         delete_soft_deleted_days=7,
         cleanup_orphaned=True,
-        vacuum=True
+        vacuum=True,
     )
-    
+
     # Create backup
     health.create_backup()
-    
+
     # Clean up old backups
     health.cleanup_old_backups(keep_days=30)
-    
+
     # Log health metrics
     health.log_health_metrics()
 ```
@@ -365,19 +362,21 @@ python scripts/health_check.py integrity
 # Test validation
 def test_video_validation():
     db = get_database()
-    
+
     # Should raise ValidationError
     with pytest.raises(ValidationError):
         db.validate_video_data("", "test.mp4", "/path", 10.0)
-    
+
     with pytest.raises(ValidationError):
         db.validate_video_data("test", "test.mp4", "/path", -1.0)
+
 
 # Test migrations
 def test_migration_system():
     manager = get_migration_manager()
     assert manager.get_current_version() >= 2
-    
+
+
 # Test archival
 def test_soft_delete():
     archival = get_archival_manager()

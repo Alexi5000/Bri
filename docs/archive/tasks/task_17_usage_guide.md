@@ -72,7 +72,7 @@ file_store = get_file_store()
 # Validate file
 is_valid, error_msg = file_store.validate_video_file(
     filename="my_video.mp4",
-    file_size=50 * 1024 * 1024  # 50MB
+    file_size=50 * 1024 * 1024,  # 50MB
 )
 
 if not is_valid:
@@ -83,12 +83,8 @@ if not is_valid:
 video_id = str(uuid.uuid4())
 
 # Save video
-with open("path/to/video.mp4", 'rb') as f:
-    video_id, file_path = file_store.save_uploaded_video(
-        f,
-        "my_video.mp4",
-        video_id
-    )
+with open("path/to/video.mp4", "rb") as f:
+    video_id, file_path = file_store.save_uploaded_video(f, "my_video.mp4", video_id)
 
 # Extract metadata
 cap = cv2.VideoCapture(file_path)
@@ -96,12 +92,7 @@ duration = cap.get(cv2.CAP_PROP_FRAME_COUNT) / cap.get(cv2.CAP_PROP_FPS)
 cap.release()
 
 # Create database record
-insert_video(
-    video_id=video_id,
-    filename="my_video.mp4",
-    file_path=file_path,
-    duration=duration
-)
+insert_video(video_id=video_id, filename="my_video.mp4", file_path=file_path, duration=duration)
 
 print(f"Video uploaded successfully: {video_id}")
 ```
@@ -163,7 +154,7 @@ file_store = FileStore()
 FileStore.MAX_FILE_SIZE_BYTES = 1024 * 1024 * 1024  # 1GB
 
 # Add custom format
-FileStore.SUPPORTED_VIDEO_FORMATS.add('.webm')
+FileStore.SUPPORTED_VIDEO_FORMATS.add(".webm")
 
 # Validate
 is_valid, error = file_store.validate_video_file("video.webm", 500_000_000)
@@ -180,8 +171,7 @@ try:
 except Exception as e:
     # Get friendly error message
     error_msg = ErrorHandler.format_error_for_user(
-        e,
-        context={'upload': True, 'filename': 'video.mp4'}
+        e, context={"upload": True, "filename": "video.mp4"}
     )
     print(f"Error: {error_msg}")
 ```
@@ -301,7 +291,7 @@ CREATE TABLE videos (
 
 2. **Use context managers for file operations**
    ```python
-   with open(video_path, 'rb') as f:
+   with open(video_path, "rb") as f:
        video_id, path = file_store.save_uploaded_video(f, filename)
    ```
 
@@ -317,6 +307,7 @@ CREATE TABLE videos (
 4. **Log important operations**
    ```python
    import logging
+
    logger = logging.getLogger(__name__)
    logger.info(f"Uploaded video: {video_id}")
    ```

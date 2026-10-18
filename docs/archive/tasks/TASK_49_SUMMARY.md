@@ -130,11 +130,7 @@ from services.embedding_pipeline import get_embedding_pipeline
 pipeline = get_embedding_pipeline()
 
 # Index single video
-pipeline.process_video(
-    video_id="vid_123",
-    captions=[...],
-    transcript_segments=[...]
-)
+pipeline.process_video(video_id="vid_123", captions=[...], transcript_segments=[...])
 ```
 
 ### 3. Perform Semantic Search
@@ -146,18 +142,11 @@ builder = ContextBuilder()
 
 # Hybrid search (keyword + semantic)
 captions = builder.search_captions(
-    video_id="vid_123",
-    query="person walking dog",
-    top_k=5,
-    use_semantic=True
+    video_id="vid_123", query="person walking dog", top_k=5, use_semantic=True
 )
 
 # Pure semantic search
-captions = builder.search_captions_semantic(
-    video_id="vid_123",
-    query="person walking dog",
-    top_k=5
-)
+captions = builder.search_captions_semantic(video_id="vid_123", query="person walking dog", top_k=5)
 ```
 
 
@@ -284,8 +273,8 @@ Adjust cache settings in `services/vector_search_optimizer.py`:
 ```python
 optimizer = VectorSearchOptimizer(
     enable_cache=True,
-    cache_size=2000,      # Max cached queries
-    cache_ttl=7200        # 2 hours TTL
+    cache_size=2000,  # Max cached queries
+    cache_ttl=7200,  # 2 hours TTL
 )
 ```
 
@@ -330,7 +319,8 @@ First run downloads model (~90MB):
 ```python
 # Pre-download model
 from sentence_transformers import SentenceTransformer
-model = SentenceTransformer('all-MiniLM-L6-v2')
+
+model = SentenceTransformer("all-MiniLM-L6-v2")
 ```
 
 ### Slow Search Performance
@@ -339,7 +329,7 @@ Check cache hit rate:
 
 ```python
 stats = service.get_stats()
-hit_rate = stats['performance']['cache']['hit_rate']
+hit_rate = stats["performance"]["cache"]["hit_rate"]
 
 if hit_rate < 0.3:
     # Increase cache size or TTL

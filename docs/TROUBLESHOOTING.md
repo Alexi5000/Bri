@@ -357,6 +357,7 @@ python -c "from ultralytics import YOLO; print('OK')"
 - **Model not found**: Download YOLOv8 model
   ```python
   from ultralytics import YOLO
+
   model = YOLO("yolov8n.pt")  # Auto-downloads if missing
   ```
 - **No objects detected**: Lower confidence threshold in query

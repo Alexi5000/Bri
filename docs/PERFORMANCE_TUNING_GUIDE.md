@@ -126,12 +126,13 @@ profiler.enable()
 
 # Process video
 from services.video_processing_service import VideoProcessingService
+
 service = VideoProcessingService()
 service.process_video(video_id)
 
 profiler.disable()
 stats = pstats.Stats(profiler)
-stats.sort_stats('cumulative')
+stats.sort_stats("cumulative")
 stats.print_stats(20)
 ```
 
@@ -206,14 +207,11 @@ for batch in loader.load_frames_batched(video_id, batch_size=5):
 ```python
 # Good: Uses index
 db.cursor.execute(
-    "SELECT * FROM memory WHERE video_id = ? ORDER BY timestamp DESC LIMIT 10",
-    (video_id,)
+    "SELECT * FROM memory WHERE video_id = ? ORDER BY timestamp DESC LIMIT 10", (video_id,)
 )
 
 # Bad: Full table scan
-db.cursor.execute(
-    "SELECT * FROM memory WHERE content LIKE '%keyword%'"
-)
+db.cursor.execute("SELECT * FROM memory WHERE content LIKE '%keyword%'")
 ```
 
 **Limit results:**
@@ -238,9 +236,7 @@ cache = MultiTierCache()
 # L3: Database (slower)
 
 result = cache.get_or_compute(
-    key="video_context:vid_123",
-    compute_fn=lambda: db.get_video_context("vid_123"),
-    ttl=3600
+    key="video_context:vid_123", compute_fn=lambda: db.get_video_context("vid_123"), ttl=3600
 )
 ```
 
@@ -345,7 +341,8 @@ python mcp_server/main.py --port 8002 &
 # Use Celery for distributed tasks
 from celery import Celery
 
-app = Celery('bri', broker='redis://localhost:6379')
+app = Celery("bri", broker="redis://localhost:6379")
+
 
 @app.task
 def process_video(video_id):
@@ -362,18 +359,20 @@ def process_video(video_id):
 import time
 from concurrent.futures import ThreadPoolExecutor
 
+
 def process_test_video():
     start = time.time()
     # Upload and process video
     elapsed = time.time() - start
     return elapsed
 
+
 # Test with multiple concurrent uploads
 with ThreadPoolExecutor(max_workers=5) as executor:
     futures = [executor.submit(process_test_video) for _ in range(10)]
     times = [f.result() for f in futures]
 
-print(f"Avg: {sum(times)/len(times):.2f}s")
+print(f"Avg: {sum(times) / len(times):.2f}s")
 print(f"Max: {max(times):.2f}s")
 ```
 

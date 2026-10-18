@@ -175,6 +175,7 @@ is_valid = backup_manager.verify_backup(backup_path)
 
 # Verify all backups
 from storage.backup import verify_all_backups
+
 valid, invalid = verify_all_backups()
 print(f"Valid: {valid}, Invalid: {invalid}")
 ```
@@ -295,7 +296,8 @@ stats = backup_manager.get_backup_stats()
 
 # Alert if no recent backups
 from datetime import datetime, timedelta
-newest = datetime.fromisoformat(stats['newest_backup'])
+
+newest = datetime.fromisoformat(stats["newest_backup"])
 if datetime.now() - newest > timedelta(days=2):
     print("⚠️  Warning: No recent backups!")
 ```
@@ -389,7 +391,7 @@ backup_manager = DatabaseBackup()
 stats = backup_manager.get_backup_stats()
 
 # Check if backups are current
-newest = datetime.fromisoformat(stats['newest_backup'])
+newest = datetime.fromisoformat(stats["newest_backup"])
 age_hours = (datetime.now() - newest).total_seconds() / 3600
 
 if age_hours > 24:
@@ -398,7 +400,7 @@ else:
     print(f"✓ Backups are current (latest: {age_hours:.1f} hours ago)")
 
 # Check backup count
-if stats['total_backups'] < 7:
+if stats["total_backups"] < 7:
     print(f"⚠️  Warning: Only {stats['total_backups']} backups available")
 else:
     print(f"✓ {stats['total_backups']} backups available")

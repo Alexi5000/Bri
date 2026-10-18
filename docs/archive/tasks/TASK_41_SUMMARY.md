@@ -28,7 +28,7 @@ Task 41 implemented comprehensive data pipeline integrity and validation feature
 **Code Example:**
 ```python
 # Using transactions with savepoints
-with db.transaction(isolation_level='IMMEDIATE') as txn:
+with db.transaction(isolation_level="IMMEDIATE") as txn:
     cursor = txn.cursor()
     savepoint = txn.savepoint()
     try:
@@ -65,7 +65,7 @@ with db.transaction(isolation_level='IMMEDIATE') as txn:
 **Code Example:**
 ```python
 # Validate batch before insertion
-valid, errors = validator.validate_batch('caption', captions, video_id)
+valid, errors = validator.validate_batch("caption", captions, video_id)
 if not valid:
     raise ValidationError(f"Validation failed: {'; '.join(errors)}")
 ```
@@ -91,17 +91,17 @@ if not valid:
 **Consistency Report Structure:**
 ```python
 {
-    'video_id': 'vid_123',
-    'consistent': True/False,
-    'checks': {
-        'frame_count': {'passed': True, 'message': '...'},
-        'caption_count': {'passed': True, 'message': '...'},
-        'timestamp_ordering': {'passed': True, 'message': '...'},
-        'data_corruption': {'passed': True, 'message': '...'},
-        'transcript_segments': {'passed': True, 'message': '...'}
+    "video_id": "vid_123",
+    "consistent": True / False,
+    "checks": {
+        "frame_count": {"passed": True, "message": "..."},
+        "caption_count": {"passed": True, "message": "..."},
+        "timestamp_ordering": {"passed": True, "message": "..."},
+        "data_corruption": {"passed": True, "message": "..."},
+        "transcript_segments": {"passed": True, "message": "..."},
     },
-    'issues': [],
-    'recommendations': []
+    "issues": [],
+    "recommendations": [],
 }
 ```
 
@@ -110,7 +110,7 @@ if not valid:
 # Run comprehensive consistency check
 checker = get_consistency_checker()
 report = checker.check_video_consistency(video_id)
-if not report['consistent']:
+if not report["consistent"]:
     print(f"Issues found: {report['issues']}")
     print(f"Recommendations: {report['recommendations']}")
 ```
@@ -150,10 +150,7 @@ print(f"Tools used: {info['tools_used']}")
 print(f"Reproducible: {info['reproducible']}")
 
 # Record reprocessing
-tracker.record_reprocessing(
-    video_id, 'caption_frames', 
-    reason='Improved model version'
-)
+tracker.record_reprocessing(video_id, "caption_frames", reason="Improved model version")
 ```
 
 ## Integration Points
@@ -216,10 +213,10 @@ service = get_video_processing_service()
 
 # Store frames with validation and lineage tracking
 results = service.store_tool_results(
-    video_id='vid_123',
-    tool_name='extract_frames',
-    results={'frames': [...]},
-    idempotency_key='extract_vid_123_v1'  # Safe to retry
+    video_id="vid_123",
+    tool_name="extract_frames",
+    results={"frames": [...]},
+    idempotency_key="extract_vid_123_v1",  # Safe to retry
 )
 print(f"Stored {results['frames']} frames")
 ```
@@ -232,7 +229,7 @@ from services.data_validator import get_data_validator
 validator = get_data_validator()
 
 # Validate batch of captions
-valid, errors = validator.validate_batch('caption', captions, video_id)
+valid, errors = validator.validate_batch("caption", captions, video_id)
 if not valid:
     print(f"Validation errors: {errors}")
 ```
@@ -245,8 +242,8 @@ from services.data_consistency_checker import get_consistency_checker
 checker = get_consistency_checker()
 
 # Run comprehensive check
-report = checker.check_video_consistency('vid_123')
-if report['consistent']:
+report = checker.check_video_consistency("vid_123")
+if report["consistent"]:
     print("All checks passed!")
 else:
     print(f"Issues: {report['issues']}")
@@ -261,12 +258,12 @@ from services.data_lineage_tracker import get_lineage_tracker
 tracker = get_lineage_tracker()
 
 # Get lineage history
-history = tracker.get_lineage_history('vid_123')
+history = tracker.get_lineage_history("vid_123")
 for record in history:
     print(f"{record['operation']}: {record['tool_name']} v{record['tool_version']}")
 
 # Get reproducibility info
-info = tracker.get_reproducibility_info('vid_123')
+info = tracker.get_reproducibility_info("vid_123")
 print(f"Can reproduce: {info['reproducible']}")
 ```
 

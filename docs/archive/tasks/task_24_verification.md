@@ -12,14 +12,12 @@ def __init__(self):
     self.enabled = Config.REDIS_ENABLED
     self.ttl = timedelta(hours=Config.CACHE_TTL_HOURS)
     self.redis_client = None
-    
+
     if self.enabled:
         try:
             import redis
-            self.redis_client = redis.from_url(
-                Config.REDIS_URL,
-                decode_responses=True
-            )
+
+            self.redis_client = redis.from_url(Config.REDIS_URL, decode_responses=True)
             # Test connection
             self.redis_client.ping()
             logger.info(f"Redis cache enabled with TTL: {Config.CACHE_TTL_HOURS}h")
@@ -47,22 +45,17 @@ python scripts/test_cache_layer.py
 **Implementation:** `mcp_server/cache.py` - `CacheManager.generate_cache_key()`
 
 ```python
-def generate_cache_key(
-    self,
-    tool_name: str,
-    video_id: str,
-    parameters: Dict[str, Any]
-) -> str:
+def generate_cache_key(self, tool_name: str, video_id: str, parameters: Dict[str, Any]) -> str:
     """Generate a unique cache key for tool execution."""
     # Create a deterministic string from parameters
     params_str = json.dumps(parameters, sort_keys=True)
-    
+
     # Hash the parameters to keep key length manageable
     params_hash = hashlib.md5(params_str.encode()).hexdigest()
-    
+
     # Format: bri:tool:{tool_name}:{video_id}:{params_hash}
     cache_key = f"bri:tool:{tool_name}:{video_id}:{params_hash}"
-    
+
     return cache_key
 ```
 
@@ -168,18 +161,18 @@ def set(self, key: str, value: Any) -> bool:
     """Store value in cache with TTL."""
     if not self.enabled or self.redis_client is None:
         return False
-    
+
     try:
         # Serialize value to JSON
         serialized_value = json.dumps(value)
-        
+
         # Store with TTL ← TTL APPLIED HERE
         self.redis_client.setex(
             key,
             self.ttl,  # ← 24 hours by default
-            serialized_value
+            serialized_value,
         )
-        
+
         logger.debug(f"Cache set: {key} (TTL: {self.ttl})")
         return True
     except Exception as e:
@@ -203,6 +196,7 @@ CACHE_TTL_HOURS=24  # Default: 24 hours
 ```python
 # Check TTL in Redis
 import redis
+
 r = redis.from_url("redis://localhost:6379")
 ttl_seconds = r.ttl("bri:tool:extract_frames:video_123:hash")
 ttl_hours = ttl_seconds / 3600

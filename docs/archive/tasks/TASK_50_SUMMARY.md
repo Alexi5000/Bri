@@ -108,7 +108,7 @@ from services.graceful_degradation import degradation_service
 data = degradation_service.get_data_with_fallback(
     primary_fetch=lambda: db.get_video_context(video_id),
     cache_key=f"bri:context:{video_id}",
-    video_id=video_id
+    video_id=video_id,
 )
 
 # Check system health
@@ -186,17 +186,15 @@ from utils.metrics_logger import MetricsLogger, track_database_query
 
 # Log database query
 MetricsLogger.log_database_query(
-    query_type="SELECT",
-    table="videos",
-    execution_time=0.023,
-    rows_affected=10,
-    video_id="vid_123"
+    query_type="SELECT", table="videos", execution_time=0.023, rows_affected=10, video_id="vid_123"
 )
+
 
 # Use decorator
 @track_database_query("SELECT", "videos")
 def get_videos(video_id):
     return db.get_video(video_id)
+
 
 # Log resource usage
 MetricsLogger.log_resource_usage("video_processing", video_id="vid_123")
@@ -354,9 +352,7 @@ health = degradation_service.get_system_health()
 
 # Get data with fallback
 data = degradation_service.get_data_with_fallback(
-    primary_fetch=fetch_function,
-    cache_key="cache_key",
-    video_id="vid_123"
+    primary_fetch=fetch_function, cache_key="cache_key", video_id="vid_123"
 )
 ```
 
@@ -365,11 +361,7 @@ data = degradation_service.get_data_with_fallback(
 from utils.metrics_logger import MetricsLogger
 
 # Log metrics
-MetricsLogger.log_database_query(
-    query_type="SELECT",
-    table="videos",
-    execution_time=0.023
-)
+MetricsLogger.log_database_query(query_type="SELECT", table="videos", execution_time=0.023)
 ```
 
 ---

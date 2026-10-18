@@ -248,10 +248,7 @@ archival.soft_delete_video("video_id")
 
 # Apply retention policies
 results = archival.apply_retention_policies(
-    archive_conversations_days=30,
-    delete_soft_deleted_days=7,
-    cleanup_orphaned=True,
-    vacuum=True
+    archive_conversations_days=30, delete_soft_deleted_days=7, cleanup_orphaned=True, vacuum=True
 )
 ```
 

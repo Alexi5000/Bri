@@ -41,18 +41,17 @@ This document evaluates vector database options for implementing semantic search
 **Sample Code**:
 ```python
 import chromadb
+
 client = chromadb.Client()
 collection = client.create_collection("captions")
 collection.add(
     embeddings=[[0.1, 0.2, ...], ...],
     documents=["caption text", ...],
     metadatas=[{"video_id": "vid_123", "timestamp": 10.5}, ...],
-    ids=["cap_1", "cap_2", ...]
+    ids=["cap_1", "cap_2", ...],
 )
 results = collection.query(
-    query_embeddings=[[0.1, 0.2, ...]],
-    n_results=5,
-    where={"video_id": "vid_123"}
+    query_embeddings=[[0.1, 0.2, ...]], n_results=5, where={"video_id": "vid_123"}
 )
 ```
 

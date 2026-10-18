@@ -119,10 +119,7 @@ from services.agent import GroqAgent
 agent = GroqAgent()
 
 # User asks about video content
-response = await agent.chat(
-    message="Show me all the important moments",
-    video_id="video_123"
-)
+response = await agent.chat(message="Show me all the important moments", video_id="video_123")
 
 # Response includes:
 print(f"Message: {response.message}")

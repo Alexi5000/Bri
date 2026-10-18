@@ -76,9 +76,9 @@ When tools fail, the system:
 Example:
 ```python
 result = ErrorHandler.handle_graceful_degradation(
-    requested_tools=['captions', 'transcripts', 'objects'],
-    available_tools=['captions', 'transcripts'],
-    query="Show me all the dogs"
+    requested_tools=["captions", "transcripts", "objects"],
+    available_tools=["captions", "transcripts"],
+    query="Show me all the dogs",
 )
 # Returns:
 # {
@@ -214,9 +214,7 @@ try:
     result = frame_extractor.extract_frames(video_path)
 except Exception as e:
     error_msg = ErrorHandler.handle_tool_error(
-        'frame_extractor',
-        e,
-        available_tools=['audio_transcriber']
+        "frame_extractor", e, available_tools=["audio_transcriber"]
     )
     # Returns: "I had trouble extracting frames, but I can still help with the audio!"
 ```
@@ -233,13 +231,13 @@ except Exception as e:
 ### 3. Graceful Degradation
 ```python
 degradation = ErrorHandler.handle_graceful_degradation(
-    requested_tools=['captions', 'transcripts', 'objects'],
-    available_tools=['captions'],
-    query="Show me the dogs"
+    requested_tools=["captions", "transcripts", "objects"],
+    available_tools=["captions"],
+    query="Show me the dogs",
 )
-if degradation['can_proceed']:
-    use_tools(degradation['usable_tools'])
-    show_message(degradation['message'])
+if degradation["can_proceed"]:
+    use_tools(degradation["usable_tools"])
+    show_message(degradation["message"])
 ```
 
 ### 4. Format Any Error
@@ -248,8 +246,7 @@ try:
     process_video(video_id)
 except Exception as e:
     user_message = ErrorHandler.format_error_for_user(
-        e,
-        context={'processing': True, 'video_id': video_id}
+        e, context={"processing": True, "video_id": video_id}
     )
 ```
 

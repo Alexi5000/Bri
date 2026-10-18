@@ -46,11 +46,7 @@ from services.context import ContextBuilder
 builder = ContextBuilder()
 
 # Hybrid search (automatically uses semantic if available)
-captions = builder.search_captions(
-    video_id="vid_123",
-    query="person walking dog",
-    top_k=5
-)
+captions = builder.search_captions(video_id="vid_123", query="person walking dog", top_k=5)
 
 for caption in captions:
     print(f"[{caption.frame_timestamp}s] {caption.text}")
@@ -64,7 +60,7 @@ captions = builder.search_captions_semantic(
     video_id="vid_123",
     query="person walking dog",
     top_k=5,
-    min_score=0.5  # Minimum similarity threshold
+    min_score=0.5,  # Minimum similarity threshold
 )
 ```
 
@@ -76,7 +72,7 @@ captions = builder.search_captions(
     video_id="vid_123",
     query="person walking dog",
     top_k=5,
-    use_semantic=False  # Disable semantic search
+    use_semantic=False,  # Disable semantic search
 )
 ```
 
@@ -94,31 +90,33 @@ from services.context import ContextBuilder
 pipeline = get_embedding_pipeline()
 builder = ContextBuilder()
 
+
 # Index single video
 def fetch_video_data(video_id):
     captions = builder._get_captions(video_id)
     transcript = builder._get_transcript(video_id)
-    
+
     caption_dicts = [
-        {
-            'text': cap.text,
-            'frame_timestamp': cap.frame_timestamp,
-            'confidence': cap.confidence
-        }
+        {"text": cap.text, "frame_timestamp": cap.frame_timestamp, "confidence": cap.confidence}
         for cap in captions
     ]
-    
-    segment_dicts = [
-        {
-            'text': seg.text,
-            'start': seg.start,
-            'end': seg.end,
-            'confidence': getattr(seg, 'confidence', 1.0)
-        }
-        for seg in transcript.segments
-    ] if transcript and transcript.segments else []
-    
+
+    segment_dicts = (
+        [
+            {
+                "text": seg.text,
+                "start": seg.start,
+                "end": seg.end,
+                "confidence": getattr(seg, "confidence", 1.0),
+            }
+            for seg in transcript.segments
+        ]
+        if transcript and transcript.segments
+        else []
+    )
+
     return caption_dicts, segment_dicts
+
 
 # Index one video
 video_id = "vid_123"
@@ -159,16 +157,16 @@ print(f"Embedding dimension: {stats['embedding_dim']}")
 print(f"Total embeddings: {stats['total_embeddings']}")
 
 # Performance stats
-if 'performance' in stats:
-    perf = stats['performance']
+if "performance" in stats:
+    perf = stats["performance"]
     print(f"Total queries: {perf['total_queries']}")
-    
-    if 'cache' in perf:
-        cache = perf['cache']
+
+    if "cache" in perf:
+        cache = perf["cache"]
         print(f"Cache hit rate: {cache['hit_rate']:.1%}")
-    
-    if 'query_times' in perf:
-        qt = perf['query_times']
+
+    if "query_times" in perf:
+        qt = perf["query_times"]
         print(f"Avg query time: {qt['avg_ms']:.1f}ms")
         print(f"P95 query time: {qt['p95_ms']:.1f}ms")
 ```
@@ -218,8 +216,8 @@ Edit `services/vector_search_optimizer.py`:
 ```python
 optimizer = VectorSearchOptimizer(
     enable_cache=True,
-    cache_size=2000,      # Max 2000 cached queries (default: 1000)
-    cache_ttl=7200        # 2 hours TTL (default: 3600)
+    cache_size=2000,  # Max 2000 cached queries (default: 1000)
+    cache_ttl=7200,  # 2 hours TTL (default: 3600)
 )
 ```
 
@@ -234,7 +232,7 @@ hybrid_results = self.semantic_search.hybrid_search(
     keyword_results=kw_results_dict,
     video_id=video_id,
     top_k=top_k,
-    semantic_weight=0.8  # 80% semantic, 20% keyword (default: 0.7)
+    semantic_weight=0.8,  # 80% semantic, 20% keyword (default: 0.7)
 )
 ```
 
@@ -265,7 +263,8 @@ First run downloads ~90MB model. If it fails:
 ```python
 # Pre-download manually
 from sentence_transformers import SentenceTransformer
-model = SentenceTransformer('all-MiniLM-L6-v2')
+
+model = SentenceTransformer("all-MiniLM-L6-v2")
 ```
 
 Or set cache directory:
@@ -278,7 +277,7 @@ export SENTENCE_TRANSFORMERS_HOME=/path/to/cache
 **Check cache hit rate:**
 ```python
 stats = service.get_stats()
-hit_rate = stats['performance']['cache']['hit_rate']
+hit_rate = stats["performance"]["cache"]["hit_rate"]
 print(f"Cache hit rate: {hit_rate:.1%}")
 ```
 
@@ -299,7 +298,7 @@ print(f"Cache hit rate: {hit_rate:.1%}")
 service.index_captions(
     video_id,
     captions,
-    batch_size=16  # Reduce from default 32
+    batch_size=16,  # Reduce from default 32
 )
 ```
 

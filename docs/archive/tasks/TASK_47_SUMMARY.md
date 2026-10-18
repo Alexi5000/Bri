@@ -267,21 +267,21 @@ results = optimizer.execute_query(
     "SELECT * FROM videos WHERE video_id = ?",
     parameters=("vid_123",),
     cache_key="video:vid_123",
-    cache_ttl=300
+    cache_ttl=300,
 )
 
 # Execute update with cache invalidation
 optimizer.execute_update(
     "UPDATE videos SET status = ? WHERE video_id = ?",
     parameters=("complete", "vid_123"),
-    invalidate_pattern="video:vid_123:*"
+    invalidate_pattern="video:vid_123:*",
 )
 
 # Batch operations
 optimizer.execute_batch(
     "INSERT INTO video_context (video_id, data) VALUES (?, ?)",
     parameters_list=[(vid, data) for vid, data in batch_data],
-    batch_size=100
+    batch_size=100,
 )
 ```
 
@@ -298,18 +298,10 @@ await prefetcher.prefetch_related_data("video_123", "frames")
 prefetcher.record_access("video_123", "captions")
 
 # Lazy loading with pagination
-result = await prefetcher.lazy_load_paginated(
-    "video_123",
-    "frames",
-    page_size=10,
-    page=0
-)
+result = await prefetcher.lazy_load_paginated("video_123", "frames", page_size=10, page=0)
 
 # Optimize N+1 queries
-results = prefetcher.optimize_n_plus_one(
-    ["video_1", "video_2", "video_3"],
-    "captions"
-)
+results = prefetcher.optimize_n_plus_one(["video_1", "video_2", "video_3"], "captions")
 ```
 
 ### Compression Manager
@@ -323,19 +315,14 @@ compressed = manager.compress_json(large_data_dict)
 decompressed = manager.decompress_json(compressed)
 
 # Compress image to WebP
-output_path, orig_size, comp_size = manager.compress_image(
-    "frame_001.jpg",
-    "frame_001.webp"
-)
+output_path, orig_size, comp_size = manager.compress_image("frame_001.jpg", "frame_001.webp")
 
 # Compress API response
 compressed_response = manager.compress_response(json_response_string)
 
 # Check for duplicate frames
 is_duplicate, original_timestamp = manager.check_frame_duplicate(
-    "video_123",
-    1.5,
-    "frame_at_1.5s.jpg"
+    "video_123", 1.5, "frame_at_1.5s.jpg"
 )
 ```
 

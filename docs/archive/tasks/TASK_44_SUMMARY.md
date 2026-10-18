@@ -75,7 +75,7 @@ def processed_video_id(self, db):
     """
     results = db.execute_query(query)
     if results:
-        return results[0]['video_id']
+        return results[0]["video_id"]
     return None
 ```
 

@@ -73,13 +73,10 @@ agent = GroqAgent(
     api_key="gsk_...",
     memory=Memory(db=db),
     router=ToolRouter(),
-    context_builder=ContextBuilder(db=db)
+    context_builder=ContextBuilder(db=db),
 )
 
-response = agent.process_query(
-    video_id="video_123",
-    query="What's happening at 2:30?"
-)
+response = agent.process_query(video_id="video_123", query="What's happening at 2:30?")
 ```
 
 **Key Methods:**
@@ -118,16 +115,10 @@ builder = ContextBuilder(db=db)
 context = builder.build_context(video_id="video_123")
 
 # Build context for specific timestamp
-context = builder.build_context(
-    video_id="video_123",
-    timestamp=30.0
-)
+context = builder.build_context(video_id="video_123", timestamp=30.0)
 
 # Build context with specific data types
-context = builder.build_context(
-    video_id="video_123",
-    context_types=['caption', 'transcript']
-)
+context = builder.build_context(video_id="video_123", context_types=["caption", "transcript"])
 ```
 
 **Expected Context Structure:**
@@ -139,7 +130,7 @@ context = builder.build_context(
     "captions": [...],
     "transcript": {...},
     "objects": [...],
-    "timestamp_filter": null  # or specific timestamp
+    "timestamp_filter": null,  # or specific timestamp
 }
 ```
 
@@ -170,17 +161,10 @@ context = builder.build_context(
 memory = Memory(db=db)
 
 # Insert message
-memory.insert(
-    video_id="video_123",
-    role="user",
-    content="What's in this video?"
-)
+memory.insert(video_id="video_123", role="user", content="What's in this video?")
 
 # Retrieve history
-history = memory.get_conversation_history(
-    video_id="video_123",
-    limit=10
-)
+history = memory.get_conversation_history(video_id="video_123", limit=10)
 
 # Reset conversation
 memory.reset_memory(video_id="video_123")
@@ -196,7 +180,7 @@ last_msg = memory.get_last_message(video_id="video_123")
     "video_id": "video_123",
     "role": "user",  # or "assistant"
     "content": "What's in this video?",
-    "timestamp": "2025-12-25T18:00:00Z"
+    "timestamp": "2025-12-25T18:00:00Z",
 }
 ```
 
@@ -228,9 +212,7 @@ last_msg = memory.get_last_message(video_id="video_123")
 router = ToolRouter()
 
 # Analyze query
-plan = router.analyze_query(
-    query="What's happening at 2:30?"
-)
+plan = router.analyze_query(query="What's happening at 2:30?")
 # Returns: {
 #   "query_type": "timestamp_specific",
 #   "tools_needed": ["extract_frames", "caption_frames"],

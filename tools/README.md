@@ -19,10 +19,7 @@ from tools.frame_extractor import FrameExtractor
 
 extractor = FrameExtractor()
 frames = extractor.extract_frames(
-    video_path="path/to/video.mp4",
-    video_id="video_123",
-    interval_seconds=2.0,
-    max_frames=100
+    video_path="path/to/video.mp4", video_id="video_123", interval_seconds=2.0, max_frames=100
 )
 ```
 
@@ -45,16 +42,12 @@ from tools.image_captioner import ImageCaptioner
 captioner = ImageCaptioner()
 
 # Single frame
-caption = captioner.caption_frame(
-    image_path="path/to/frame.jpg",
-    timestamp=2.5
-)
+caption = captioner.caption_frame(image_path="path/to/frame.jpg", timestamp=2.5)
 print(f"Caption: {caption.text} (confidence: {caption.confidence})")
 
 # Batch processing
 captions = captioner.caption_frames_batch(
-    image_paths=["frame1.jpg", "frame2.jpg", "frame3.jpg"],
-    timestamps=[0.0, 2.0, 4.0]
+    image_paths=["frame1.jpg", "frame2.jpg", "frame3.jpg"], timestamps=[0.0, 2.0, 4.0]
 )
 ```
 
@@ -87,9 +80,7 @@ for segment in transcript.segments:
 
 # Transcribe specific time range
 segment = transcriber.transcribe_segment(
-    video_path="path/to/video.mp4",
-    start_time=10.0,
-    end_time=20.0
+    video_path="path/to/video.mp4", start_time=10.0, end_time=20.0
 )
 print(f"Segment: {segment.text}")
 ```
@@ -114,17 +105,12 @@ detector = ObjectDetector(model_name="yolov8n.pt")
 
 # Batch detection
 detections = detector.detect_objects_in_frames(
-    frame_paths=["frame1.jpg", "frame2.jpg"],
-    timestamps=[0.0, 2.5],
-    confidence_threshold=0.3
+    frame_paths=["frame1.jpg", "frame2.jpg"], timestamps=[0.0, 2.5], confidence_threshold=0.3
 )
 
 # Search for specific object
 dog_frames = detector.search_for_object(
-    frame_paths=frame_paths,
-    timestamps=timestamps,
-    object_class="dog",
-    confidence_threshold=0.3
+    frame_paths=frame_paths, timestamps=timestamps, object_class="dog", confidence_threshold=0.3
 )
 
 # Get available classes
@@ -201,9 +187,7 @@ from tools.frame_extractor import FrameExtractor
 # Extract frames from a video
 extractor = FrameExtractor()
 frames = extractor.extract_frames(
-    video_path="data/videos/sample.mp4",
-    video_id="test_video",
-    max_frames=5
+    video_path="data/videos/sample.mp4", video_id="test_video", max_frames=5
 )
 
 # Caption the frames

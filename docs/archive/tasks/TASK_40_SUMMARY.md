@@ -197,7 +197,7 @@ for attempt in range(max_retries):
     except DatabaseError as e:
         if attempt < max_retries - 1:
             # Exponential backoff: 0.5s, 1s, 2s
-            sleep_time = 0.5 * (2 ** attempt)
+            sleep_time = 0.5 * (2**attempt)
             time.sleep(sleep_time)
         else:
             # All retries exhausted
@@ -211,7 +211,7 @@ for attempt in range(max_retries):
 # After INSERT, verify data was written
 cursor.execute(
     "SELECT COUNT(*) FROM video_context WHERE video_id = ? AND context_type = ?",
-    (video_id, context_type)
+    (video_id, context_type),
 )
 validation_count = cursor.fetchone()[0]
 

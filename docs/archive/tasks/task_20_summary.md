@@ -119,11 +119,13 @@ from services.memory import Memory
 # Get conversation history
 conversation_history = memory.get_conversation_history(video_id)
 
+
 # Define message handler
 def handle_send_message(message: str):
     response = agent.chat(message, video_id)
     memory.add_memory_pair(video_id, message, response.message)
     st.rerun()
+
 
 # Render chat window
 render_chat_window(video_id, conversation_history, handle_send_message)

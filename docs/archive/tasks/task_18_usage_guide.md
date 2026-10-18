@@ -158,6 +158,7 @@ def on_progress(step_name, progress, message):
     print(f"[{progress:.0f}%] {step_name}")
     print(f"  {message}")
 
+
 result = await processor.process_video(video_id, on_progress)
 ```
 
@@ -211,6 +212,7 @@ print(status["message"])
 4. Manually update status if needed:
    ```python
    from storage.database import update_video_status
+
    update_video_status(video_id, "complete")
    ```
 

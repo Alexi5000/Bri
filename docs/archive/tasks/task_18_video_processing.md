@@ -134,9 +134,11 @@ from services.video_processor import get_video_processor
 
 processor = get_video_processor()
 
+
 # Define progress callback
 def on_progress(step_name, progress, message):
     print(f"[{progress:.0f}%] {step_name}: {message}")
+
 
 # Process video
 result = await processor.process_video(video_id, on_progress)

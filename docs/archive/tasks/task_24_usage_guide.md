@@ -65,10 +65,7 @@ import requests
 # First request - processes video and caches result
 response = requests.post(
     "http://localhost:8000/tools/extract_frames/execute",
-    json={
-        "video_id": "my_video",
-        "parameters": {"interval_seconds": 2.0}
-    }
+    json={"video_id": "my_video", "parameters": {"interval_seconds": 2.0}},
 )
 
 print(response.json())
@@ -82,10 +79,7 @@ print(response.json())
 # Second request - returns cached result instantly
 response = requests.post(
     "http://localhost:8000/tools/extract_frames/execute",
-    json={
-        "video_id": "my_video",
-        "parameters": {"interval_seconds": 2.0}
-    }
+    json={"video_id": "my_video", "parameters": {"interval_seconds": 2.0}},
 )
 
 print(response.json())
@@ -284,7 +278,7 @@ Pre-populate cache for common videos:
 # Process video to populate cache
 requests.post(
     "http://localhost:8000/videos/popular_video/process",
-    json={"tools": None}  # Process with all tools
+    json={"tools": None},  # Process with all tools
 )
 ```
 

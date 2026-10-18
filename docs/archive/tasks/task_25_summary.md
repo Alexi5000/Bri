@@ -145,6 +145,7 @@ history = memory.get_conversation_history(video_id, limit=10, offset=0)
 
 # Lazy loading
 from ui.lazy_loader import LazyImageLoader
+
 loader = LazyImageLoader(batch_size=3)
 loader.render_lazy_images(images, timestamps)
 ```

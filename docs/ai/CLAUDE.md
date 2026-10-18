@@ -391,9 +391,11 @@ from services.memory import Memory
 # 4. Constants
 DEFAULT_TIMEOUT = 30
 
+
 # 5. Classes and functions
 class MyService:
     """Service docstring."""
+
     pass
 ```
 
@@ -435,8 +437,10 @@ if not video_exists(video_id):
 try:
     result = process_frame(frame_id)
 except ProcessingError as e:
-    logger.error(f"Failed to process frame {frame_id} for video {video_id}",
-                 extra={'frame_id': frame_id, 'video_id': video_id, 'error': str(e)})
+    logger.error(
+        f"Failed to process frame {frame_id} for video {video_id}",
+        extra={"frame_id": frame_id, "video_id": video_id, "error": str(e)},
+    )
     raise
 
 # Avoid
@@ -454,7 +458,7 @@ error_handler = ErrorHandler()
 try:
     captions = caption_frames(video_id)
 except CaptioningError as e:
-    friendly_message = error_handler.handle_tool_error('image_captioner', e)
+    friendly_message = error_handler.handle_tool_error("image_captioner", e)
     return {"error": friendly_message}
 ```
 
@@ -467,14 +471,15 @@ from utils.logging_config import get_logger
 logger = get_logger(__name__)
 
 # Use structured logging with context
-logger.info("Processing video",
-            extra={'video_id': video_id, 'frame_count': len(frames)})
+logger.info("Processing video", extra={"video_id": video_id, "frame_count": len(frames)})
 
 # Performance logging
 from utils.logging_config import get_performance_logger
+
 perf_logger = get_performance_logger(__name__)
-perf_logger.info("Frame extraction completed",
-                 extra={'duration_ms': duration, 'frame_count': count})
+perf_logger.info(
+    "Frame extraction completed", extra={"duration_ms": duration, "frame_count": count}
+)
 ```
 
 #### Log Levels
@@ -493,19 +498,21 @@ from services.data_validator import DataValidator
 validator = DataValidator()
 
 # Validate single record
-errors = validator.validate_caption({
-    'video_id': video_id,
-    'frame_number': 1,
-    'timestamp': 0.5,
-    'caption_text': "A cat sitting on a table"
-})
+errors = validator.validate_caption(
+    {
+        "video_id": video_id,
+        "frame_number": 1,
+        "timestamp": 0.5,
+        "caption_text": "A cat sitting on a table",
+    }
+)
 
 if errors:
     raise ValidationError(f"Invalid caption data: {errors}")
 
 # Validate batch
 captions_batch = [...]
-batch_errors = validator.validate_batch(captions_batch, 'caption')
+batch_errors = validator.validate_batch(captions_batch, "caption")
 ```
 
 ### Database Patterns
@@ -526,10 +533,7 @@ with db.transaction():
 #### Use Prepared Statements
 ```python
 # Good - prevents SQL injection
-cursor.execute(
-    "SELECT * FROM videos WHERE video_id = ?",
-    (video_id,)
-)
+cursor.execute("SELECT * FROM videos WHERE video_id = ?", (video_id,))
 
 # Avoid - SQL injection risk
 cursor.execute(f"SELECT * FROM videos WHERE video_id = '{video_id}'")
@@ -542,22 +546,24 @@ cursor.execute(f"SELECT * FROM videos WHERE video_id = '{video_id}'")
 import pytest
 import tempfile
 
+
 @pytest.fixture
 def temp_db():
     """Create temporary database for testing."""
-    fd, path = tempfile.mkstemp(suffix='.db')
+    fd, path = tempfile.mkstemp(suffix=".db")
     db = Database(path)
     db.initialize_schema()
     yield db
     os.close(fd)
     os.unlink(path)
 
+
 def test_insert_video(temp_db):
     """Test video insertion."""
-    video_data = {'video_id': 'test-123', 'filename': 'test.mp4'}
+    video_data = {"video_id": "test-123", "filename": "test.mp4"}
     temp_db.insert_video(video_data)
-    result = temp_db.get_video('test-123')
-    assert result['filename'] == 'test.mp4'
+    result = temp_db.get_video("test-123")
+    assert result["filename"] == "test.mp4"
 ```
 
 ---
@@ -617,6 +623,7 @@ max_frames = 100
 
 # Good
 from config import Config
+
 max_frames = Config.MAX_FRAMES_PER_VIDEO
 ```
 
@@ -660,6 +667,7 @@ tests/
 import pytest
 from services.memory import Memory
 
+
 @pytest.fixture
 def memory_service():
     """Create memory service with temp database."""
@@ -671,6 +679,7 @@ def memory_service():
 
     # Teardown
     cleanup_temp_database(db)
+
 
 def test_store_and_retrieve_message(memory_service):
     """Test message storage and retrieval."""
@@ -766,7 +775,7 @@ See `docs/OPERATIONS_RUNBOOK.md` for detailed operational procedures including:
    ```python
    from tools.my_new_tool import MyNewTool
 
-   registry.register_tool('my_new_tool', MyNewTool())
+   registry.register_tool("my_new_tool", MyNewTool())
    ```
 
 3. **Add to router** (`services/router.py`)
@@ -796,9 +805,9 @@ See `docs/OPERATIONS_RUNBOOK.md` for detailed operational procedures including:
    MIGRATIONS = [
        # ... existing migrations
        {
-           'version': 5,
-           'description': 'Add new column',
-           'sql': 'ALTER TABLE videos ADD COLUMN new_field TEXT;'
+           "version": 5,
+           "description": "Add new column",
+           "sql": "ALTER TABLE videos ADD COLUMN new_field TEXT;",
        }
    ]
    ```
@@ -867,11 +876,11 @@ Always check the database for existing data before calling tools:
 captions = db.get_captions(video_id)
 if not captions:
     # Only call tool if no data exists
-    captions = mcp_client.call_tool('caption_frames', {'video_id': video_id})
+    captions = mcp_client.call_tool("caption_frames", {"video_id": video_id})
     db.store_captions(video_id, captions)
 
 # Avoid - Always calling tools
-captions = mcp_client.call_tool('caption_frames', {'video_id': video_id})
+captions = mcp_client.call_tool("caption_frames", {"video_id": video_id})
 ```
 
 ### 3. **Graceful Degradation**
@@ -900,13 +909,11 @@ from utils.logging_config import get_logger
 logger = get_logger(__name__)
 
 # Good
-logger.info("Starting video processing",
-            extra={'video_id': video_id, 'frame_count': len(frames)})
+logger.info("Starting video processing", extra={"video_id": video_id, "frame_count": len(frames)})
 
 # Better
 with log_context(video_id=video_id):
-    logger.info("Starting video processing",
-                extra={'frame_count': len(frames)})
+    logger.info("Starting video processing", extra={"frame_count": len(frames)})
 ```
 
 ### 5. **Use Type Hints Consistently**
@@ -915,12 +922,15 @@ with log_context(video_id=video_id):
 from typing import Optional, List, Dict
 from models.video import VideoMetadata
 
+
 # Good
 def get_video(video_id: str) -> Optional[VideoMetadata]:
     pass
 
+
 def get_frames(video_id: str) -> List[Dict[str, any]]:
     pass
+
 
 # Avoid
 def get_video(video_id):
@@ -937,7 +947,7 @@ validator = DataValidator()
 # Good
 errors = validator.validate_caption(caption_data)
 if errors:
-    logger.error("Invalid caption data", extra={'errors': errors})
+    logger.error("Invalid caption data", extra={"errors": errors})
     raise ValidationError(errors)
 db.insert_caption(caption_data)
 
@@ -956,8 +966,8 @@ error_handler = ErrorHandler()
 try:
     result = process_video(video_id)
 except ProcessingError as e:
-    logger.error("Video processing failed", extra={'video_id': video_id, 'error': str(e)})
-    friendly_msg = error_handler.handle_tool_error('frame_extractor', e)
+    logger.error("Video processing failed", extra={"video_id": video_id, "error": str(e)})
+    friendly_msg = error_handler.handle_tool_error("frame_extractor", e)
     return {"error": friendly_msg}
 
 # Avoid - technical error exposed to user
@@ -976,13 +986,13 @@ db = Database()
 with db.transaction():
     db.insert_video(video_data)
     db.insert_frames(frames_data)
-    db.update_processing_status(video_id, 'completed')
+    db.update_processing_status(video_id, "completed")
     # All or nothing
 
 # Avoid
 db.insert_video(video_data)
 db.insert_frames(frames_data)  # Could fail leaving inconsistent state
-db.update_processing_status(video_id, 'completed')
+db.update_processing_status(video_id, "completed")
 ```
 
 ### 9. **Document Your Changes**

@@ -153,6 +153,7 @@ def _check_video_context_exists(self, video_id: str) -> bool:
     return bool(context.captions or context.transcript or context.objects)
     # ❌ Ignores context.frames!
 
+
 # Fixed
 def _check_video_context_exists(self, video_id: str) -> bool:
     context = self.context_builder.build_video_context(video_id)
@@ -201,24 +202,24 @@ response = agent.chat("What's in the video?", test_video_id)
 ```python
 class VideoProcessingService:
     """Centralized service for all video processing with guaranteed persistence."""
-    
+
     async def process_video_staged(self, video_id: str):
         """Process video in stages with verification."""
-        
+
         # Stage 1: Extract frames (fast)
         frames = await self.extract_frames(video_id)
-        self._verify_stored(video_id, 'frame', len(frames))
-        
+        self._verify_stored(video_id, "frame", len(frames))
+
         # Stage 2: Generate captions (medium)
         captions = await self.generate_captions(video_id, frames)
-        self._verify_stored(video_id, 'caption', len(captions))
-        
+        self._verify_stored(video_id, "caption", len(captions))
+
         # Stage 3: Full analysis (slow)
         transcript = await self.transcribe_audio(video_id)
         objects = await self.detect_objects(video_id, frames)
-        self._verify_stored(video_id, 'transcript', len(transcript.segments))
-        self._verify_stored(video_id, 'object', len(objects))
-    
+        self._verify_stored(video_id, "transcript", len(transcript.segments))
+        self._verify_stored(video_id, "object", len(objects))
+
     def _verify_stored(self, video_id: str, context_type: str, expected_count: int):
         """Verify data was actually written to database."""
         actual_count = self.db.count_context(video_id, context_type)

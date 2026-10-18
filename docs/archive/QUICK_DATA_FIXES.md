@@ -19,10 +19,11 @@ Add this method to the `Database` class:
 ```python
 from contextlib import contextmanager
 
+
 @contextmanager
 def transaction(self):
     """Transaction context manager with automatic commit/rollback.
-    
+
     Usage:
         with db.transaction():
             db.execute_update("INSERT ...")
@@ -54,23 +55,31 @@ def _store_tool_result_in_db(video_id: str, tool_name: str, result: dict):
     try:
         from storage.database import get_database
         import json
-        
+
         db = get_database()
-        
+
         # Use transaction for atomic writes
         with db.transaction():
-            if tool_name == 'caption_frames' and result:
+            if tool_name == "caption_frames" and result:
                 # Store all captions atomically
-                for caption in result.get('captions', []):
+                for caption in result.get("captions", []):
                     db.execute_update(
                         """INSERT INTO video_context (context_id, video_id, context_type, timestamp, data)
                            VALUES (?, ?, ?, ?, ?)""",
-                        (str(uuid.uuid4()), video_id, 'caption', caption.get('timestamp', 0), json.dumps(caption))
+                        (
+                            str(uuid.uuid4()),
+                            video_id,
+                            "caption",
+                            caption.get("timestamp", 0),
+                            json.dumps(caption),
+                        ),
                     )
-                logger.info(f"✅ Stored {len(result.get('captions', []))} captions for video {video_id}")
-            
+                logger.info(
+                    f"✅ Stored {len(result.get('captions', []))} captions for video {video_id}"
+                )
+
             # Similar for other tools...
-            
+
     except Exception as e:
         logger.error(f"❌ Failed to store tool result in database: {e}")
         raise  # Re-raise to trigger rollback
@@ -90,21 +99,23 @@ Invalid data gets stored, causing downstream failures.
 ```python
 """Data validation for BRI video agent."""
 
+
 class ValidationError(Exception):
     """Raised when data validation fails."""
+
     pass
 
 
 class DataValidator:
     """Validates data before database insertion."""
-    
+
     @staticmethod
     def validate_caption(caption: dict) -> None:
         """Validate caption structure and values.
-        
+
         Args:
             caption: Caption dictionary
-            
+
         Raises:
             ValidationError: If validation fails
         """
@@ -113,17 +124,17 @@ class DataValidator:
         for field in required:
             if field not in caption:
                 raise ValidationError(f"Missing required field: {field}")
-        
+
         # Value ranges
         if not isinstance(caption["text"], str) or not caption["text"]:
             raise ValidationError("Caption text must be non-empty string")
-        
+
         if not isinstance(caption["timestamp"], (int, float)) or caption["timestamp"] < 0:
             raise ValidationError(f"Invalid timestamp: {caption['timestamp']}")
-        
+
         if not 0 <= caption["confidence"] <= 1:
             raise ValidationError(f"Confidence must be 0-1, got: {caption['confidence']}")
-    
+
     @staticmethod
     def validate_transcript_segment(segment: dict) -> None:
         """Validate transcript segment."""
@@ -131,13 +142,13 @@ class DataValidator:
         for field in required:
             if field not in segment:
                 raise ValidationError(f"Missing required field: {field}")
-        
+
         if segment["start"] < 0 or segment["end"] < 0:
             raise ValidationError("Timestamps must be non-negative")
-        
+
         if segment["start"] >= segment["end"]:
             raise ValidationError("Start must be before end")
-    
+
     @staticmethod
     def validate_object_detection(detection: dict) -> None:
         """Validate object detection."""
@@ -145,10 +156,10 @@ class DataValidator:
         for field in required:
             if field not in detection:
                 raise ValidationError(f"Missing required field: {field}")
-        
+
         if not isinstance(detection["objects"], list):
             raise ValidationError("Objects must be a list")
-        
+
         for obj in detection["objects"]:
             if "class_name" not in obj or "confidence" not in obj:
                 raise ValidationError("Object missing class_name or confidence")
@@ -161,28 +172,29 @@ class DataValidator:
 ```python
 from services.data_validator import DataValidator, ValidationError
 
+
 def _store_tool_result_in_db(video_id: str, tool_name: str, result: dict):
     """Store tool result with validation."""
     try:
         db = get_database()
-        
+
         with db.transaction():
-            if tool_name == 'caption_frames' and result:
-                for caption in result.get('captions', []):
+            if tool_name == "caption_frames" and result:
+                for caption in result.get("captions", []):
                     # Validate before storing
                     DataValidator.validate_caption(caption)
-                    
+
                     db.execute_update(...)
-                    
-            elif tool_name == 'transcribe_audio' and result:
-                for segment in result.get('segments', []):
+
+            elif tool_name == "transcribe_audio" and result:
+                for segment in result.get("segments", []):
                     # Validate before storing
                     DataValidator.validate_transcript_segment(segment)
-                    
+
                     db.execute_update(...)
-            
+
             # etc...
-            
+
     except ValidationError as e:
         logger.error(f"❌ Data validation failed: {e}")
         raise
@@ -214,85 +226,88 @@ logger = logging.getLogger(__name__)
 
 class ConsistencyError(Exception):
     """Raised when data consistency check fails."""
+
     pass
 
 
 class DataConsistencyChecker:
     """Checks data consistency and completeness."""
-    
+
     def __init__(self):
         self.db = get_database()
-    
+
     def check_video_completeness(self, video_id: str) -> Dict[str, Any]:
         """Check if video has complete and consistent data.
-        
+
         Args:
             video_id: Video identifier
-            
+
         Returns:
             Dictionary with completeness report
         """
         report = {
             "video_id": video_id,
-            "frames": self._count_context(video_id, 'frame'),
-            "captions": self._count_context(video_id, 'caption'),
-            "transcripts": self._count_context(video_id, 'transcript'),
-            "objects": self._count_context(video_id, 'object'),
+            "frames": self._count_context(video_id, "frame"),
+            "captions": self._count_context(video_id, "caption"),
+            "transcripts": self._count_context(video_id, "transcript"),
+            "objects": self._count_context(video_id, "object"),
             "issues": [],
-            "warnings": []
+            "warnings": [],
         }
-        
+
         # Check for critical issues
         if report["frames"] > 0 and report["captions"] == 0:
             report["issues"].append("CRITICAL: Frames extracted but no captions generated")
-        
+
         if report["captions"] > report["frames"]:
             report["issues"].append("ERROR: More captions than frames (data corruption?)")
-        
+
         # Check for warnings
         if report["frames"] > 0 and report["transcripts"] == 0:
             report["warnings"].append("No audio transcript available")
-        
+
         if report["frames"] > 0 and report["objects"] == 0:
             report["warnings"].append("No object detection performed")
-        
+
         # Calculate completeness score
         expected_data_types = 4  # frames, captions, transcripts, objects
-        available_data_types = sum([
-            report["frames"] > 0,
-            report["captions"] > 0,
-            report["transcripts"] > 0,
-            report["objects"] > 0
-        ])
+        available_data_types = sum(
+            [
+                report["frames"] > 0,
+                report["captions"] > 0,
+                report["transcripts"] > 0,
+                report["objects"] > 0,
+            ]
+        )
         report["completeness"] = available_data_types / expected_data_types
         report["complete"] = len(report["issues"]) == 0 and report["completeness"] >= 0.5
-        
+
         return report
-    
+
     def _count_context(self, video_id: str, context_type: str) -> int:
         """Count context entries of a specific type."""
         result = self.db.execute_query(
             "SELECT COUNT(*) as count FROM video_context WHERE video_id = ? AND context_type = ?",
-            (video_id, context_type)
+            (video_id, context_type),
         )
-        return result[0]['count'] if result else 0
-    
+        return result[0]["count"] if result else 0
+
     def verify_or_raise(self, video_id: str) -> None:
         """Verify data consistency and raise if issues found.
-        
+
         Args:
             video_id: Video identifier
-            
+
         Raises:
             ConsistencyError: If critical issues found
         """
         report = self.check_video_completeness(video_id)
-        
+
         if report["issues"]:
             error_msg = f"Data consistency check failed for video {video_id}:\n"
             error_msg += "\n".join(f"  - {issue}" for issue in report["issues"])
             raise ConsistencyError(error_msg)
-        
+
         logger.info(f"✅ Data consistency check passed for video {video_id}")
 ```
 
@@ -305,27 +320,28 @@ Add verification after storing:
 ```python
 from services.data_consistency import DataConsistencyChecker, ConsistencyError
 
+
 def _store_tool_result_in_db(video_id: str, tool_name: str, result: dict):
     """Store tool result with validation and verification."""
     try:
         db = get_database()
-        
+
         with db.transaction():
             # Store data (with validation)
             # ... existing code ...
-            
+
             logger.info(f"✅ Stored {tool_name} results for video {video_id}")
-        
+
         # Verify consistency after transaction commits
-        if tool_name == 'caption_frames':
+        if tool_name == "caption_frames":
             checker = DataConsistencyChecker()
             report = checker.check_video_completeness(video_id)
-            
+
             if report["issues"]:
                 logger.error(f"❌ Consistency issues: {report['issues']}")
             else:
                 logger.info(f"✅ Data consistency verified: {report['completeness']:.0%} complete")
-        
+
     except ConsistencyError as e:
         logger.error(f"❌ Consistency check failed: {e}")
         # Don't raise - data is stored, just log the issue
@@ -350,11 +366,12 @@ Add new endpoint:
 ```python
 from services.data_consistency import DataConsistencyChecker
 
+
 @app.get("/videos/{video_id}/status")
 async def get_video_status(video_id: str):
     """
     Get video processing status and data completeness.
-    
+
     Returns detailed report on what data is available.
     """
     try:
@@ -362,14 +379,13 @@ async def get_video_status(video_id: str):
         video = get_video(video_id)
         if not video:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Video not found: {video_id}"
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"Video not found: {video_id}"
             )
-        
+
         # Check data completeness
         checker = DataConsistencyChecker()
         report = checker.check_video_completeness(video_id)
-        
+
         # Build response
         return {
             "video_id": video_id,
@@ -380,18 +396,18 @@ async def get_video_status(video_id: str):
                 "transcripts": report["transcripts"],
                 "objects": report["objects"],
                 "completeness_score": report["completeness"],
-                "is_complete": report["complete"]
+                "is_complete": report["complete"],
             },
             "issues": report["issues"],
             "warnings": report["warnings"],
-            "ready_for_chat": report["frames"] > 0  # Can chat if frames exist
+            "ready_for_chat": report["frames"] > 0,  # Can chat if frames exist
         }
-        
+
     except Exception as e:
         logger.error(f"Failed to get video status: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get video status: {str(e)}"
+            detail=f"Failed to get video status: {str(e)}",
         )
 ```
 
@@ -449,14 +465,16 @@ def test_transaction_rollback():
 # Test invalid data rejected
 def test_validation():
     validator = DataValidator()
-    
+
     # Should raise ValidationError
     try:
-        validator.validate_caption({
-            "text": "",  # Empty text
-            "timestamp": -1,  # Negative timestamp
-            "confidence": 1.5  # Out of range
-        })
+        validator.validate_caption(
+            {
+                "text": "",  # Empty text
+                "timestamp": -1,  # Negative timestamp
+                "confidence": 1.5,  # Out of range
+            }
+        )
         assert False, "Should have raised ValidationError"
     except ValidationError:
         pass  # Expected

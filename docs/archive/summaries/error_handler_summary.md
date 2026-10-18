@@ -61,9 +61,9 @@ When tools fail, the system:
 Example:
 ```python
 result = ErrorHandler.handle_graceful_degradation(
-    requested_tools=['captions', 'transcripts', 'objects'],
-    available_tools=['captions', 'transcripts'],
-    query="Show me all the dogs"
+    requested_tools=["captions", "transcripts", "objects"],
+    available_tools=["captions", "transcripts"],
+    query="Show me all the dogs",
 )
 # Returns:
 # {
@@ -175,9 +175,7 @@ try:
     result = frame_extractor.extract_frames(video_path)
 except Exception as e:
     error_msg = ErrorHandler.handle_tool_error(
-        'frame_extractor',
-        e,
-        available_tools=['audio_transcriber']
+        "frame_extractor", e, available_tools=["audio_transcriber"]
     )
     # Returns: "I had trouble extracting frames, but I can still help with the audio!"
 ```
@@ -195,8 +193,8 @@ except Exception as e:
 ```python
 fallback = ErrorHandler.suggest_fallback(
     original_query="What did they say at 1:30?",
-    available_data=['captions'],
-    failed_tools=['transcripts']
+    available_data=["captions"],
+    failed_tools=["transcripts"],
 )
 # Returns: "I can describe what's visible in the video instead!"
 ```
@@ -204,14 +202,14 @@ fallback = ErrorHandler.suggest_fallback(
 ### 4. Graceful Degradation
 ```python
 degradation = ErrorHandler.handle_graceful_degradation(
-    requested_tools=['captions', 'transcripts', 'objects'],
-    available_tools=['captions'],
-    query="Show me the dogs"
+    requested_tools=["captions", "transcripts", "objects"],
+    available_tools=["captions"],
+    query="Show me the dogs",
 )
-if degradation['can_proceed']:
+if degradation["can_proceed"]:
     # Continue with available tools
-    use_tools(degradation['usable_tools'])
-    show_message(degradation['message'])
+    use_tools(degradation["usable_tools"])
+    show_message(degradation["message"])
 ```
 
 ### 5. Format Any Error
@@ -221,8 +219,7 @@ try:
     process_video(video_id)
 except Exception as e:
     user_message = ErrorHandler.format_error_for_user(
-        e,
-        context={'processing': True, 'video_id': video_id}
+        e, context={"processing": True, "video_id": video_id}
     )
     # Returns appropriate friendly message based on error type
 ```

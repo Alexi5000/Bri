@@ -79,16 +79,16 @@ Logs all data mutations (insert/update/delete) for audit trail.
 logger = DataMutationLogger()
 
 # Log insert operation
-logger.log_insert('videos', video_id, data, user_id)
+logger.log_insert("videos", video_id, data, user_id)
 
 # Log update operation
-logger.log_update('videos', video_id, old_data, new_data, user_id)
+logger.log_update("videos", video_id, old_data, new_data, user_id)
 
 # Log delete operation
-logger.log_delete('videos', video_id, data, user_id)
+logger.log_delete("videos", video_id, data, user_id)
 
 # Get mutation history
-history = logger.get_mutation_history(table='videos', limit=100)
+history = logger.get_mutation_history(table="videos", limit=100)
 ```
 
 **Features**:
@@ -103,11 +103,11 @@ Monitors data pipeline latency and performance.
 monitor = PipelineLatencyMonitor()
 
 # Monitor a pipeline stage
-with monitor.monitor_stage('frame_extraction', video_id):
+with monitor.monitor_stage("frame_extraction", video_id):
     extract_frames(video_id)
 
 # Get statistics for a stage
-stats = monitor.get_stage_statistics('frame_extraction')
+stats = monitor.get_stage_statistics("frame_extraction")
 # Returns: count, min, max, avg, p50, p95, p99
 
 # Get all statistics
@@ -223,12 +223,7 @@ pytest tests/test_data_quality.py --cov=services --cov-report=html
 Configurable retry policy with exponential backoff.
 
 ```python
-policy = RetryPolicy(
-    max_retries=3,
-    initial_delay=1.0,
-    max_delay=60.0,
-    exponential_base=2.0
-)
+policy = RetryPolicy(max_retries=3, initial_delay=1.0, max_delay=60.0, exponential_base=2.0)
 
 # Calculate delay for retry attempt
 delay = policy.calculate_delay(attempt=2)  # Returns: 4.0 seconds
@@ -245,16 +240,12 @@ retry = AutomaticRetry()
 
 # Execute operation with automatic retry
 result = retry.execute_with_retry(
-    operation=process_video,
-    operation_name='video_processing',
-    video_id=video_id
+    operation=process_video, operation_name="video_processing", video_id=video_id
 )
 
 # Log failed operation
 failure_id = retry.log_failed_operation(
-    operation_name='frame_extraction',
-    error=exception,
-    context={'video_id': video_id}
+    operation_name="frame_extraction", error=exception, context={"video_id": video_id}
 )
 ```
 
@@ -273,9 +264,9 @@ dlq = DeadLetterQueue()
 # Add to queue
 dlq_id = dlq.add_to_queue(
     video_id=video_id,
-    operation='caption_generation',
+    operation="caption_generation",
     data=frame_data,
-    error_message='BLIP model failed'
+    error_message="BLIP model failed",
 )
 
 # Get queue items
@@ -301,7 +292,7 @@ Interface for manually reprocessing failed operations.
 reprocessing = ManualReprocessing()
 
 # Reprocess a video
-result = reprocessing.reprocess_video(video_id, operations=['captions', 'transcripts'])
+result = reprocessing.reprocess_video(video_id, operations=["captions", "transcripts"])
 
 # Reprocess a DLQ item
 result = reprocessing.reprocess_dlq_item(dlq_id)
@@ -397,43 +388,35 @@ from services.data_quality_metrics import get_quality_metrics
 from services.data_observability import get_data_observability
 from services.data_recovery import get_data_recovery
 
+
 # In video processing service
 class VideoProcessingService:
     def __init__(self):
         self.metrics = get_quality_metrics()
         self.observability = get_data_observability()
         self.recovery = get_data_recovery()
-    
+
     def process_video(self, video_id: str):
         # Monitor pipeline stage
-        with self.observability.latency_monitor.monitor_stage('processing', video_id):
+        with self.observability.latency_monitor.monitor_stage("processing", video_id):
             try:
                 # Process video with automatic retry
                 result = self.recovery.retry.execute_with_retry(
-                    self._process_video_internal,
-                    'video_processing',
-                    video_id
+                    self._process_video_internal, "video_processing", video_id
                 )
-                
+
                 # Log mutation
-                self.observability.mutation_logger.log_insert(
-                    'video_context',
-                    context_id,
-                    data
-                )
-                
+                self.observability.mutation_logger.log_insert("video_context", context_id, data)
+
                 # Check quality after processing
                 quality = self.metrics.get_quality_report(video_id)
-                if quality['quality_score'] < 70:
+                if quality["quality_score"] < 70:
                     logger.warning(f"Low quality score for {video_id}: {quality['quality_score']}")
-                
+
             except Exception as e:
                 # Add to dead letter queue
                 self.recovery.dlq.add_to_queue(
-                    video_id,
-                    'video_processing',
-                    {'video_id': video_id},
-                    str(e)
+                    video_id, "video_processing", {"video_id": video_id}, str(e)
                 )
 ```
 
@@ -447,11 +430,13 @@ from services.data_recovery import get_data_recovery
 
 router = APIRouter()
 
+
 @router.get("/videos/{video_id}/quality")
 async def get_video_quality(video_id: str):
     """Get quality report for a video."""
     metrics = get_quality_metrics()
     return metrics.get_quality_report(video_id)
+
 
 @router.get("/videos/{video_id}/flow")
 async def get_video_flow(video_id: str):
@@ -459,17 +444,20 @@ async def get_video_flow(video_id: str):
     observability = get_data_observability()
     return observability.flow_visualizer.get_video_data_flow(video_id)
 
+
 @router.post("/videos/{video_id}/reprocess")
 async def reprocess_video(video_id: str):
     """Manually reprocess a video."""
     recovery = get_data_recovery()
     return recovery.reprocessing.reprocess_video(video_id)
 
+
 @router.get("/system/quality")
 async def get_system_quality():
     """Get system-wide quality report."""
     metrics = get_quality_metrics()
     return metrics.get_system_quality_report()
+
 
 @router.get("/system/recovery")
 async def get_recovery_dashboard():
@@ -486,28 +474,34 @@ import time
 from services.data_quality_metrics import get_quality_metrics
 from services.data_recovery import get_data_recovery
 
+
 def quality_monitoring_job():
     """Scheduled job to monitor data quality."""
     metrics = get_quality_metrics()
     report = metrics.get_system_quality_report()
-    
-    if report['system_health'] == 'degraded':
-        logger.warning(f"System health degraded: {report['complete_videos_percentage']:.1%} complete")
+
+    if report["system_health"] == "degraded":
+        logger.warning(
+            f"System health degraded: {report['complete_videos_percentage']:.1%} complete"
+        )
+
 
 def reconciliation_job():
     """Scheduled job to reconcile data."""
     recovery = get_data_recovery()
     summary = recovery.reconciliation.reconcile_all_videos()
-    
+
     logger.info(f"Reconciliation: {summary['total_fixes']} fixes applied")
+
 
 def dlq_processing_job():
     """Scheduled job to process DLQ items."""
     recovery = get_data_recovery()
     items = recovery.dlq.get_queue_items(limit=10)
-    
+
     for item in items:
-        recovery.reprocessing.reprocess_dlq_item(item['dlq_id'])
+        recovery.reprocessing.reprocess_dlq_item(item["dlq_id"])
+
 
 # Schedule jobs
 schedule.every(1).hours.do(quality_monitoring_job)
@@ -530,7 +524,7 @@ from services.data_quality_metrics import get_quality_metrics
 metrics = get_quality_metrics()
 
 # Get quality report for a video
-report = metrics.get_quality_report('vid_123')
+report = metrics.get_quality_report("vid_123")
 
 print(f"Quality Score: {report['quality_score']}/100")
 print(f"Status: {report['quality_status']}")
@@ -539,13 +533,13 @@ print(f"Freshness: {report['freshness']['age_hours']:.1f} hours")
 print(f"Accuracy: {report['accuracy']['overall_accuracy']:.1%}")
 
 # Check for degradation
-if report['degradation']['has_degradation']:
+if report["degradation"]["has_degradation"]:
     print("\nAlerts:")
-    for alert in report['degradation']['alerts']:
+    for alert in report["degradation"]["alerts"]:
         print(f"  [{alert['severity']}] {alert['message']}")
-    
+
     print("\nRecommendations:")
-    for rec in report['degradation']['recommendations']:
+    for rec in report["degradation"]["recommendations"]:
         print(f"  - {rec}")
 ```
 
@@ -557,12 +551,12 @@ from services.data_observability import get_data_observability
 observability = get_data_observability()
 
 # Monitor a pipeline stage
-with observability.latency_monitor.monitor_stage('frame_extraction', 'vid_123'):
+with observability.latency_monitor.monitor_stage("frame_extraction", "vid_123"):
     # Extract frames
-    frames = extract_frames('vid_123')
+    frames = extract_frames("vid_123")
 
 # Get performance statistics
-stats = observability.latency_monitor.get_stage_statistics('frame_extraction')
+stats = observability.latency_monitor.get_stage_statistics("frame_extraction")
 print(f"Frame Extraction Performance:")
 print(f"  Average: {stats['avg']:.2f}s")
 print(f"  Min: {stats['min']:.2f}s")
@@ -580,24 +574,22 @@ recovery = get_data_recovery()
 # Execute with automatic retry
 try:
     result = recovery.retry.execute_with_retry(
-        process_video,
-        'video_processing',
-        video_id='vid_123'
+        process_video, "video_processing", video_id="vid_123"
     )
 except Exception as e:
     # Add to dead letter queue
     dlq_id = recovery.dlq.add_to_queue(
-        video_id='vid_123',
-        operation='video_processing',
-        data={'video_id': 'vid_123'},
-        error_message=str(e)
+        video_id="vid_123",
+        operation="video_processing",
+        data={"video_id": "vid_123"},
+        error_message=str(e),
     )
     print(f"Added to DLQ: {dlq_id}")
 
 # Later, reprocess DLQ items
 items = recovery.dlq.get_queue_items(processed=False)
 for item in items:
-    result = recovery.reprocessing.reprocess_dlq_item(item['dlq_id'])
+    result = recovery.reprocessing.reprocess_dlq_item(item["dlq_id"])
     print(f"Reprocessed {item['dlq_id']}: {result['status']}")
 ```
 
@@ -609,7 +601,7 @@ from services.data_recovery import get_data_recovery
 recovery = get_data_recovery()
 
 # Reconcile a specific video
-result = recovery.reconciliation.reconcile_video_data('vid_123')
+result = recovery.reconciliation.reconcile_video_data("vid_123")
 print(f"Issues found: {len(result['issues_found'])}")
 print(f"Fixes applied: {len(result['fixes_applied'])}")
 

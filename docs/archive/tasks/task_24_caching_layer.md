@@ -141,10 +141,7 @@ import requests
 # First request (cache miss)
 response1 = requests.post(
     "http://localhost:8000/tools/extract_frames/execute",
-    json={
-        "video_id": "video_123",
-        "parameters": {"interval_seconds": 2.0}
-    }
+    json={"video_id": "video_123", "parameters": {"interval_seconds": 2.0}},
 )
 print(response1.json())
 # Output: {"status": "success", "cached": false, "execution_time": 5.2}
@@ -152,10 +149,7 @@ print(response1.json())
 # Second request (cache hit)
 response2 = requests.post(
     "http://localhost:8000/tools/extract_frames/execute",
-    json={
-        "video_id": "video_123",
-        "parameters": {"interval_seconds": 2.0}
-    }
+    json={"video_id": "video_123", "parameters": {"interval_seconds": 2.0}},
 )
 print(response2.json())
 # Output: {"status": "success", "cached": true, "execution_time": 0.03}
