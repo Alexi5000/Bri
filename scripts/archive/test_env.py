@@ -13,10 +13,7 @@ load_dotenv()
 groq_key = os.getenv("GROQ_API_KEY", "")
 
 if groq_key:
-    # Mask the key for security
-    masked_key = groq_key[:10] + "..." + groq_key[-4:] if len(groq_key) > 14 else "***"
-    print(f"✅ GROQ_API_KEY found: {masked_key}")
-    print(f"   Length: {len(groq_key)} characters")
+    print("✅ GROQ_API_KEY found")
 else:
     print("❌ GROQ_API_KEY not found!")
     print("\nPlease check:")
@@ -31,12 +28,7 @@ print("\nTesting Config class...")
 from config import Config
 
 if Config.GROQ_API_KEY:
-    masked_key = (
-        Config.GROQ_API_KEY[:10] + "..." + Config.GROQ_API_KEY[-4:]
-        if len(Config.GROQ_API_KEY) > 14
-        else "***"
-    )
-    print(f"✅ Config.GROQ_API_KEY loaded: {masked_key}")
+    print("✅ Config.GROQ_API_KEY loaded")
 else:
     print("❌ Config.GROQ_API_KEY is empty!")
 

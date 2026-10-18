@@ -82,3 +82,39 @@ def test_ensure_directories_creates_runtime_locations(
 
     for directory in ["db", "videos", "frames", "cache", "logs"]:
         assert (tmp_path / directory).is_dir()
+
+
+def test_display_config_never_logs_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
+    from unittest.mock import Mock
+
+    import config
+
+    reset_config(monkeypatch)
+    monkeypatch.setenv("GROQ_API_KEY", "gsk_secret_value_never_log")
+    Config.reset_cache()
+    logger = Mock()
+    monkeypatch.setattr(config, "_get_logger", lambda: logger)
+
+    Config.display_config()
+
+    assert logger.info.call_count > 0
+    assert "gsk_secret_value_never_log" not in str(logger.info.call_args_list)
+    assert "groq_api_key" not in str(logger.info.call_args_list)
+
+
+def test_environment_diagnostics_do_not_print_key_fragments(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import runpy
+
+    reset_config(monkeypatch)
+    monkeypatch.setenv("GROQ_API_KEY", "unique_prefix_secret_suffix")
+    Config.reset_cache()
+
+    runpy.run_path(str(Path(__file__).parents[2] / "scripts/archive/test_env.py"))
+
+    output = capsys.readouterr().out
+    assert "GROQ_API_KEY found" in output
+    assert "Config.GROQ_API_KEY loaded" in output
+    assert "unique_pre" not in output
+    assert "ffix" not in output
