@@ -20,7 +20,7 @@ This guide provides practical examples for interacting with the BRI MCP Server A
 
 ### Base URL
 
-```
+```text
 http://localhost:8000
 ```
 
@@ -45,6 +45,7 @@ curl http://localhost:8000/
 ```
 
 **Response:**
+
 ```json
 {
   "name": "BRI MCP Server",
@@ -61,6 +62,7 @@ curl http://localhost:8000/health
 ```
 
 **Response:**
+
 ```json
 {
   "status": "healthy",
@@ -78,6 +80,7 @@ curl http://localhost:8000/tools | jq
 ```
 
 **Response:**
+
 ```json
 {
   "tools": [
@@ -122,6 +125,7 @@ curl -X POST http://localhost:8000/tools/extract_frames/execute \
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -165,6 +169,7 @@ curl -X POST http://localhost:8000/tools/extract_frames/execute \
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -201,6 +206,7 @@ curl -X POST http://localhost:8000/tools/caption_frames/execute \
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -243,6 +249,7 @@ curl -X POST http://localhost:8000/tools/transcribe_audio/execute \
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -286,6 +293,7 @@ curl -X POST http://localhost:8000/tools/transcribe_audio/execute \
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -323,6 +331,7 @@ curl -X POST http://localhost:8000/tools/detect_objects/execute \
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -381,6 +390,7 @@ curl -X POST http://localhost:8000/tools/detect_objects/execute \
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -419,6 +429,7 @@ curl -X POST http://localhost:8000/videos/video_123/process \
 ```
 
 **Response:**
+
 ```json
 {
   "status": "complete",
@@ -484,6 +495,7 @@ curl http://localhost:8000/cache/stats | jq
 ```
 
 **Response:**
+
 ```json
 {
   "enabled": true,
@@ -502,6 +514,7 @@ curl -X DELETE http://localhost:8000/cache/videos/video_123 | jq
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -518,6 +531,7 @@ curl -X DELETE http://localhost:8000/cache | jq
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -540,6 +554,7 @@ curl -X POST http://localhost:8000/tools/invalid_tool/execute \
 ```
 
 **Response (404):**
+
 ```json
 {
   "detail": "Tool 'invalid_tool' not found"
@@ -558,6 +573,7 @@ curl -X POST http://localhost:8000/tools/extract_frames/execute \
 ```
 
 **Response (500):**
+
 ```json
 {
   "status": "error",
@@ -583,6 +599,7 @@ curl -X POST http://localhost:8000/tools/extract_frames/execute \
 ```
 
 **Response (422):**
+
 ```json
 {
   "detail": [
@@ -839,6 +856,7 @@ client.session.delete(f"{client.base_url}/cache/videos/{video_id}")
 ---
 
 For more information, see:
+
 - [MCP Server README](../mcp_server/README.md) - Complete API reference
 - [User Guide](USER_GUIDE.md) - Using BRI through the UI
 - [Configuration](CONFIGURATION.md) - Server configuration options

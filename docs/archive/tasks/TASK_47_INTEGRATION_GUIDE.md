@@ -380,6 +380,7 @@ python scripts/test_task_47_caching_optimization.py
 ```
 
 Expected output:
+
 ```
 ✅ L1 Cache tests passed
 ✅ Multi-tier cache tests passed
@@ -394,6 +395,7 @@ Expected output:
 ## Support
 
 For issues or questions:
+
 1. Check logs in `logs/bri.log` and `logs/bri_performance.log`
 2. Review statistics with `get_stats()` methods
 3. Refer to `docs/TASK_47_SUMMARY.md` for detailed documentation

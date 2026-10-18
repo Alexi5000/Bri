@@ -1,6 +1,7 @@
 # BRI MCP Server
 
-Model Context Protocol (MCP) server for BRI video processing tools. This FastAPI-based server exposes video processing capabilities through a standardized REST API with caching support.
+Model Context Protocol (MCP) server for BRI video processing tools. This FastAPI-based server exposes video processing
+capabilities through a standardized REST API with caching support.
 
 ## Features
 
@@ -14,32 +15,40 @@ Model Context Protocol (MCP) server for BRI video processing tools. This FastAPI
 ## Available Tools
 
 ### 1. Frame Extraction (`extract_frames`)
+
 Extract frames from videos at regular intervals or specific timestamps.
 
 **Parameters:**
+
 - `interval_seconds` (number, optional): Interval between frames in seconds (default: 2.0)
 - `max_frames` (integer, optional): Maximum number of frames to extract (default: 100)
 - `timestamp` (number, optional): Extract single frame at specific timestamp
 
 ### 2. Image Captioning (`caption_frames`)
+
 Generate natural language captions for video frames using BLIP.
 
 **Parameters:**
+
 - `frame_paths` (array of strings): List of frame image paths to caption
 - `timestamps` (array of numbers): List of timestamps corresponding to frames
 
 ### 3. Audio Transcription (`transcribe_audio`)
+
 Transcribe audio from videos using Whisper with timestamps.
 
 **Parameters:**
+
 - `language` (string, optional): Language code (e.g., 'en', 'es'). Auto-detected if not provided
 - `start_time` (number, optional): Start time for segment transcription
 - `end_time` (number, optional): End time for segment transcription
 
 ### 4. Object Detection (`detect_objects`)
+
 Detect objects in video frames using YOLOv8.
 
 **Parameters:**
+
 - `frame_paths` (array of strings): List of frame image paths to analyze
 - `timestamps` (array of numbers): List of timestamps corresponding to frames
 - `confidence_threshold` (number, optional): Minimum confidence score (0-1, default: 0.25)
@@ -50,9 +59,11 @@ Detect objects in video frames using YOLOv8.
 ### Server Information
 
 #### `GET /`
+
 Get server information and status.
 
 **Response:**
+
 ```json
 {
   "name": "BRI MCP Server",
@@ -63,9 +74,11 @@ Get server information and status.
 ```
 
 #### `GET /health`
+
 Health check endpoint.
 
 **Response:**
+
 ```json
 {
   "status": "healthy",
@@ -77,9 +90,11 @@ Health check endpoint.
 ### Tool Discovery
 
 #### `GET /tools`
+
 List all available tools with their schemas.
 
 **Response:**
+
 ```json
 {
   "tools": [
@@ -107,9 +122,11 @@ List all available tools with their schemas.
 ### Tool Execution
 
 #### `POST /tools/{tool_name}/execute`
+
 Execute a specific tool with provided parameters.
 
 **Request Body:**
+
 ```json
 {
   "tool_name": "extract_frames",
@@ -122,6 +139,7 @@ Execute a specific tool with provided parameters.
 ```
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -137,9 +155,11 @@ Execute a specific tool with provided parameters.
 ### Batch Processing
 
 #### `POST /videos/{video_id}/process`
+
 Process a video with multiple tools in batch.
 
 **Request Body:**
+
 ```json
 {
   "tools": ["extract_frames", "caption_frames", "transcribe_audio", "detect_objects"]
@@ -147,6 +167,7 @@ Process a video with multiple tools in batch.
 ```
 
 **Response:**
+
 ```json
 {
   "status": "complete",
@@ -170,9 +191,11 @@ Process a video with multiple tools in batch.
 ### Cache Management
 
 #### `GET /cache/stats`
+
 Get cache statistics.
 
 **Response:**
+
 ```json
 {
   "enabled": true,
@@ -184,9 +207,11 @@ Get cache statistics.
 ```
 
 #### `DELETE /cache/videos/{video_id}`
+
 Clear all cached results for a specific video.
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -196,9 +221,11 @@ Clear all cached results for a specific video.
 ```
 
 #### `DELETE /cache`
+
 Clear all BRI cache entries.
 
 **Response:**
+
 ```json
 {
   "status": "success",
@@ -260,6 +287,7 @@ The server implements comprehensive error handling:
 - **Graceful Degradation**: If a tool fails during batch processing, other tools continue
 
 Error responses include:
+
 ```json
 {
   "status": "error",
@@ -289,7 +317,7 @@ python scripts/test_mcp_server.py
 
 ## Architecture
 
-```
+```text
 mcp_server/
 ├── main.py          # FastAPI application and endpoints
 ├── registry.py      # Tool registry and tool implementations

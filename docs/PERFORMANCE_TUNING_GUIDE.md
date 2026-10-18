@@ -2,11 +2,13 @@
 
 ## Overview
 
-This guide provides detailed instructions for optimizing BRI's performance across different deployment scenarios and workloads.
+This guide provides detailed instructions for optimizing BRI's performance across different deployment scenarios and
+workloads.
 
 ## Performance Targets
 
 ### Response Times
+
 - Video upload: <5 seconds
 - Frame extraction: <10 seconds
 - Full processing: <2 minutes (5-min video)
@@ -14,6 +16,7 @@ This guide provides detailed instructions for optimizing BRI's performance acros
 - Database queries: <100ms (95th percentile)
 
 ### Resource Usage
+
 - Memory: <2GB under normal load
 - CPU: <50% average
 - Disk I/O: <100 MB/s
@@ -24,6 +27,7 @@ This guide provides detailed instructions for optimizing BRI's performance acros
 ### Video Processing
 
 **Frame Extraction:**
+
 ```bash
 # Faster processing (fewer frames)
 MAX_FRAMES_PER_VIDEO=15
@@ -39,6 +43,7 @@ FRAME_EXTRACTION_INTERVAL=2.0
 ```
 
 **Model Selection:**
+
 ```bash
 # Faster inference
 GROQ_MODEL=llama-3.1-8b-instant
@@ -53,6 +58,7 @@ GROQ_MODEL=llama-3.1-70b-versatile
 ### Caching Strategy
 
 **Redis Configuration:**
+
 ```bash
 # Enable caching
 REDIS_ENABLED=true
@@ -63,6 +69,7 @@ CACHE_TTL_HOURS=24  # Increase for better hit rate
 ```
 
 **Cache Warming:**
+
 ```python
 from services.data_prefetcher import DataPrefetcher
 
@@ -73,12 +80,14 @@ prefetcher.warm_cache_for_video(video_id)
 ### Database Optimization
 
 **Connection Pooling:**
+
 ```python
 # In storage/database.py
 # Already implemented with WAL mode
 ```
 
 **Query Optimization:**
+
 ```bash
 # Run ANALYZE regularly
 sqlite3 data/bri.db "ANALYZE"
@@ -88,6 +97,7 @@ sqlite3 data/bri.db "EXPLAIN QUERY PLAN SELECT * FROM videos WHERE video_id='vid
 ```
 
 **Indexes:**
+
 ```sql
 -- Already created in schema
 CREATE INDEX IF NOT EXISTS idx_memory_video_id ON memory(video_id);
@@ -101,12 +111,14 @@ CREATE INDEX IF NOT EXISTS idx_video_context_timestamp ON video_context(timestam
 ### Real-Time Monitoring
 
 **Dashboard:**
+
 ```bash
 # Access logging dashboard
 streamlit run ui/logging_dashboard.py
 ```
 
 **Metrics:**
+
 ```python
 from utils.metrics_logger import MetricsLogger
 
@@ -117,6 +129,7 @@ MetricsLogger.log_resource_usage("video_processing")
 ### Performance Profiling
 
 **Profile Video Processing:**
+
 ```python
 import cProfile
 import pstats
@@ -137,6 +150,7 @@ stats.print_stats(20)
 ```
 
 **Profile Database Queries:**
+
 ```python
 import time
 from storage.database import Database
@@ -155,6 +169,7 @@ print(f"Query took {elapsed:.3f}s")
 ### 1. Progressive Processing
 
 **Enable staged processing:**
+
 ```python
 from services.progressive_processor import ProgressiveProcessor
 
@@ -175,6 +190,7 @@ processor.process_stage_3(video_id)  # ~120s
 ### 2. Batch Processing
 
 **Process multiple videos:**
+
 ```python
 from services.processing_queue import ProcessingQueue
 
@@ -191,6 +207,7 @@ queue.process_all(max_workers=3)
 ### 3. Lazy Loading
 
 **Load data on demand:**
+
 ```python
 from ui.lazy_loader import LazyLoader
 
@@ -204,6 +221,7 @@ for batch in loader.load_frames_batched(video_id, batch_size=5):
 ### 4. Query Optimization
 
 **Use indexes:**
+
 ```python
 # Good: Uses index
 db.cursor.execute(
@@ -215,6 +233,7 @@ db.cursor.execute("SELECT * FROM memory WHERE content LIKE '%keyword%'")
 ```
 
 **Limit results:**
+
 ```python
 # Good: Limited results
 db.get_conversation_history(video_id, limit=10)
@@ -226,6 +245,7 @@ db.get_all_memory(video_id)
 ### 5. Cache Optimization
 
 **Multi-tier caching:**
+
 ```python
 from storage.multi_tier_cache import MultiTierCache
 
@@ -244,29 +264,35 @@ result = cache.get_or_compute(
 
 ### Common Bottlenecks
 
-**1. Frame Extraction**
+1. Frame Extraction
+
 - **Symptom:** High CPU during extraction
 - **Solution:** Reduce MAX_FRAMES_PER_VIDEO or increase FRAME_EXTRACTION_INTERVAL
 
-**2. Model Inference**
+1. Model Inference
+
 - **Symptom:** Long processing times
 - **Solution:** Use GPU if available, reduce batch sizes
 
-**3. Database Queries**
+1. Database Queries
+
 - **Symptom:** Slow query times
 - **Solution:** Add indexes, run VACUUM, optimize queries
 
-**4. API Calls**
+1. API Calls
+
 - **Symptom:** Slow Groq responses
 - **Solution:** Enable caching, reduce max_tokens, use faster model
 
-**5. Memory Usage**
+1. Memory Usage
+
 - **Symptom:** High memory consumption
 - **Solution:** Reduce frame count, clear cache, restart services
 
 ### Diagnostic Tools
 
 **Check Processing Times:**
+
 ```bash
 grep "Pipeline.*completed" logs/bri_pipeline.log | \
   awk '{print $NF}' | \
@@ -275,6 +301,7 @@ grep "Pipeline.*completed" logs/bri_pipeline.log | \
 ```
 
 **Check Database Performance:**
+
 ```bash
 grep "DB.*execution_time" logs/bri.log | \
   grep -oP "execution_time=\K[\d.]+" | \
@@ -283,6 +310,7 @@ grep "DB.*execution_time" logs/bri.log | \
 ```
 
 **Check Cache Hit Rate:**
+
 ```bash
 hits=$(grep "Cache HIT" logs/bri_performance.log | wc -l)
 misses=$(grep "Cache MISS" logs/bri_performance.log | wc -l)
@@ -294,12 +322,14 @@ echo "Cache hit rate: ${rate}%"
 ## Hardware Recommendations
 
 ### Minimum Requirements
+
 - CPU: 4 cores
 - RAM: 4GB
 - Disk: 20GB SSD
 - Network: 10 Mbps
 
 ### Recommended
+
 - CPU: 8 cores
 - RAM: 8GB
 - Disk: 50GB SSD
@@ -307,6 +337,7 @@ echo "Cache hit rate: ${rate}%"
 - GPU: Optional (for faster inference)
 
 ### High Performance
+
 - CPU: 16+ cores
 - RAM: 16GB+
 - Disk: 100GB+ NVMe SSD
@@ -318,6 +349,7 @@ echo "Cache hit rate: ${rate}%"
 ### Vertical Scaling
 
 **Increase Resources:**
+
 - Add more CPU cores
 - Increase RAM
 - Use faster storage (NVMe)
@@ -326,6 +358,7 @@ echo "Cache hit rate: ${rate}%"
 ### Horizontal Scaling
 
 **Multiple Instances:**
+
 ```bash
 # Run multiple MCP servers
 python mcp_server/main.py --port 8000 &
@@ -337,6 +370,7 @@ python mcp_server/main.py --port 8002 &
 ```
 
 **Distributed Processing:**
+
 ```python
 # Use Celery for distributed tasks
 from celery import Celery
@@ -355,6 +389,7 @@ def process_video(video_id):
 ### Load Testing
 
 **Test video processing:**
+
 ```python
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -379,6 +414,7 @@ print(f"Max: {max(times):.2f}s")
 ### Benchmark Results
 
 **Expected Performance (8-core, 8GB RAM):**
+
 - Video upload: 2-3 seconds
 - Frame extraction (20 frames): 5-8 seconds
 - Caption generation: 15-20 seconds
@@ -391,12 +427,14 @@ print(f"Max: {max(times):.2f}s")
 ### Slow Video Processing
 
 **Check:**
+
 1. CPU usage: `top`
 2. Memory usage: `free -h`
 3. Disk I/O: `iostat`
 4. Processing logs: `grep "Pipeline" logs/bri_pipeline.log`
 
 **Fix:**
+
 1. Reduce MAX_FRAMES_PER_VIDEO
 2. Enable caching
 3. Use faster storage
@@ -405,11 +443,13 @@ print(f"Max: {max(times):.2f}s")
 ### Slow Database Queries
 
 **Check:**
+
 ```bash
 grep "DB.*execution_time" logs/bri.log | sort -t'=' -k2 -rn | head -20
 ```
 
 **Fix:**
+
 1. Run VACUUM: `sqlite3 data/bri.db "VACUUM"`
 2. Run ANALYZE: `sqlite3 data/bri.db "ANALYZE"`
 3. Check indexes: `sqlite3 data/bri.db ".indexes"`
@@ -418,11 +458,13 @@ grep "DB.*execution_time" logs/bri.log | sort -t'=' -k2 -rn | head -20
 ### High Memory Usage
 
 **Check:**
+
 ```bash
 ps aux | grep python | grep bri
 ```
 
 **Fix:**
+
 1. Reduce MAX_FRAMES_PER_VIDEO
 2. Clear cache: `redis-cli FLUSHALL`
 3. Restart services
@@ -431,11 +473,13 @@ ps aux | grep python | grep bri
 ### Low Cache Hit Rate
 
 **Check:**
+
 ```bash
 grep "Cache" logs/bri_performance.log | tail -100
 ```
 
 **Fix:**
+
 1. Increase CACHE_TTL_HOURS
 2. Warm cache for popular videos
 3. Check Redis memory: `redis-cli INFO memory`
@@ -452,6 +496,7 @@ grep "Cache" logs/bri_performance.log | tail -100
 ## Summary
 
 Key performance optimizations:
+
 - ✅ Enable Redis caching
 - ✅ Reduce frame extraction for faster processing
 - ✅ Use progressive processing for better UX

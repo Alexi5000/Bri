@@ -7,10 +7,13 @@ This guide provides quick commands for managing the BRI database using the new t
 ## Health Monitoring
 
 ### Check Overall Health
+
 ```bash
 python scripts/health_check.py report
 ```
+
 Generates a comprehensive health report with:
+
 - Health score (0-100)
 - Database size and growth rate
 - Connection pool status
@@ -19,6 +22,7 @@ Generates a comprehensive health report with:
 - Slow query detection
 
 ### Check Specific Metrics
+
 ```bash
 # Database size
 python scripts/health_check.py size
@@ -33,12 +37,15 @@ python scripts/health_check.py integrity
 ## Backup Management
 
 ### Create Backup
+
 ```bash
 python scripts/health_check.py backup
 ```
+
 Creates a timestamped backup in `data/backups/`
 
 ### Clean Up Old Backups
+
 ```bash
 # Keep last 30 days (default)
 python scripts/health_check.py cleanup-backups
@@ -50,16 +57,20 @@ python scripts/health_check.py cleanup-backups --keep-days 60
 ## Data Archival & Cleanup
 
 ### Check Retention Status
+
 ```bash
 python scripts/archival_cli.py status
 ```
+
 Shows:
+
 - Database size
 - Total records (videos, conversations, context)
 - Soft-deleted videos
 - Old conversations
 
 ### Apply Retention Policies
+
 ```bash
 # Apply all policies with defaults
 python scripts/archival_cli.py apply-policies
@@ -72,6 +83,7 @@ python scripts/archival_cli.py apply-policies \
 ```
 
 Default policies:
+
 - Archive conversations older than 30 days
 - Permanently delete soft-deleted videos after 7 days
 - Clean up orphaned data
@@ -80,26 +92,31 @@ Default policies:
 ### Manual Operations
 
 #### Soft Delete Video
+
 ```bash
 python scripts/archival_cli.py soft-delete VIDEO_ID
 ```
 
 #### Restore Video
+
 ```bash
 python scripts/archival_cli.py restore VIDEO_ID
 ```
 
 #### List Deleted Videos
+
 ```bash
 python scripts/archival_cli.py list-deleted
 ```
 
 #### Clean Up Orphaned Data
+
 ```bash
 python scripts/archival_cli.py cleanup
 ```
 
 #### Optimize Database
+
 ```bash
 python scripts/archival_cli.py vacuum
 ```
@@ -107,15 +124,19 @@ python scripts/archival_cli.py vacuum
 ## Schema Migrations
 
 ### Check Migration Status
+
 ```bash
 python scripts/migrate_db.py status
 ```
+
 Shows:
+
 - Current schema version
 - Applied migrations
 - Pending migrations
 
 ### Apply Migrations
+
 ```bash
 # Apply all pending migrations
 python scripts/migrate_db.py migrate
@@ -125,6 +146,7 @@ python scripts/migrate_db.py migrate --to 3
 ```
 
 ### Rollback Migrations
+
 ```bash
 # Rollback last migration
 python scripts/migrate_db.py rollback
@@ -137,6 +159,7 @@ python scripts/migrate_db.py rollback --steps 3
 ```
 
 ### Test Migrations
+
 ```bash
 python scripts/migrate_db.py test
 ```
@@ -144,6 +167,7 @@ python scripts/migrate_db.py test
 ## Scheduled Maintenance
 
 ### Daily Tasks
+
 ```bash
 # Create backup
 python scripts/health_check.py backup
@@ -153,6 +177,7 @@ python scripts/health_check.py report
 ```
 
 ### Weekly Tasks
+
 ```bash
 # Apply retention policies
 python scripts/archival_cli.py apply-policies
@@ -162,6 +187,7 @@ python scripts/health_check.py cleanup-backups
 ```
 
 ### Monthly Tasks
+
 ```bash
 # Review growth rate
 python scripts/health_check.py growth
@@ -173,6 +199,7 @@ python scripts/health_check.py integrity
 ## Troubleshooting
 
 ### Database Growing Too Fast
+
 ```bash
 # Check growth rate
 python scripts/health_check.py growth
@@ -188,6 +215,7 @@ python scripts/archival_cli.py vacuum
 ```
 
 ### Slow Queries Detected
+
 ```bash
 # Generate health report to see slow queries
 python scripts/health_check.py report
@@ -196,6 +224,7 @@ python scripts/health_check.py report
 ```
 
 ### Integrity Check Failed
+
 ```bash
 # Check integrity
 python scripts/health_check.py integrity
@@ -207,6 +236,7 @@ python scripts/health_check.py integrity
 ```
 
 ### Orphaned Data
+
 ```bash
 # Check for orphaned data
 python scripts/archival_cli.py status
@@ -220,6 +250,7 @@ python scripts/archival_cli.py cleanup
 ### Python Integration
 
 #### Health Monitoring
+
 ```python
 from storage.health_monitor import get_health_monitor
 
@@ -238,6 +269,7 @@ with monitor.query_monitor.monitor_query("SELECT * FROM videos"):
 ```
 
 #### Archival Management
+
 ```python
 from storage.archival import get_archival_manager
 
@@ -253,6 +285,7 @@ results = archival.apply_retention_policies(
 ```
 
 #### Migration Management
+
 ```python
 from storage.migrations import get_migration_manager
 
@@ -286,7 +319,9 @@ manager.migrate()
 ## Common Issues
 
 ### Issue: Health Score Below 80
+
 **Solution:**
+
 1. Check health report for specific issues
 2. Run integrity check
 3. Clean up orphaned data
@@ -294,7 +329,9 @@ manager.migrate()
 5. Run VACUUM
 
 ### Issue: Database Size Growing Rapidly
+
 **Solution:**
+
 1. Check growth rate
 2. Review retention policies
 3. Archive old conversations
@@ -302,7 +339,9 @@ manager.migrate()
 5. Run VACUUM
 
 ### Issue: Slow Queries
+
 **Solution:**
+
 1. Review slow query log in health report
 2. Check if indexes are being used
 3. Optimize problematic queries
@@ -311,6 +350,7 @@ manager.migrate()
 ## Support
 
 For issues or questions:
+
 1. Check health report: `python scripts/health_check.py report`
 2. Review logs: `logs/database_health.log`
 3. Check documentation: `docs/TASK_45_SUMMARY.md`

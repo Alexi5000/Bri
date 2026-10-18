@@ -20,16 +20,19 @@ This document catalogs common error patterns encountered in BRI, their root caus
 ### Error: "database is locked"
 
 **Pattern:**
-```
+
+```text
 sqlite3.OperationalError: database is locked
 ```
 
 **Cause:**
+
 - Multiple processes accessing database simultaneously
 - Long-running transaction blocking others
 - WAL mode not enabled
 
 **Solution:**
+
 ```bash
 # 1. Check for multiple processes
 ps aux | grep python | grep bri
@@ -46,6 +49,7 @@ sqlite3 data/bri.db "PRAGMA journal_mode=WAL"
 ```
 
 **Prevention:**
+
 - Use single Streamlit instance
 - Use single MCP server instance
 - Keep transactions short
@@ -56,17 +60,20 @@ sqlite3 data/bri.db "PRAGMA journal_mode=WAL"
 ### Error: "database disk image is malformed"
 
 **Pattern:**
-```
+
+```text
 sqlite3.DatabaseError: database disk image is malformed
 ```
 
 **Cause:**
+
 - Disk corruption
 - Improper shutdown
 - Disk full during write
 - Hardware failure
 
 **Solution:**
+
 ```bash
 # 1. Stop all services
 pkill -f streamlit
@@ -86,6 +93,7 @@ sqlite3 data/bri.db "PRAGMA integrity_check"
 ```
 
 **Prevention:**
+
 - Regular backups (automated daily)
 - Monitor disk space
 - Use reliable storage (SSD)
@@ -96,16 +104,19 @@ sqlite3 data/bri.db "PRAGMA integrity_check"
 ### Error: "no such table: videos"
 
 **Pattern:**
-```
+
+```text
 sqlite3.OperationalError: no such table: videos
 ```
 
 **Cause:**
+
 - Database not initialized
 - Wrong database path
 - Database file deleted
 
 **Solution:**
+
 ```bash
 # 1. Check if database exists
 ls -la data/bri.db
@@ -119,6 +130,7 @@ sqlite3 data/bri.db ".tables"
 ```
 
 **Prevention:**
+
 - Run init_db.py during setup
 - Don't delete database file
 - Use correct DATABASE_PATH in .env
@@ -130,16 +142,19 @@ sqlite3 data/bri.db ".tables"
 ### Error: "Groq API rate limit exceeded"
 
 **Pattern:**
-```
+
+```text
 groq.RateLimitError: Rate limit exceeded. Please try again in 60 seconds.
 ```
 
 **Cause:**
+
 - Too many requests in short time
 - Exceeded API quota
 - Retry loop without backoff
 
 **Solution:**
+
 ```python
 # 1. Wait for rate limit to reset
 import time
@@ -157,6 +172,7 @@ result = await retry_with_backoff(api_call_function, max_retries=3, base_delay=1
 ```
 
 **Prevention:**
+
 - Enable caching for repeated queries
 - Implement rate limiting
 - Use circuit breaker pattern
@@ -167,17 +183,20 @@ result = await retry_with_backoff(api_call_function, max_retries=3, base_delay=1
 ### Error: "Groq API authentication failed"
 
 **Pattern:**
-```
+
+```text
 groq.AuthenticationError: Invalid API key
 ```
 
 **Cause:**
+
 - Missing API key
 - Invalid API key
 - Expired API key
 - Wrong environment variable
 
 **Solution:**
+
 ```bash
 # 1. Check API key is set
 echo $GROQ_API_KEY
@@ -198,6 +217,7 @@ print('API key valid')
 ```
 
 **Prevention:**
+
 - Store API key in .env file
 - Don't commit .env to git
 - Validate API key on startup
@@ -208,17 +228,20 @@ print('API key valid')
 ### Error: "Groq API timeout"
 
 **Pattern:**
-```
+
+```text
 groq.APITimeoutError: Request timed out
 ```
 
 **Cause:**
+
 - Network issues
 - API server overloaded
 - Request too large
 - Slow connection
 
 **Solution:**
+
 ```python
 # 1. Increase timeout
 from config import Config
@@ -235,6 +258,7 @@ result = await retry_with_backoff(api_call, max_retries=3, base_delay=2.0)
 ```
 
 **Prevention:**
+
 - Set appropriate timeouts
 - Monitor network latency
 - Use circuit breaker
@@ -247,17 +271,20 @@ result = await retry_with_backoff(api_call, max_retries=3, base_delay=2.0)
 ### Error: "Out of memory during video processing"
 
 **Pattern:**
-```
+
+```text
 MemoryError: Unable to allocate memory
 ```
 
 **Cause:**
+
 - Video too large
 - Too many frames extracted
 - Memory leak
 - Insufficient RAM
 
 **Solution:**
+
 ```bash
 # 1. Reduce frame extraction
 # In .env
@@ -277,6 +304,7 @@ streamlit run app.py
 ```
 
 **Prevention:**
+
 - Set reasonable MAX_FRAMES_PER_VIDEO
 - Monitor memory usage
 - Process videos in chunks
@@ -287,16 +315,19 @@ streamlit run app.py
 ### Error: "Video codec not supported"
 
 **Pattern:**
-```
+
+```text
 cv2.error: OpenCV: Unsupported codec
 ```
 
 **Cause:**
+
 - Unsupported video format
 - Missing codec
 - Corrupted video file
 
 **Solution:**
+
 ```bash
 # 1. Check video format
 ffprobe video.mp4
@@ -308,6 +339,7 @@ ffmpeg -i video.mov -c:v libx264 -c:a aac video.mp4
 ```
 
 **Prevention:**
+
 - Accept only common formats (MP4, AVI, MOV, MKV)
 - Validate video format on upload
 - Provide format conversion tool
@@ -318,17 +350,20 @@ ffmpeg -i video.mov -c:v libx264 -c:a aac video.mp4
 ### Error: "Frame extraction failed"
 
 **Pattern:**
-```
+
+```text
 ERROR - tools.frame_extractor - Failed to extract frames: [error details]
 ```
 
 **Cause:**
+
 - Corrupted video
 - Insufficient disk space
 - Permission issues
 - OpenCV error
 
 **Solution:**
+
 ```bash
 # 1. Check disk space
 df -h
@@ -349,6 +384,7 @@ print(f'Extracted {len(frames)} frames')
 ```
 
 **Prevention:**
+
 - Validate video on upload
 - Monitor disk space
 - Set proper permissions
@@ -361,17 +397,20 @@ print(f'Extracted {len(frames)} frames')
 ### Error: "Redis connection refused"
 
 **Pattern:**
-```
+
+```text
 redis.exceptions.ConnectionError: Error connecting to Redis
 ```
 
 **Cause:**
+
 - Redis not running
 - Wrong Redis URL
 - Network issues
 - Redis crashed
 
 **Solution:**
+
 ```bash
 # 1. Check if Redis is running
 redis-cli ping
@@ -395,6 +434,7 @@ print('Redis connected')
 ```
 
 **Prevention:**
+
 - Start Redis before BRI
 - Use systemd/supervisor for Redis
 - Monitor Redis health
@@ -405,16 +445,19 @@ print('Redis connected')
 ### Error: "Redis out of memory"
 
 **Pattern:**
-```
+
+```text
 redis.exceptions.ResponseError: OOM command not allowed when used memory > 'maxmemory'
 ```
 
 **Cause:**
+
 - Cache too large
 - No eviction policy
 - Memory limit too low
 
 **Solution:**
+
 ```bash
 # 1. Check Redis memory
 redis-cli INFO memory
@@ -430,6 +473,7 @@ redis-cli CONFIG SET maxmemory 2gb
 ```
 
 **Prevention:**
+
 - Set appropriate maxmemory
 - Use LRU eviction policy
 - Monitor cache size
@@ -442,17 +486,20 @@ redis-cli CONFIG SET maxmemory 2gb
 ### Error: "BLIP model not found"
 
 **Pattern:**
-```
+
+```text
 OSError: Model 'Salesforce/blip-image-captioning-large' not found
 ```
 
 **Cause:**
+
 - Model not downloaded
 - Network issues during download
 - Insufficient disk space
 - Hugging Face API issues
 
 **Solution:**
+
 ```python
 # 1. Download model manually
 from transformers import BlipProcessor, BlipForConditionalGeneration
@@ -464,6 +511,7 @@ print("Model downloaded successfully")
 ```
 
 **Prevention:**
+
 - Download models during setup
 - Cache models locally
 - Monitor disk space
@@ -474,17 +522,20 @@ print("Model downloaded successfully")
 ### Error: "Whisper model loading failed"
 
 **Pattern:**
-```
+
+```text
 RuntimeError: Failed to load Whisper model
 ```
 
 **Cause:**
+
 - Model file corrupted
 - Insufficient memory
 - Wrong model name
 - Missing dependencies
 
 **Solution:**
+
 ```python
 # 1. Download model again
 import whisper
@@ -497,6 +548,7 @@ model = whisper.load_model("tiny")
 ```
 
 **Prevention:**
+
 - Use appropriate model size
 - Verify model files
 - Monitor memory usage
@@ -509,17 +561,20 @@ model = whisper.load_model("tiny")
 ### Error: "Disk space full"
 
 **Pattern:**
-```
+
+```text
 OSError: [Errno 28] No space left on device
 ```
 
 **Cause:**
+
 - Too many videos
 - Large log files
 - Many backups
 - Cache not cleaned
 
 **Solution:**
+
 ```bash
 # 1. Check disk usage
 df -h
@@ -539,6 +594,7 @@ sqlite3 data/bri.db "VACUUM"
 ```
 
 **Prevention:**
+
 - Monitor disk space
 - Automated cleanup
 - Set retention policies
@@ -549,16 +605,19 @@ sqlite3 data/bri.db "VACUUM"
 ### Error: "Permission denied"
 
 **Pattern:**
-```
+
+```text
 PermissionError: [Errno 13] Permission denied: 'data/videos/video.mp4'
 ```
 
 **Cause:**
+
 - Wrong file permissions
 - Wrong directory permissions
 - Running as wrong user
 
 **Solution:**
+
 ```bash
 # 1. Check permissions
 ls -la data/
@@ -572,6 +631,7 @@ chown -R $USER:$USER data/
 ```
 
 **Prevention:**
+
 - Set correct permissions during setup
 - Run as appropriate user
 - Document permission requirements
@@ -583,6 +643,7 @@ chown -R $USER:$USER data/
 ### How to Identify Patterns
 
 **1. Group Similar Errors:**
+
 ```bash
 grep ERROR logs/bri_errors.log | \
   sed 's/[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}.*ERROR/ERROR/' | \
@@ -590,6 +651,7 @@ grep ERROR logs/bri_errors.log | \
 ```
 
 **2. Find Error Frequency:**
+
 ```bash
 grep ERROR logs/bri_errors.log | \
   grep -oP '\d{4}-\d{2}-\d{2} \d{2}' | \
@@ -597,6 +659,7 @@ grep ERROR logs/bri_errors.log | \
 ```
 
 **3. Correlate with Events:**
+
 ```bash
 # Find errors around specific time
 grep "2025-10-16 14:" logs/bri_errors.log
@@ -614,7 +677,8 @@ When reporting errors, include:
 6. **Steps to reproduce:** How to trigger error
 
 **Example Report:**
-```
+
+```text
 Error: Database is locked
 
 Stack trace:
@@ -642,14 +706,14 @@ Steps to reproduce:
 
 Common error patterns and quick fixes:
 
-| Error | Quick Fix |
-|-------|-----------|
-| Database locked | Kill duplicate processes |
-| API rate limit | Wait 60s, enable caching |
-| Out of memory | Reduce MAX_FRAMES_PER_VIDEO |
-| Redis connection | Start Redis or disable |
-| Model not found | Download models |
-| Disk full | Clean up logs/backups |
-| Permission denied | Fix file permissions |
+| Error             | Quick Fix                   |
+| ----------------- | --------------------------- |
+| Database locked   | Kill duplicate processes    |
+| API rate limit    | Wait 60s, enable caching    |
+| Out of memory     | Reduce MAX_FRAMES_PER_VIDEO |
+| Redis connection  | Start Redis or disable      |
+| Model not found   | Download models             |
+| Disk full         | Clean up logs/backups       |
+| Permission denied | Fix file permissions        |
 
 For detailed solutions, see the Operations Runbook.

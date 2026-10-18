@@ -32,7 +32,8 @@ cp .env.example .env
 ```
 
 **Required:** Set your `GROQ_API_KEY` in the `.env` file:
-```
+
+```text
 GROQ_API_KEY=your_actual_api_key_here
 ```
 
@@ -43,6 +44,7 @@ python scripts/validate_setup.py
 ```
 
 This will check:
+
 - ✓ Python version
 - ✓ Dependencies installed
 - ✓ Configuration valid
@@ -58,11 +60,13 @@ python scripts/init_db.py
 ### 5. Start the Application
 
 **Terminal 1 - Start MCP Server:**
+
 ```bash
 python mcp_server/main.py
 ```
 
 **Terminal 2 - Start Streamlit UI:**
+
 ```bash
 streamlit run app.py
 ```
@@ -84,14 +88,17 @@ Navigate to: `http://localhost:8501`
 ## Common Issues
 
 ### "GROQ_API_KEY is required"
+
 - Make sure you created a `.env` file (not `.env.example`)
 - Add your actual API key from [console.groq.com](https://console.groq.com)
 
 ### "Connection refused"
+
 - Make sure both terminals are running (MCP server + Streamlit)
 - Check that ports 8000 and 8501 are available
 
 ### Redis warnings
+
 - Redis is optional - set `REDIS_ENABLED=false` in `.env` to disable warnings
 - Or install Redis for better performance
 
@@ -109,4 +116,4 @@ Navigate to: `http://localhost:8501`
 
 ---
 
-**Enjoy using BRI! 💜**
+Enjoy using BRI! 💜

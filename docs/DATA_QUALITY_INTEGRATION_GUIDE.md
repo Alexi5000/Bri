@@ -313,16 +313,16 @@ def save_context_with_logging(video_id: str, context_type: str, data: dict):
 def daily_reconciliation():
     """Run daily data reconciliation."""
     recovery = get_data_recovery()
-    
+
     # Reconcile all videos
     summary = recovery.reconciliation.reconcile_all_videos()
-    
+
     # Log results
     logger.info(f"Daily reconciliation completed:")
     logger.info(f"  Videos checked: {summary['total_videos']}")
     logger.info(f"  Issues found: {summary['total_issues']}")
     logger.info(f"  Fixes applied: {summary['total_fixes']}")
-    
+
     return summary
 ```
 

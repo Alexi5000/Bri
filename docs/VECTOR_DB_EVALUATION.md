@@ -2,7 +2,8 @@
 
 ## Executive Summary
 
-This document evaluates vector database options for implementing semantic search in BRI's video analysis system. The goal is to enhance caption and transcript search with embedding-based similarity matching.
+This document evaluates vector database options for implementing semantic search in BRI's video analysis system. The
+goal is to enhance caption and transcript search with embedding-based similarity matching.
 
 ## Evaluation Criteria
 
@@ -20,6 +21,7 @@ This document evaluates vector database options for implementing semantic search
 **Overview**: Open-source embedding database designed for AI applications.
 
 **Pros**:
+
 - ✅ **Zero-cost**: Fully open-source, no licensing fees
 - ✅ **Easy setup**: `pip install chromadb` - runs in-process or client-server
 - ✅ **Excellent Python SDK**: Native Python, well-documented
@@ -29,6 +31,7 @@ This document evaluates vector database options for implementing semantic search
 - ✅ **Active development**: Strong community, frequent updates
 
 **Cons**:
+
 - ⚠️ **Smaller scale**: Best for <10M vectors (sufficient for BRI's use case)
 - ⚠️ **Limited distributed features**: Single-node focused
 
@@ -39,6 +42,7 @@ This document evaluates vector database options for implementing semantic search
 **Best For**: BRI's current scale, local-first architecture, rapid prototyping
 
 **Sample Code**:
+
 ```python
 import chromadb
 
@@ -62,6 +66,7 @@ results = collection.query(
 **Overview**: High-performance vector search engine with rich filtering.
 
 **Pros**:
+
 - ✅ **High performance**: Rust-based, optimized for speed
 - ✅ **Rich filtering**: Advanced metadata filtering capabilities
 - ✅ **Good Python SDK**: Well-maintained client library
@@ -69,6 +74,7 @@ results = collection.query(
 - ✅ **Payload support**: Store full documents with vectors
 
 **Cons**:
+
 - ⚠️ **More complex setup**: Requires separate server process
 - ⚠️ **Higher resource usage**: More memory/CPU than ChromaDB
 - ⚠️ **Operational overhead**: Need to manage server lifecycle
@@ -86,12 +92,14 @@ results = collection.query(
 **Overview**: Cloud-native vector database with GraphQL API.
 
 **Pros**:
+
 - ✅ **Feature-rich**: Built-in vectorization, hybrid search, multi-tenancy
 - ✅ **Scalable**: Designed for large-scale deployments
 - ✅ **Good documentation**: Comprehensive guides and examples
 - ✅ **Managed option**: Cloud offering available
 
 **Cons**:
+
 - ⚠️ **Complex setup**: Requires Docker/Kubernetes for self-hosting
 - ⚠️ **Higher learning curve**: More concepts to understand
 - ⚠️ **Resource intensive**: Heavier than ChromaDB/Qdrant
@@ -110,6 +118,7 @@ results = collection.query(
 **Overview**: Fully managed vector database service.
 
 **Pros**:
+
 - ✅ **Zero ops**: Fully managed, no infrastructure to maintain
 - ✅ **High performance**: Optimized for production workloads
 - ✅ **Excellent SDK**: Well-designed Python client
@@ -117,6 +126,7 @@ results = collection.query(
 - ✅ **Metadata filtering**: Good filtering capabilities
 
 **Cons**:
+
 - ❌ **Cost**: $70+/month for production (free tier limited)
 - ❌ **Vendor lock-in**: Proprietary service
 - ❌ **Network dependency**: Requires internet connectivity
@@ -132,17 +142,17 @@ results = collection.query(
 
 ## Comparison Matrix
 
-| Feature | ChromaDB | Qdrant | Weaviate | Pinecone |
-|---------|----------|--------|----------|----------|
-| **Cost** | Free | Free/Paid | Free/Paid | Paid |
-| **Setup** | Very Easy | Easy | Moderate | Very Easy |
-| **Performance** | Good | Excellent | Excellent | Excellent |
-| **Scale** | <10M | <100M | <1B | <10B |
-| **Self-hosted** | ✅ | ✅ | ✅ | ❌ |
-| **Hybrid Search** | ✅ | ✅ | ✅ | ✅ |
-| **Python SDK** | Excellent | Good | Good | Excellent |
-| **Ops Overhead** | Minimal | Low | Moderate | None |
-| **BRI Fit** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ |
+| Feature           | ChromaDB   | Qdrant    | Weaviate  | Pinecone  |
+| ----------------- | ---------- | --------- | --------- | --------- |
+| **Cost**          | Free       | Free/Paid | Free/Paid | Paid      |
+| **Setup**         | Very Easy  | Easy      | Moderate  | Very Easy |
+| **Performance**   | Good       | Excellent | Excellent | Excellent |
+| **Scale**         | <10M       | <100M     | <1B       | <10B      |
+| **Self-hosted**   | ✅         | ✅        | ✅        | ❌        |
+| **Hybrid Search** | ✅         | ✅        | ✅        | ✅        |
+| **Python SDK**    | Excellent  | Good      | Good      | Excellent |
+| **Ops Overhead**  | Minimal    | Low       | Moderate  | None      |
+| **BRI Fit**       | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐  | ⭐⭐⭐    | ⭐⭐      |
 
 ## Recommendation: ChromaDB
 
@@ -176,6 +186,7 @@ results = collection.query(
 ## Implementation Plan
 
 ### Phase 1: ChromaDB Integration (Recommended)
+
 1. Install ChromaDB: `pip install chromadb`
 2. Create embedding service using sentence-transformers
 3. Implement semantic search in ContextBuilder
@@ -183,12 +194,14 @@ results = collection.query(
 5. Benchmark search quality improvements
 
 ### Phase 2: Optimization
+
 1. Batch embedding generation
 2. Incremental updates (only new captions)
 3. Query result caching
 4. Index optimization
 
 ### Phase 3: Migration Path (If Needed)
+
 - If scale exceeds 10M vectors → Migrate to Qdrant
 - If need enterprise features → Consider Weaviate
 - If prefer managed service → Evaluate Pinecone
@@ -196,17 +209,20 @@ results = collection.query(
 ## Testing with Sample Data
 
 ### Test Dataset
+
 - 10 sample videos (5-10 min each)
 - ~500 captions total
 - 100 test queries
 
 ### Metrics to Track
+
 - Query latency (target: <100ms)
 - Search quality (precision@5, recall@5)
 - Indexing time (target: <1s per video)
 - Memory usage (target: <500MB)
 
 ### Success Criteria
+
 - ✅ 90%+ search quality improvement over keyword search
 - ✅ <100ms query latency
 - ✅ <1s indexing time per video
@@ -215,6 +231,7 @@ results = collection.query(
 ## Conclusion
 
 **ChromaDB is the recommended choice** for BRI's vector database needs due to its:
+
 - Zero cost and complexity
 - Perfect fit with BRI's local-first architecture
 - Excellent Python SDK and documentation

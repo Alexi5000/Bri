@@ -1,6 +1,7 @@
 # 🚀 Start BRI on Windows - Quick Guide
 
 ## ✅ Prerequisites (Already Done!)
+
 - [x] Python 3.11+ installed
 - [x] Dependencies installed (`pip install -r requirements.txt`)
 - [x] `.env` file configured with GROQ_API_KEY
@@ -17,7 +18,8 @@ python -m uvicorn mcp_server.main:app --host 0.0.0.0 --port 8000
 ```
 
 You should see:
-```
+
+```text
 INFO:     Started server process
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
@@ -35,7 +37,8 @@ streamlit run app.py
 ```
 
 You should see:
-```
+
+```text
 You can now view your Streamlit app in your browser.
 
 Local URL: http://localhost:8501
@@ -47,7 +50,8 @@ Network URL: http://192.168.x.x:8501
 ### Step 3: Open BRI in Browser
 
 Your browser should automatically open to:
-```
+
+```text
 http://localhost:8501
 ```
 
@@ -69,6 +73,7 @@ If not, manually open your browser and go to that URL.
 ## 🛑 Stop BRI
 
 To stop BRI:
+
 1. Press `Ctrl+C` in the Streamlit window
 2. Press `Ctrl+C` in the MCP Server window
 3. Close both windows
@@ -80,12 +85,14 @@ To stop BRI:
 ### "Address already in use" error
 
 **For Port 8000 (MCP Server)**:
+
 ```cmd
 netstat -ano | findstr :8000
 taskkill /PID <PID> /F
 ```
 
 **For Port 8501 (Streamlit)**:
+
 ```cmd
 netstat -ano | findstr :8501
 taskkill /PID <PID> /F
@@ -128,12 +135,14 @@ This will start both services automatically, but you'll need to open separate wi
 ## 🎥 Test Video Recommendations
 
 For best results, use:
+
 - **Duration**: 30 seconds - 2 minutes
 - **Format**: MP4 (most compatible)
 - **Content**: Videos with clear speech and visible objects
 - **Size**: Under 100MB
 
 Sample test videos:
+
 - Short demo from your phone
 - Screen recording
 - Download samples from: https://sample-videos.com/
@@ -157,23 +166,26 @@ Sample test videos:
 
 ## 📊 What You Should See
 
-### MCP Server Window:
-```
+### MCP Server Window
+
+```text
 INFO:     Started server process [PID]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8000
 ```
 
-### Streamlit Window:
-```
+### Streamlit Window
+
+```text
 You can now view your Streamlit app in your browser.
 
 Local URL: http://localhost:8501
 Network URL: http://192.168.x.x:8501
 ```
 
-### Browser:
+### Browser
+
 - Welcome screen with BRI's greeting
 - Soft colors (blush pink, lavender, teal)
 - Upload area for videos
@@ -196,6 +208,7 @@ If something isn't working:
 ## 🎉 Success Indicators
 
 You know BRI is working when:
+
 - ✅ MCP Server shows "Application startup complete"
 - ✅ Streamlit shows "You can now view your Streamlit app"
 - ✅ Browser opens to http://localhost:8501

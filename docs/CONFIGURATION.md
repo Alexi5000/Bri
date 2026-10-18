@@ -21,7 +21,7 @@ BRI uses environment variables for configuration, stored in a `.env` file in the
 
 ### Configuration File Location
 
-```
+```text
 bri-video-agent/
 ├── .env              # Your configuration (gitignored)
 └── .env.example      # Template with defaults
@@ -40,6 +40,7 @@ nano .env  # or use your preferred editor
 ### Configuration Validation
 
 BRI validates configuration on startup:
+
 - ✗ **Fails** if required values are missing
 - ⚠️ **Warns** about suboptimal settings
 - ✓ **Creates** necessary directories automatically
@@ -64,6 +65,7 @@ GROQ_API_KEY=gsk_your_actual_key_here
 ```
 
 **How to get**:
+
 1. Visit [console.groq.com](https://console.groq.com)
 2. Sign up or log in
 3. Navigate to API Keys
@@ -71,6 +73,7 @@ GROQ_API_KEY=gsk_your_actual_key_here
 5. Copy and paste into `.env`
 
 **Security**:
+
 - Never commit this to version control
 - Keep `.env` in `.gitignore`
 - Rotate keys periodically
@@ -91,6 +94,7 @@ GROQ_MODEL=llama-3.1-70b-versatile
 ```
 
 **Available Models**:
+
 - `llama-3.1-70b-versatile` - Best quality, slower (recommended)
 - `llama-3.1-8b-instant` - Faster, good quality
 - `llama-3-70b-8192` - Alternative 70B model
@@ -98,6 +102,7 @@ GROQ_MODEL=llama-3.1-70b-versatile
 - `mixtral-8x7b-32768` - Good for longer contexts
 
 **Choosing a Model**:
+
 - **Quality priority**: Use 70B models
 - **Speed priority**: Use 8B models
 - **Long videos**: Use models with larger context windows
@@ -115,6 +120,7 @@ GROQ_TEMPERATURE=0.7
 ```
 
 **Values**:
+
 - `0.0` - Deterministic, factual responses
 - `0.5` - Balanced, slightly creative
 - `0.7` - Recommended balance (default)
@@ -122,6 +128,7 @@ GROQ_TEMPERATURE=0.7
 - `1.5+` - Very creative, less predictable
 
 **Use Cases**:
+
 - **Factual queries**: 0.3 - 0.5
 - **General use**: 0.7 (default)
 - **Creative exploration**: 1.0 - 1.2
@@ -139,12 +146,14 @@ GROQ_MAX_TOKENS=1024
 ```
 
 **Values**:
+
 - `512` - Short, concise responses
 - `1024` - Standard responses (default)
 - `2048` - Longer, detailed responses
 - `4096` - Very detailed responses
 
 **Considerations**:
+
 - Higher values = slower responses
 - Higher values = more API cost
 - Adjust based on your needs
@@ -164,12 +173,14 @@ REDIS_URL=redis://localhost:6379
 ```
 
 **Formats**:
+
 - Local: `redis://localhost:6379`
 - With password: `redis://:password@localhost:6379`
 - Remote: `redis://hostname:6379`
 - With database: `redis://localhost:6379/0`
 
 **Cloud Redis**:
+
 ```bash
 # Redis Cloud
 REDIS_URL=redis://username:password@redis-12345.cloud.redislabs.com:12345
@@ -194,15 +205,18 @@ REDIS_ENABLED=true
 ```
 
 **Values**:
+
 - `true` - Use Redis for caching (recommended)
 - `false` - Disable caching (fallback mode)
 
 **When to Disable**:
+
 - Redis not available
 - Development/testing without Redis
 - Troubleshooting cache issues
 
 **Impact of Disabling**:
+
 - Slower repeated queries
 - No cache persistence
 - Higher API usage
@@ -221,6 +235,7 @@ CACHE_TTL_HOURS=24
 ```
 
 **Values**:
+
 - `1` - 1 hour (frequent updates)
 - `12` - 12 hours (balanced)
 - `24` - 24 hours (default)
@@ -228,6 +243,7 @@ CACHE_TTL_HOURS=24
 - `168` - 1 week (maximum recommended)
 
 **Considerations**:
+
 - Longer TTL = less reprocessing
 - Shorter TTL = fresher results
 - Balance based on video update frequency
@@ -247,6 +263,7 @@ DATABASE_PATH=data/bri.db
 ```
 
 **Considerations**:
+
 - Use absolute path for production
 - Ensure directory is writable
 - Backup regularly
@@ -265,6 +282,7 @@ VIDEO_STORAGE_PATH=data/videos
 ```
 
 **Considerations**:
+
 - Ensure sufficient disk space
 - Use fast storage (SSD recommended)
 - Consider network storage for multi-instance
@@ -283,6 +301,7 @@ FRAME_STORAGE_PATH=data/frames
 ```
 
 **Considerations**:
+
 - Can grow large (100+ frames per video)
 - Use same storage as videos
 - Clean up with videos on deletion
@@ -300,6 +319,7 @@ CACHE_STORAGE_PATH=data/cache
 ```
 
 **Considerations**:
+
 - Temporary storage
 - Can be cleared safely
 - Separate from Redis cache
@@ -319,11 +339,13 @@ MCP_SERVER_HOST=localhost
 ```
 
 **Values**:
+
 - `localhost` - Local development (default)
 - `0.0.0.0` - Listen on all interfaces
 - `hostname` - Specific host for production
 
 **Security**:
+
 - Use `localhost` for single-machine setup
 - Use `0.0.0.0` only if needed for remote access
 - Implement authentication for remote access
@@ -341,6 +363,7 @@ MCP_SERVER_PORT=8000
 ```
 
 **Considerations**:
+
 - Ensure port is available
 - Use non-privileged port (>1024)
 - Configure firewall if needed
@@ -361,6 +384,7 @@ MAX_FRAMES_PER_VIDEO=100
 ```
 
 **Values**:
+
 - `25` - Minimal (fast processing)
 - `50` - Light (good for short videos)
 - `100` - Standard (default)
@@ -368,12 +392,14 @@ MAX_FRAMES_PER_VIDEO=100
 - `500` - Maximum (very detailed)
 
 **Impact**:
+
 - More frames = better coverage
 - More frames = slower processing
 - More frames = more storage
 - More frames = more memory usage
 
 **Recommendations**:
+
 - Short videos (<5 min): 50-100
 - Medium videos (5-15 min): 100-200
 - Long videos (>15 min): 200-500
@@ -391,16 +417,17 @@ FRAME_EXTRACTION_INTERVAL=2.0
 ```
 
 **Values**:
+
 - `0.5` - Very frequent (action videos)
 - `1.0` - Frequent (detailed analysis)
 - `2.0` - Standard (default)
 - `5.0` - Sparse (slow-paced videos)
 - `10.0` - Very sparse (minimal coverage)
 
-**Adaptive Behavior**:
-BRI automatically adjusts interval for very long videos to respect `MAX_FRAMES_PER_VIDEO`.
+**Adaptive Behavior**: BRI automatically adjusts interval for very long videos to respect `MAX_FRAMES_PER_VIDEO`.
 
 **Choosing Interval**:
+
 - Fast-paced content: 0.5 - 1.0 seconds
 - Normal content: 2.0 seconds (default)
 - Slow-paced content: 5.0 - 10.0 seconds
@@ -420,17 +447,20 @@ MAX_CONVERSATION_HISTORY=10
 ```
 
 **Values**:
+
 - `5` - Minimal context (faster)
 - `10` - Standard (default)
 - `20` - Extended context
 - `50` - Maximum (slower)
 
 **Impact**:
+
 - More history = better context awareness
 - More history = slower responses
 - More history = higher API costs
 
 **Recommendations**:
+
 - Quick queries: 5
 - Normal use: 10 (default)
 - Complex analysis: 20
@@ -448,12 +478,14 @@ TOOL_EXECUTION_TIMEOUT=120
 ```
 
 **Values**:
+
 - `60` - 1 minute (short videos)
 - `120` - 2 minutes (default)
 - `300` - 5 minutes (long videos)
 - `600` - 10 minutes (very long videos)
 
 **Considerations**:
+
 - Longer videos need more time
 - Slower hardware needs more time
 - Balance between patience and responsiveness
@@ -471,6 +503,7 @@ REQUEST_TIMEOUT=30
 ```
 
 **Values**:
+
 - `10` - Fast timeout (may fail on slow connections)
 - `30` - Standard (default)
 - `60` - Patient (slow connections)
@@ -488,12 +521,14 @@ LAZY_LOAD_BATCH_SIZE=3
 ```
 
 **Values**:
+
 - `1` - Minimal memory usage
 - `3` - Balanced (default)
 - `5` - Faster loading
 - `10` - Maximum performance
 
 **Impact**:
+
 - Larger batches = faster UI
 - Larger batches = more memory
 - Adjust based on available RAM
@@ -513,10 +548,12 @@ DEBUG=false
 ```
 
 **Values**:
+
 - `true` - Debug mode (development)
 - `false` - Normal mode (production)
 
 **Debug Mode Effects**:
+
 - Verbose logging
 - Detailed error messages
 - Stack traces in responses
@@ -538,6 +575,7 @@ LOG_LEVEL=INFO
 ```
 
 **Values**:
+
 - `DEBUG` - Everything (very verbose)
 - `INFO` - Normal operations (default)
 - `WARNING` - Warnings and errors only
@@ -545,6 +583,7 @@ LOG_LEVEL=INFO
 - `CRITICAL` - Critical errors only
 
 **Recommendations**:
+
 - Development: `DEBUG`
 - Production: `INFO` or `WARNING`
 - Troubleshooting: `DEBUG`
@@ -762,6 +801,7 @@ LOG_LEVEL=INFO
 ---
 
 For more help with configuration, see:
+
 - [README.md](../README.md) - Setup guide
 - [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Common issues
 - [USER_GUIDE.md](USER_GUIDE.md) - Usage instructions

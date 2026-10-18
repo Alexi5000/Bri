@@ -15,7 +15,8 @@ python scripts/test_vector_search.py
 ```
 
 Expected output:
-```
+
+```text
 ✅ PASS: Semantic Search Availability
 ✅ PASS: Embedding Generation
 ✅ PASS: Indexing and Search
@@ -75,7 +76,6 @@ captions = builder.search_captions(
     use_semantic=False,  # Disable semantic search
 )
 ```
-
 
 ## Manual Indexing
 
@@ -180,11 +180,11 @@ for rec in recommendations:
 ```
 
 Example output:
-```
+
+```text
 💡 Excellent cache hit rate (85.3%)! Cache is working well.
 💡 Excellent query performance (42.3ms average)!
 ```
-
 
 ## Advanced Configuration
 
@@ -241,17 +241,20 @@ hybrid_results = self.semantic_search.hybrid_search(
 ### Issue: Dependencies Won't Install
 
 **Solution 1**: Upgrade pip
+
 ```bash
 python -m pip install --upgrade pip
 pip install chromadb sentence-transformers
 ```
 
 **Solution 2**: Install with specific versions
+
 ```bash
 pip install chromadb==0.4.0 sentence-transformers==2.2.0
 ```
 
 **Solution 3**: Use conda (if pip fails)
+
 ```bash
 conda install -c conda-forge chromadb sentence-transformers
 ```
@@ -268,6 +271,7 @@ model = SentenceTransformer("all-MiniLM-L6-v2")
 ```
 
 Or set cache directory:
+
 ```bash
 export SENTENCE_TRANSFORMERS_HOME=/path/to/cache
 ```
@@ -275,6 +279,7 @@ export SENTENCE_TRANSFORMERS_HOME=/path/to/cache
 ### Issue: Slow Search Performance
 
 **Check cache hit rate:**
+
 ```python
 stats = service.get_stats()
 hit_rate = stats["performance"]["cache"]["hit_rate"]
@@ -282,11 +287,13 @@ print(f"Cache hit rate: {hit_rate:.1%}")
 ```
 
 **If low (<30%):**
+
 - Increase cache size
 - Increase cache TTL
 - Check if queries are too diverse
 
 **If query times high (>100ms):**
+
 - Use smaller model (all-MiniLM-L6-v2)
 - Reduce indexed items
 - Check system resources
@@ -294,6 +301,7 @@ print(f"Cache hit rate: {hit_rate:.1%}")
 ### Issue: Out of Memory
 
 **Reduce batch size:**
+
 ```python
 service.index_captions(
     video_id,
@@ -303,6 +311,7 @@ service.index_captions(
 ```
 
 **Use smaller model:**
+
 ```python
 service = SemanticSearchService(
     model_name="all-MiniLM-L6-v2"  # 384 dims vs 768
@@ -386,27 +395,23 @@ Code changes minimal - same interface!
 
 ## FAQ
 
-**Q: Do I need to reprocess videos?**
-A: No, just install dependencies. New videos auto-index, old videos can be indexed manually.
+**Q: Do I need to reprocess videos?** A: No, just install dependencies. New videos auto-index, old videos can be indexed
+manually.
 
-**Q: What if I don't install dependencies?**
-A: System works normally with keyword search only. No errors.
+**Q: What if I don't install dependencies?** A: System works normally with keyword search only. No errors.
 
-**Q: How much disk space needed?**
-A: ~1MB per 1000 embeddings. 10K captions ≈ 10MB.
+**Q: How much disk space needed?** A: ~1MB per 1000 embeddings. 10K captions ≈ 10MB.
 
-**Q: Can I use GPU?**
-A: Yes! sentence-transformers auto-detects GPU. Speeds up indexing 10x.
+**Q: Can I use GPU?** A: Yes! sentence-transformers auto-detects GPU. Speeds up indexing 10x.
 
-**Q: How to disable semantic search?**
-A: Uninstall dependencies or pass `use_semantic=False` to search methods.
+**Q: How to disable semantic search?** A: Uninstall dependencies or pass `use_semantic=False` to search methods.
 
-**Q: Does it work offline?**
-A: Yes, after first model download. No internet needed.
+**Q: Does it work offline?** A: Yes, after first model download. No internet needed.
 
 ## Support
 
 For issues or questions:
+
 1. Check test output: `python scripts/test_vector_search.py`
 2. Review logs for warnings/errors
 3. Check documentation: `docs/TASK_49_SUMMARY.md`
