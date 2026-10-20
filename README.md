@@ -189,3 +189,7 @@ Administrative requests must include `Authorization: Bearer <secret>`. Missing o
 administrative access (503); missing or incorrect credentials return 401 before any administrative effect.
 Keep this token out of browser bundles and use TLS for network requests. Cache deletion and circuit-breaker
 resets require this token. Existing ordinary application operations retain their current access behavior.
+
+## Security reporting
+
+Read [SECURITY.md](SECURITY.md) for supported versions, private vulnerability reporting, and operator guidance. Use [CONTRIBUTING.md](CONTRIBUTING.md) for the development and review process.
