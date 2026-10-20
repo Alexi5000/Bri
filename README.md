@@ -181,3 +181,11 @@ reports and feature requests go through the issue templates under `.github/ISSUE
 ## License
 
 Released under the [MIT License](LICENSE).
+
+## Administrative access
+
+Set `BRI_ADMIN_TOKEN` to an independently generated secret of at least 32 characters on the server.
+Administrative requests must include `Authorization: Bearer <secret>`. Missing or short configuration disables
+administrative access (503); missing or incorrect credentials return 401 before any administrative effect.
+Keep this token out of browser bundles and use TLS for network requests. Cache deletion and circuit-breaker
+resets require this token. Existing ordinary application operations retain their current access behavior.

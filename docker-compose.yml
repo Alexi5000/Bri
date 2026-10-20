@@ -28,6 +28,7 @@ services:
     ports:
       - "8000:8000"
     environment:
+      - BRI_ADMIN_TOKEN=${BRI_ADMIN_TOKEN:-}
       - GROQ_API_KEY=${GROQ_API_KEY}
       - REDIS_URL=redis://redis:6379
       - DATABASE_PATH=/app/data/bri.db
