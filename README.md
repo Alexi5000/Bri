@@ -192,4 +192,5 @@ resets require this token. Existing ordinary application operations retain their
 
 ## Security reporting
 
-Read [SECURITY.md](SECURITY.md) for supported versions, private vulnerability reporting, and operator guidance. Use [CONTRIBUTING.md](CONTRIBUTING.md) for the development and review process.
+Read [SECURITY.md](SECURITY.md) for supported versions, private vulnerability reporting, and operator guidance.
+Use [CONTRIBUTING.md](CONTRIBUTING.md) for the development and review process.
