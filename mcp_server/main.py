@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from config import Config
+from mcp_server.admin_auth import require_admin
 from mcp_server.cache import CacheManager
 from mcp_server.circuit_breaker import cache_breaker, database_breaker, tool_execution_breaker
 from mcp_server.middleware import (
@@ -665,7 +666,7 @@ async def get_cache_stats():
         )
 
 
-@app.delete("/cache/videos/{video_id}")
+@app.delete("/cache/videos/{video_id}", dependencies=[Depends(require_admin)])
 async def clear_video_cache(video_id: str):
     """
     Clear all cached results for a specific video.
@@ -688,7 +689,7 @@ async def clear_video_cache(video_id: str):
         )
 
 
-@app.delete("/cache")
+@app.delete("/cache", dependencies=[Depends(require_admin)])
 async def clear_all_cache():
     """
     Clear all BRI cache entries.
@@ -938,7 +939,7 @@ async def get_circuit_breaker_status(request: Request):
     )
 
 
-@app.post("/circuit-breakers/{breaker_name}/reset")
+@app.post("/circuit-breakers/{breaker_name}/reset", dependencies=[Depends(require_admin)])
 async def reset_circuit_breaker(breaker_name: str, request: Request):
     """
     Manually reset a circuit breaker.
