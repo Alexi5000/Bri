@@ -7,7 +7,7 @@ name = "bri-video-agent"
 version = "1.1.0"
 description = "Empathetic multimodal video intelligence: Streamlit UI, FastAPI MCP server, and optional local BLIP/Whisper/YOLOv8 tools."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "Alexi5000", email = "alexjobs23@gmail.com" }]
 keywords = ["video-analysis", "streamlit", "fastapi", "groq", "mcp", "blip", "whisper", "yolov8", "python"]
@@ -21,17 +21,16 @@ classifiers = [
   "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Topic :: Multimedia :: Video",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
-  "streamlit>=1.28.0",
+  "streamlit>=1.66.1",
   "groq>=0.4.0",
   "opencv-python>=4.8.0",
-  "pillow>=10.0.0",
+  "pillow>=13.0.0",
   "fastapi>=0.104.0",
   "uvicorn>=0.24.0",
   "redis>=5.0.0",
@@ -93,7 +92,7 @@ markers = [
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py311"
 exclude = ["data", "logs", ".venv", "venv", "build", "dist", "site"]
 
 [tool.ruff.lint]

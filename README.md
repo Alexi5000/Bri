@@ -8,7 +8,7 @@
 
 [![CI](https://img.shields.io/github/actions/workflow/status/Alexi5000/Bri/ci.yml?branch=master&label=CI)](https://github.com/Alexi5000/Bri/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.10%2B-3776ab?logo=python)](https://python.org)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-3776ab?logo=python)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-MCP%20API-009688?logo=fastapi)](https://fastapi.tiangolo.com)
 [![Streamlit](https://img.shields.io/badge/Streamlit-UI-ff4b4b?logo=streamlit)](https://streamlit.io)
 [![SQLite](https://img.shields.io/badge/SQLite-Persistence-003b57?logo=sqlite)](https://sqlite.org)
@@ -219,8 +219,10 @@ vulnerability, and operator guidance. Do not open a public issue for a security 
 
 ### Dependency and code-scanning status
 
-As of 2026-10-21 the repository has 0 open Dependabot alerts, 0 open secret-scanning alerts, and 0 critical or
-high code-scanning alerts. CodeQL runs on push, pull request, and a weekly schedule (`.github/workflows/codeql.yml`)
+As of 2026-10-21 the repository has 0 open secret-scanning alerts and 0 critical or high code-scanning alerts.
+Dependabot opened 10 alerts against `requirements.lock.txt` on 2026-10-21 (certifi, and nine Pillow advisories fixed in
+Pillow 13.0.0); the lock now pins certifi 2026.10.19, Pillow 13.0.0 and Streamlit 1.66.1, so each alert closes when
+Dependabot re-reads the lock. CodeQL runs on push, pull request, and a weekly schedule (`.github/workflows/codeql.yml`)
 and currently reports 142 open lower-severity findings in the Security tab: 60 medium `py/log-injection` warnings
 (request-derived values reaching log calls) and 82 code-quality notes such as unused imports and empty `except`
 blocks. None of these have been dismissed; they are tracked as open work. Dependabot version updates are intentionally disabled

@@ -370,7 +370,7 @@ async def execute_tool(
                 tool.execute(exec_request.video_id, exec_request.parameters),
                 timeout=timeout_seconds,
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             execution_time = time.time() - start_time
             logger.error("Tool '%s' execution timed out after %ss", (tool_name), (timeout_seconds))
             perf_logger.log_execution_time(

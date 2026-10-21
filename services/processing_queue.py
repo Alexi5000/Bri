@@ -253,7 +253,7 @@ class ProcessingQueue:
                 asyncio.gather(*self.workers, return_exceptions=True), timeout=timeout
             )
             logger.info("All workers stopped gracefully")
-        except asyncio.TimeoutError:
+        except TimeoutError:
             logger.warning(f"Shutdown timeout after {timeout}s, cancelling workers")
             for worker in self.workers:
                 worker.cancel()
