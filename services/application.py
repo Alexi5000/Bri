@@ -326,7 +326,7 @@ class BriApplicationService:
             return ChatResult(
                 ok=False, message="Bri returned an invalid response. Please try again."
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return ChatResult(ok=False, message="Request timed out. Please try a simpler question.")
         except Exception as exc:
             logger.error("Conversation workflow failed: %s", exc, exc_info=True)

@@ -484,7 +484,7 @@ class DataPrefetcher:
                 video_id, data_type = task
                 await self.prefetch_related_data(video_id, data_type)
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 continue
             except Exception as e:
                 logger.error(f"Prefetch worker error: {e}")

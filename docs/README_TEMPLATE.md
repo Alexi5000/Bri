@@ -56,7 +56,7 @@ That is the entire template. Eleven sections.
 
 [![Build](https://img.shields.io/github/actions/workflow/<owner>/<repo>/ci.yml?branch=master)](https://github.com/<owner>/<repo>/actions)
 [![License: <SPDX>](https://img.shields.io/badge/License-<SPDX>-blue.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.10%2B-3776ab?logo=python)](https://python.org)
+[![Python](https://img.shields.io/badge/Python-3.11%2B-3776ab?logo=python)](https://python.org)
 [![Coverage](https://img.shields.io/codecov/c/github/<owner>/<repo>)](https://codecov.io/gh/<owner>/<repo>)
 [![Container](https://img.shields.io/badge/ghcr.io-<owner>%2F<repo>-2496ed?logo=docker)](https://github.com/<owner>/<repo>/pkgs/container/<repo>)
 
