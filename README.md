@@ -2,18 +2,17 @@
   <img src="assets/icon.svg" alt="BRI logo" width="112" />
   <img src="assets/icon.png" alt="BRI logo (raster fallback)" width="112" />
 
-# BRI — Conversational video intelligence that feels human
+# BRI: Conversational video intelligence that feels human
 
 ## Empathetic multimodal video analysis: upload, watch, ask, remember
 
-[![Build](https://img.shields.io/badge/build-passing-22c55e)](https://github.com/Alexi5000/Bri/actions)
+[![CI](https://img.shields.io/github/actions/workflow/status/Alexi5000/Bri/ci.yml?branch=master&label=CI)](https://github.com/Alexi5000/Bri/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776ab?logo=python)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-MCP%20API-009688?logo=fastapi)](https://fastapi.tiangolo.com)
 [![Streamlit](https://img.shields.io/badge/Streamlit-UI-ff4b4b?logo=streamlit)](https://streamlit.io)
 [![SQLite](https://img.shields.io/badge/SQLite-Persistence-003b57?logo=sqlite)](https://sqlite.org)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ed?logo=docker)](https://docker.com)
-[![Container](https://img.shields.io/badge/ghcr.io-alexi5000%2Fbri-2496ed?logo=docker)](https://github.com/Alexi5000/Bri/pkgs/container/bri-mcp)
 
 </div>
 
@@ -24,6 +23,36 @@ BRI (Brianna) is an open-source multimodal video intelligence agent. It extracts
 speech, and detects objects through a FastAPI MCP service and a Streamlit interface, then answers natural-language
 questions about the media using a Groq-backed conversational agent with per-video memory. It is designed for teams that
 want to ship a real product on top of open weights rather than wire a notebook to a vector store every time.
+
+## Why this exists
+
+**What it does.** BRI extracts frames, captions scenes, transcribes speech, and detects objects for an uploaded video
+through a FastAPI tool service, stores the results in SQLite, and answers natural-language questions about the video
+from a Streamlit chat panel using a Groq-backed agent with per-video memory. Captioning, transcription, and detection
+run on open models (BLIP, Whisper, YOLOv8) that load lazily only when a tool executes.
+
+**Who it serves.** Small teams and solo operators who want a self-hosted video question-and-answer tool where the media
+and derived data stay on their own disk, and developers who want a working reference for a Streamlit front end, a typed
+middle layer, and a schema-first tool API in one Python codebase.
+
+**Why Alex built it.** Alex Cinovoj, Founder & CTO of TechTide AI, started BRI on 2025-10-14 (repository created the
+same day; first commit `6d3e3d4`, "Initial project setup: directory structure, dependencies, and configuration"). The
+original product steering file committed with that first commit stated the goal: make "video analysis feel like
+discussing content with a knowledgeable friend", be "accessible for users of all technical levels", and stay
+"privacy-focused with local storage by default", built on open-source tools (OpenCV, Whisper, BLIP, YOLO) plus Groq's
+LLM (`.kiro/steering/product.md` and `.kiro/specs/bri-video-agent/requirements.md` at `6d3e3d4`). The repository was
+then reworked into an "open-source flagship" with CI, typed errors, and contract tests (`FINAL_REPORT.md`, 2026-07-09).
+
+**Real-world use case (2025-2026 evidence).** A small team runs BRI on one machine to ask questions about recorded
+sessions ("what is the speaker holding at 0:15?") without sending the footage to a hosted video service. The upload,
+processing, and chat path is exercised end to end by `tests/integration/test_e2e_video_processing.py` and the contract
+suites under `tests/production/`, which run in CI on Linux and Windows (324 tests passed, 30 skipped on 2026-10-21).
+**Verified in this repository** at the test-suite level; the Groq client is mocked in those tests, so live model
+answers still require a `GROQ_API_KEY`. The tool service follows the schema-first discovery pattern that the Model
+Context Protocol specification standardizes (`GET /tools` lists tools with JSON schemas, `POST /tools/{name}/execute`
+runs one); it does not implement the MCP wire protocol itself.[^1] The UI targets the Streamlit 1.4x releases shipped
+during 2025.[^2] Conversational answers use Groq's OpenAI-compatible chat API, whose model and SDK changes are tracked
+in the Groq changelog.[^3]
 
 ## Hero
 
@@ -173,6 +202,31 @@ module-level docstring; every public function declares its contract in a one-lin
 docstrings by `mkdocstrings` and deployed with the release. The data-flow and database-schema reasoning lives alongside
 the code in the `docs/architecture/` directory.
 
+## Security
+
+### Administrative access
+
+Set `BRI_ADMIN_TOKEN` to an independently generated secret of at least 32 characters on the server.
+Administrative requests must include `Authorization: Bearer <secret>`. Missing or short configuration disables
+administrative access (503); missing or incorrect credentials return 401 before any administrative effect.
+Keep this token out of browser bundles and use TLS for network requests. Cache deletion and circuit-breaker
+resets require this token. Existing ordinary application operations retain their current access behavior.
+
+### Vulnerability reporting
+
+Read [SECURITY.md](SECURITY.md) for supported versions, the private email channel for reporting a suspected
+vulnerability, and operator guidance. Do not open a public issue for a security problem.
+
+### Dependency and code-scanning status
+
+As of 2026-10-21 the repository has 0 open Dependabot alerts, 0 open secret-scanning alerts, and 0 critical or
+high code-scanning alerts. CodeQL runs on push, pull request, and a weekly schedule (`.github/workflows/codeql.yml`)
+and currently reports 142 open lower-severity findings in the Security tab: 60 medium `py/log-injection` warnings
+(request-derived values reaching log calls) and 82 code-quality notes such as unused imports and empty `except`
+blocks. None of these have been dismissed; they are tracked as open work. Dependabot version updates are intentionally disabled
+(`.github/dependabot.yml`, `updates: []`); dependency upgrades are handled manually in grouped pull requests, and the
+pinned lock lives in `requirements.lock.txt`.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for environment setup, branch naming, commit message format, and review SLA. Bug
@@ -182,15 +236,6 @@ reports and feature requests go through the issue templates under `.github/ISSUE
 
 Released under the [MIT License](LICENSE).
 
-## Administrative access
-
-Set `BRI_ADMIN_TOKEN` to an independently generated secret of at least 32 characters on the server.
-Administrative requests must include `Authorization: Bearer <secret>`. Missing or short configuration disables
-administrative access (503); missing or incorrect credentials return 401 before any administrative effect.
-Keep this token out of browser bundles and use TLS for network requests. Cache deletion and circuit-breaker
-resets require this token. Existing ordinary application operations retain their current access behavior.
-
-## Security reporting
-
-Read [SECURITY.md](SECURITY.md) for supported versions, private vulnerability reporting, and operator guidance.
-Use [CONTRIBUTING.md](CONTRIBUTING.md) for the development and review process.
+[^1]: Model Context Protocol, "Specification (2025-06-18)", https://modelcontextprotocol.io/specification/2025-06-18, published 2025-06-18.
+[^2]: Streamlit, "2025 release notes", https://docs.streamlit.io/develop/quick-reference/release-notes/2025, entries dated March 4, 2025 through October 29, 2025.
+[^3]: Groq, "Changelog", https://console.groq.com/docs/changelog, entries dated May 2025 through 2026-04-18.
