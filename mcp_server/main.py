@@ -8,8 +8,6 @@ from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from utils.log_safety import safe_log_value
-
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -45,6 +43,7 @@ from mcp_server.validation import (
 )
 from mcp_server.versioning import APIVersion, get_api_version, get_version_info
 from services.errors import BriError, http_status_for
+from utils.log_safety import safe_log_value
 from utils.logging_config import get_logger, get_performance_logger, setup_logging
 
 # Setup logging

@@ -1,6 +1,9 @@
 import io
 import json
 import logging
+import subprocess
+import sys
+from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
@@ -94,3 +97,22 @@ def test_json_formatter_preserves_structured_values():
     data = json.loads(output)
     assert data["message"] == "input\nvalue"
     assert data["video_id"] == "clip\nvalue"
+
+
+def test_direct_server_startup_bootstraps_workspace_before_local_imports(tmp_path):
+    root = Path(__file__).resolve().parents[2]
+    code = """
+import builtins, pathlib, runpy, sys
+root = pathlib.Path(sys.argv[1])
+original_import = builtins.__import__
+def guarded_import(name, *args, **kwargs):
+    if name == 'utils.log_safety':
+        assert sys.path[0] == str(root), 'Local import occurred before script bootstrap'
+    return original_import(name, *args, **kwargs)
+builtins.__import__ = guarded_import
+runpy.run_path(str(root / 'mcp_server/main.py'), run_name='startup_probe')
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", code, str(root)], cwd=tmp_path, capture_output=True, text=True
+    )
+    assert result.returncode == 0, result.stderr
