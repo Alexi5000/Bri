@@ -3,12 +3,49 @@
 import importlib
 import logging
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import Any
 
 from config import Config
 from storage.database import get_database
 
 logger = logging.getLogger(__name__)
+
+
+class FramePathError(ValueError):
+    """Raised when a caller-supplied frame path is outside the video's frame directory."""
+
+
+def resolve_video_frame_paths(video_id: str, frame_paths: list[Any]) -> list[str]:
+    """Bind caller-supplied frame paths to the selected video's registered frames.
+
+    Explicit ``frame_paths`` must resolve (following symlinks) to files inside
+    ``FRAME_STORAGE_PATH/<video_id>``. Relative paths are interpreted against that
+    directory. Anything else, including ``..`` traversal and symlinks that point
+    outside the directory, is rejected so the tool cannot be used to read
+    arbitrary server-readable images.
+    """
+    storage_root = Path(Config.FRAME_STORAGE_PATH).resolve()
+    video_dir = (storage_root / video_id).resolve()
+    if video_dir == storage_root or not video_dir.is_relative_to(storage_root):
+        raise FramePathError("Invalid video_id for frame lookup")
+
+    contained: list[str] = []
+    for raw in frame_paths:
+        if not isinstance(raw, str) or not raw or "\x00" in raw:
+            raise FramePathError("Frame paths must be non-empty strings")
+        candidate = Path(raw)
+        if not candidate.is_absolute():
+            # Accept paths relative to the frame directory or to the working
+            # directory (stored frame records use the configured, possibly
+            # relative, FRAME_STORAGE_PATH prefix).
+            cwd_candidate = Path.cwd() / candidate
+            candidate = cwd_candidate if cwd_candidate.exists() else video_dir / candidate
+        resolved = candidate.resolve()
+        if not resolved.is_relative_to(video_dir):
+            raise FramePathError("Frame path is outside the selected video's frame directory")
+        contained.append(str(resolved))
+    return contained
 
 
 def _load_tool_class(module_name: str, class_name: str):
@@ -179,7 +216,7 @@ class ImageCaptioningTool(Tool):
                 frame_paths = [f["image_path"] for f in frames]
                 timestamps = [f["timestamp"] for f in frames]
             else:
-                frame_paths = parameters["frame_paths"]
+                frame_paths = resolve_video_frame_paths(video_id, parameters["frame_paths"])
                 timestamps = parameters["timestamps"]
 
             # Generate captions
@@ -337,7 +374,7 @@ class ObjectDetectionTool(Tool):
                 frame_paths = [f["image_path"] for f in frames]
                 timestamps = [f["timestamp"] for f in frames]
             else:
-                frame_paths = parameters["frame_paths"]
+                frame_paths = resolve_video_frame_paths(video_id, parameters["frame_paths"])
                 timestamps = parameters["timestamps"]
 
             confidence_threshold = parameters.get("confidence_threshold", 0.25)
