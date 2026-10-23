@@ -6,6 +6,7 @@ from datetime import timedelta
 from typing import Any
 
 from config import Config
+from utils.log_safety import safe_log_value
 from utils.logging_config import get_logger, get_performance_logger
 
 logger = get_logger(__name__)
@@ -77,15 +78,15 @@ class CacheManager:
         try:
             value = self.redis_client.get(key)
             if value is not None:
-                logger.debug("Cache hit: %s", key)
+                logger.debug("Cache hit: %s", safe_log_value(key))
                 perf_logger.log_cache_hit(key, hit=True)
                 return json.loads(value)
             else:
-                logger.debug("Cache miss: %s", key)
+                logger.debug("Cache miss: %s", safe_log_value(key))
                 perf_logger.log_cache_hit(key, hit=False)
                 return None
         except Exception as e:
-            logger.error("Cache get failed for key %s: %s", key, str(e))
+            logger.error("Cache get failed for key %s: %s", safe_log_value(key), str(e))
             return None
 
     def set(self, key: str, value: Any) -> bool:
@@ -109,10 +110,10 @@ class CacheManager:
             # Store with TTL
             self.redis_client.setex(key, self.ttl, serialized_value)
 
-            logger.debug("Cache set: %s (TTL: %s)", key, self.ttl)
+            logger.debug("Cache set: %s (TTL: %s)", safe_log_value(key), self.ttl)
             return True
         except Exception as e:
-            logger.error("Cache set failed for key %s: %s", key, str(e))
+            logger.error("Cache set failed for key %s: %s", safe_log_value(key), str(e))
             return False
 
     def delete(self, key: str) -> bool:
@@ -156,13 +157,15 @@ class CacheManager:
 
             if keys:
                 deleted = self.redis_client.delete(*keys)
-                logger.info("Cleared %s cache entries for video %s", deleted, video_id)
+                logger.info(
+                    "Cleared %s cache entries for video %s", deleted, safe_log_value(video_id)
+                )
                 return deleted
             else:
-                logger.debug("No cache entries found for video %s", video_id)
+                logger.debug("No cache entries found for video %s", safe_log_value(video_id))
                 return 0
         except Exception as e:
-            logger.error("Failed to clear cache for video %s: %s", video_id, str(e))
+            logger.error("Failed to clear cache for video %s: %s", safe_log_value(video_id), str(e))
             return 0
 
     def clear_all(self) -> bool:

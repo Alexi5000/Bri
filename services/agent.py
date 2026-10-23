@@ -5,6 +5,8 @@ from typing import Any
 
 import httpx
 
+from utils.log_safety import safe_log_value
+
 try:
     from groq import Groq
 except ModuleNotFoundError:  # pragma: no cover - optional production dependency
@@ -131,7 +133,9 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
         """
         start_time = time.time()
         try:
-            logger.info(f"Processing message for video {video_id}: {message[:50]}...")
+            logger.info(
+                safe_log_value(f"Processing message for video {video_id}: {message[:50]}...")
+            )
 
             # Check if video has existing context (already processed)
             has_video_context = self._check_video_context_exists(video_id)

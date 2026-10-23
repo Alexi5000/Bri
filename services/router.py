@@ -5,6 +5,8 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
+from utils.log_safety import safe_log_value
+
 logger = logging.getLogger(__name__)
 
 
@@ -159,7 +161,9 @@ class ToolRouter:
             object_name = self._extract_object_name(query_lower)
             if object_name:
                 parameters["object_name"] = object_name
-            logger.debug(f"Object search query detected: looking for '{object_name}'")
+            logger.debug(
+                safe_log_value(f"Object search query detected: looking for '{object_name}'")
+            )
 
         elif query_type == "general":
             # General questions → Use comprehensive context
