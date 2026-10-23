@@ -8,7 +8,12 @@ are therefore resolved lazily when accessed.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from tools.audio_transcriber import AudioTranscriber
+    from tools.frame_extractor import FrameExtractor
+    from tools.image_captioner import ImageCaptioner
 
 __all__ = ["FrameExtractor", "ImageCaptioner", "AudioTranscriber"]
 

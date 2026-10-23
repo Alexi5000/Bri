@@ -4,16 +4,14 @@ import sys
 import os
 import json
 import uuid
-from datetime import datetime
 
 # Add parent directory to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from services.context import ContextBuilder, VideoContext, TimestampContext
+from services.context import ContextBuilder
 from models.video import VideoMetadata, Frame
 from models.tools import Caption, Transcript, TranscriptSegment, DetectionResult, DetectedObject
 from storage.database import Database
-from config import Config
 
 
 def setup_test_data(db: Database, video_id: str) -> None:
@@ -344,43 +342,38 @@ def main():
 
     # Initialize database with test path
     test_db_path = "data/test_context.db"
-    db = Database(test_db_path)
-    db.connect()
-    db.initialize_schema()
+    with Database(test_db_path) as db:
+        db.initialize_schema()
 
-    # Generate test video ID
-    video_id = f"test_vid_{uuid.uuid4().hex[:8]}"
+        # Generate test video ID
+        video_id = f"test_vid_{uuid.uuid4().hex[:8]}"
 
-    try:
-        # Set up test data
-        setup_test_data(db, video_id)
+        try:
+            # Set up test data
+            setup_test_data(db, video_id)
 
-        # Initialize Context Builder
-        builder = ContextBuilder(db)
+            # Initialize Context Builder
+            builder = ContextBuilder(db)
 
-        # Run tests
-        test_build_video_context(builder, video_id)
-        test_search_captions(builder, video_id)
-        test_search_transcripts(builder, video_id)
-        test_get_frames_with_object(builder, video_id)
-        test_get_context_at_timestamp(builder, video_id)
+            # Run tests
+            test_build_video_context(builder, video_id)
+            test_search_captions(builder, video_id)
+            test_search_transcripts(builder, video_id)
+            test_get_frames_with_object(builder, video_id)
+            test_get_context_at_timestamp(builder, video_id)
 
-        print(f"\n{'=' * 60}")
-        print("✓ ALL TESTS PASSED")
-        print(f"{'=' * 60}\n")
+            print(f"\n{'=' * 60}")
+            print("✓ ALL TESTS PASSED")
+            print(f"{'=' * 60}\n")
 
-    except Exception as e:
-        print(f"\n{'=' * 60}")
-        print(f"✗ TEST FAILED: {e}")
-        print(f"{'=' * 60}\n")
-        import traceback
+        except Exception as e:
+            print(f"\n{'=' * 60}")
+            print(f"✗ TEST FAILED: {e}")
+            print(f"{'=' * 60}\n")
+            import traceback
 
-        traceback.print_exc()
-        sys.exit(1)
-
-    finally:
-        # Clean up
-        db.close()
+            traceback.print_exc()
+            sys.exit(1)
 
 
 if __name__ == "__main__":

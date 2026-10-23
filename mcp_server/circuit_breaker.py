@@ -334,6 +334,8 @@ async def retry_with_backoff(
     """
     import asyncio
 
+    if max_retries < 0:
+        raise ValueError("max_retries must be non-negative")
     backoff = ExponentialBackoff(base_delay=base_delay, max_delay=max_delay)
     last_exception = None
 
@@ -353,6 +355,8 @@ async def retry_with_backoff(
             else:
                 logger.error("All %s attempts failed", max_retries + 1)
 
+    if last_exception is None:
+        raise RuntimeError("Retry loop completed without a result or exception")
     raise last_exception
 
 

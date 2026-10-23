@@ -222,7 +222,7 @@ class DataMutationLogger:
                     try:
                         record["data"] = json.loads(record["data"])
                     except json.JSONDecodeError:
-                        pass
+                        logger.warning("Mutation payload is invalid JSON; retaining original text")
                 history.append(record)
 
             return history

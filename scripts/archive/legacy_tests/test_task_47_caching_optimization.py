@@ -12,7 +12,6 @@ import os
 import time
 import json
 import tempfile
-from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -20,8 +19,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from storage.multi_tier_cache import get_multi_tier_cache, LRUCache
 from storage.query_optimizer import get_query_optimizer
 from services.data_prefetcher import get_data_prefetcher
-from storage.compression import get_compression_manager, CompressionLevel
-from config import Config
+from storage.compression import get_compression_manager
 
 
 def test_l1_cache():

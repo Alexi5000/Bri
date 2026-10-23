@@ -9,7 +9,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from services.agent import GroqAgent
-from services.memory import Memory
 from config import Config
 
 # Configure logging
@@ -57,7 +56,7 @@ async def test_should_use_tool():
 
         all_passed = True
         for message, expected, description in test_cases:
-            result = agent._should_use_tool(message)
+            result = agent._should_use_tool(message, has_video_context=True)
             passed = result == expected
             status = "✓" if passed else "✗"
             print(f"{status} {description}: '{message}'")

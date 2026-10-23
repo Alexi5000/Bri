@@ -93,7 +93,7 @@ def test_image_captioner():
     print("-" * 60)
     try:
         print("Testing with non-existent file...")
-        caption = captioner.caption_frame("nonexistent.jpg", timestamp=0.0)
+        captioner.caption_frame("nonexistent.jpg", timestamp=0.0)
         print("❌ Should have raised FileNotFoundError")
     except FileNotFoundError:
         print("✓ FileNotFoundError raised correctly for missing file")

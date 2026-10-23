@@ -195,6 +195,7 @@ class ValidatedToolExecutionRequest(BaseModel):
     parameters: dict[str, Any] = Field(default_factory=dict, description="Tool parameters")
 
     @validator("video_id")
+    @classmethod
     def validate_video_id_format(cls, v):
         """Validate video_id format."""
         if not v or not v.strip():
@@ -209,6 +210,7 @@ class ValidatedToolExecutionRequest(BaseModel):
         return v.strip()
 
     @validator("parameters")
+    @classmethod
     def validate_parameters_structure(cls, v):
         """Validate parameters structure."""
         if not isinstance(v, dict):
@@ -249,6 +251,7 @@ class ValidatedProcessVideoRequest(BaseModel):
     tools: list[str] | None = Field(None, description="List of tool names to execute")
 
     @validator("tools")
+    @classmethod
     def validate_tools_list(cls, v):
         """Validate tools list."""
         if v is not None:
@@ -279,6 +282,7 @@ class ValidatedProgressiveProcessRequest(BaseModel):
     video_path: str = Field(..., min_length=1, max_length=1024, description="Path to video file")
 
     @validator("video_path")
+    @classmethod
     def validate_video_path(cls, v):
         """Validate video path format."""
         if not v or not v.strip():

@@ -4,7 +4,9 @@ from pathlib import Path
 
 import pytest
 
-from config import Config
+import config
+
+Config = config.Config
 
 
 def reset_config(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -86,8 +88,6 @@ def test_ensure_directories_creates_runtime_locations(
 
 def test_display_config_never_logs_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
     from unittest.mock import Mock
-
-    import config
 
     reset_config(monkeypatch)
     monkeypatch.setenv("GROQ_API_KEY", "gsk_secret_value_never_log")

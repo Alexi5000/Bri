@@ -139,6 +139,8 @@ class AutomaticRetry:
 
         # All retries failed
         logger.error(f"{operation_name} failed after {attempt + 1} attempts")
+        if last_error is None:
+            raise ValueError("Retry policy must allow at least one attempt")
         raise last_error
 
     def log_failed_operation(
@@ -303,7 +305,7 @@ class DeadLetterQueue:
                 try:
                     item["data"] = json.loads(item["data"])
                 except json.JSONDecodeError:
-                    pass
+                    logger.warning("Dead-letter payload is invalid JSON; retaining original text")
             items.append(item)
 
         return items

@@ -179,7 +179,10 @@ class AudioTranscriber:
             )
             raise Exception(f"Segment transcription failed: {str(e)}")
 
-    def __del__(self):
-        """Cleanup resources."""
+    def close(self):
+        """Release model resources explicitly; safe to call more than once."""
         if hasattr(self, "model"):
             del self.model
+
+    def __del__(self):
+        self.close()

@@ -100,7 +100,7 @@ class TestChatInterface:
 
             # Should not crash, should return error message
             try:
-                agent = GroqAgent()
+                GroqAgent()
                 # This should be caught
             except Exception as e:
                 assert "API" in str(e) or "Error" in str(e)

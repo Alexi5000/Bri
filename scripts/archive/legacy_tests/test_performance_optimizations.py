@@ -2,13 +2,12 @@
 
 import sys
 import time
-import asyncio
 from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from storage.database import Database, initialize_database
+from storage.database import Database
 from services.memory import Memory
 from config import Config
 from ui.lazy_loader import LazyImageLoader, LazyListLoader
@@ -142,7 +141,6 @@ def test_lazy_image_loader():
 
         # Test with mock image paths
         image_paths = [f"data/frames/frame_{i}.jpg" for i in range(10)]
-        timestamps = [float(i * 2) for i in range(10)]
 
         print(f"✓ Created LazyImageLoader with batch_size=3")
         print(f"✓ Mock data: {len(image_paths)} images with timestamps")
@@ -172,7 +170,7 @@ def test_lazy_list_loader():
     print("\n=== Testing Lazy List Loader ===")
 
     try:
-        loader = LazyListLoader(items_per_page=5)
+        LazyListLoader(items_per_page=5)
 
         # Test with mock items
         items = [f"Item {i}" for i in range(23)]
@@ -343,4 +341,4 @@ def main():
 
 
 if __name__ == "__main__":
-    exit(main())
+    sys.exit(main())

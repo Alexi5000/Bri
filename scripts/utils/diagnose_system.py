@@ -131,8 +131,9 @@ def diagnose():
                         data = response.json()
                         print(f"  Tools registered: {data.get('tools_registered', 'unknown')}")
                         return True
-            except:
+            except (httpx.HTTPError, ValueError):
                 return False
+            return False
 
         if asyncio.run(check_server()):
             pass

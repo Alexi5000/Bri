@@ -1,6 +1,7 @@
 import json
 
-data = json.load(open("eval_report_75befeed.json"))
+with open("eval_report_75befeed.json") as report:
+    data = json.load(report)
 failed = [t for t in data["detailed_results"] if not t["passed"]]
 
 print(f"Failed tests: {len(failed)}/50\n")

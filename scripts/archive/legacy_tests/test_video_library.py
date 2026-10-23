@@ -84,8 +84,8 @@ def test_video_database_operations():
         try:
             delete_video(test_video_id)
             logger.info("   Cleaned up existing test video")
-        except Exception:
-            pass
+        except Exception as error:
+            logger.debug("Prior test-video cleanup failed: %s", type(error).__name__)
 
         insert_video(
             video_id=test_video_id,
