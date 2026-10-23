@@ -238,7 +238,7 @@ class DataLineageTracker:
                     try:
                         record["parameters"] = json.loads(record["parameters"])
                     except json.JSONDecodeError:
-                        pass
+                        logger.warning("Lineage parameters are invalid JSON; retaining stored data")
                 lineage.append(record)
 
             return lineage
@@ -320,7 +320,7 @@ class DataLineageTracker:
                     try:
                         tool_info["parameters"] = json.loads(row["processing_params"])
                     except json.JSONDecodeError:
-                        pass
+                        logger.warning("Lineage parameters are invalid JSON; retaining stored data")
 
                 tools_used.append(tool_info)
 

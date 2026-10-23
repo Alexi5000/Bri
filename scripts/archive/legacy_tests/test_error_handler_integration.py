@@ -2,7 +2,6 @@
 
 import sys
 import os
-import asyncio
 
 # Add parent directory to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -17,7 +16,7 @@ def test_error_handler_integration():
     print("=" * 70)
 
     print("\n✅ Testing ErrorHandler class instantiation...")
-    handler = ErrorHandler()
+    ErrorHandler()
     print("   ErrorHandler created successfully")
 
     print("\n✅ Testing tool error handling...")
@@ -192,4 +191,4 @@ def main():
 
 
 if __name__ == "__main__":
-    exit(main())
+    sys.exit(main())

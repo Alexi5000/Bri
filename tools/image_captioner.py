@@ -195,11 +195,14 @@ class ImageCaptioner:
         # For now, we return a reasonable default based on BLIP's reliability
         return 0.85  # BLIP is generally reliable, so we use a high baseline
 
-    def __del__(self):
-        """Cleanup resources."""
+    def close(self):
+        """Release model resources explicitly; safe to call more than once."""
         if hasattr(self, "model"):
             del self.model
         if hasattr(self, "processor"):
             del self.processor
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
+
+    def __del__(self):
+        self.close()

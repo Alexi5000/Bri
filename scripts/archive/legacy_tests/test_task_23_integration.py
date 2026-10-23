@@ -73,8 +73,8 @@ def test_memory_integration():
         # Clean up any existing test video
         try:
             delete_video(test_video_id)
-        except Exception:
-            pass
+        except Exception as error:
+            print(f"Prior test-video cleanup failed: {type(error).__name__}")
 
         # Insert test video
         insert_video(

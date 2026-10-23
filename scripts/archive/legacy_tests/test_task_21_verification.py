@@ -50,6 +50,7 @@ try:
         extract_timestamps_from_conversation,
     )
 
+    assert callable(render_video_player) and callable(render_video_player_with_context)
     print("   ✓ All player functions imported successfully")
 except ImportError as e:
     print(f"   ✗ Import failed: {e}")

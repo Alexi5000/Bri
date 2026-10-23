@@ -7,6 +7,7 @@ normal imports so tests, CLI scripts, and API processes remain deterministic.
 
 from __future__ import annotations
 
+import logging
 import os
 from collections.abc import Callable
 from pathlib import Path
@@ -20,9 +21,7 @@ if TYPE_CHECKING:
 
 def _get_logger():
     """Lazy logger accessor that breaks the config <-> utils cycle."""
-    from utils.logging_config import get_logger  # noqa: WPS433 (intentional lazy import)
-
-    return get_logger(__name__)
+    return logging.getLogger(__name__)
 
 
 try:
@@ -76,7 +75,7 @@ def get_config_value(key: str, default: str = "") -> str:
         if hasattr(st, "secrets") and key in st.secrets:
             return str(st.secrets[key])
     except Exception:
-        pass
+        return default
     return default
 
 

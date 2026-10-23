@@ -126,9 +126,9 @@ def memory(database):
 
 
 @pytest.fixture
-def context_builder(database, file_store):
+def context_builder(database):
     """Create ContextBuilder instance."""
-    return ContextBuilder(db=database, file_store=file_store)
+    return ContextBuilder(db=database, enable_semantic_search=False)
 
 
 @pytest.fixture
@@ -335,7 +335,6 @@ class TestEndToEndQueryResponse:
     @pytest.mark.asyncio
     async def test_query_with_tool_routing(self, memory, mock_groq_client):
         """Test that queries are routed to appropriate tools."""
-        video_id = "test_video_007"
 
         router = ToolRouter()
 
@@ -567,14 +566,13 @@ class TestEndToEndErrorHandling:
     @pytest.mark.asyncio
     async def test_error_message_is_user_friendly(self, memory):
         """Test that error messages are friendly and helpful."""
-        video_id = "test_video_014"
 
         # Create agent with invalid API key
         with patch("services.agent.Groq") as mock_groq:
             mock_groq.side_effect = Exception("API key invalid")
 
             try:
-                agent = GroqAgent(groq_api_key="invalid_key", memory=memory)
+                GroqAgent(groq_api_key="invalid_key", memory=memory)
                 # Should raise AgentError with friendly message
                 assert False, "Should have raised an error"
             except Exception as e:

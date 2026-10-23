@@ -92,7 +92,7 @@ def test_suggestion_generation():
             """Use the real suggestion generation logic."""
             agent = GroqAgent.__new__(GroqAgent)
             # Bind all the helper methods
-            agent._classify_query_type = lambda msg: self._classify_query_type(msg)
+            agent._classify_query_type = self._classify_query_type
             agent._suggest_visual_followups = GroqAgent._suggest_visual_followups.__get__(
                 agent, GroqAgent
             )

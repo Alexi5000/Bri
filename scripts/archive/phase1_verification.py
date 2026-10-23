@@ -8,10 +8,8 @@ import sys
 import os
 import sqlite3
 import json
-import time
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Any, Optional
 
 # Add project to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -23,6 +21,8 @@ try:
     from config import Config
     from storage import get_database
     from storage.database import Database
+
+    assert all(callable(symbol) for symbol in (Config, get_database, Database))
 except ImportError as e:
     print(f"Import error: {e}")
     print("Basic modules imported. Will test database directly.")
@@ -287,7 +287,7 @@ def task_1_3_tools_verification():
 
     for tool in tools:
         try:
-            module = __import__(f"tools.{tool}", fromlist=[""])
+            __import__(f"tools.{tool}", fromlist=[""])
             log_result("1.3", f"Import {tool}", "PASS")
         except ImportError as e:
             import_errors[tool] = str(e)

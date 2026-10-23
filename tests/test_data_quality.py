@@ -140,8 +140,6 @@ class TestDataPipelines:
         # This would test the full pipeline from upload to completion
         # For now, we'll test the data flow structure
 
-        video_id = "test_video_123"
-
         # Simulate pipeline stages
         stages = [
             "upload",
@@ -293,7 +291,7 @@ class TestQueryPerformance:
         start_time = time.time()
 
         query = "SELECT * FROM videos LIMIT 100"
-        results = db.execute_query(query)
+        db.execute_query(query)
 
         duration = time.time() - start_time
 
@@ -305,7 +303,7 @@ class TestQueryPerformance:
         start_time = time.time()
 
         query = "SELECT * FROM video_context LIMIT 100"
-        results = db.execute_query(query)
+        db.execute_query(query)
 
         duration = time.time() - start_time
 
@@ -323,7 +321,7 @@ class TestQueryPerformance:
             GROUP BY v.video_id
             LIMIT 100
         """
-        results = db.execute_query(query)
+        db.execute_query(query)
 
         duration = time.time() - start_time
 
@@ -339,7 +337,7 @@ class TestQueryPerformance:
             FROM video_context
             GROUP BY context_type
         """
-        results = db.execute_query(query)
+        db.execute_query(query)
 
         duration = time.time() - start_time
 

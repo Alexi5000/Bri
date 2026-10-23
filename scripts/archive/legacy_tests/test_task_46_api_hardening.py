@@ -5,11 +5,8 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import asyncio
 from mcp_server.validation import (
     RateLimiter,
-    VideoIdValidator,
-    RequestSizeValidator,
     ValidatedToolExecutionRequest,
     ValidatedProcessVideoRequest,
     ValidatedProgressiveProcessRequest,
@@ -62,7 +59,7 @@ def test_request_validation():
 
     # Invalid video_id (path traversal)
     try:
-        req = ValidatedToolExecutionRequest(video_id="../../../etc/passwd", parameters={})
+        ValidatedToolExecutionRequest(video_id="../../../etc/passwd", parameters={})
         print("✗ Should have rejected path traversal")
     except ValueError as e:
         print(f"✓ Rejected path traversal: {e}")
@@ -76,7 +73,7 @@ def test_request_validation():
 
     # Invalid tools list (too many)
     try:
-        req = ValidatedProcessVideoRequest(tools=["tool" + str(i) for i in range(15)])
+        ValidatedProcessVideoRequest(tools=["tool" + str(i) for i in range(15)])
         print("✗ Should have rejected too many tools")
     except ValueError as e:
         print(f"✓ Rejected too many tools: {e}")
@@ -90,7 +87,7 @@ def test_request_validation():
 
     # Invalid video path (wrong extension)
     try:
-        req = ValidatedProgressiveProcessRequest(video_path="data/videos/test.txt")
+        ValidatedProgressiveProcessRequest(video_path="data/videos/test.txt")
         print("✗ Should have rejected invalid extension")
     except ValueError as e:
         print(f"✓ Rejected invalid extension: {e}")
@@ -157,8 +154,8 @@ def test_circuit_breaker():
     for i in range(3):
         try:
             breaker.call(failure_func)
-        except Exception:
-            pass
+        except Exception as error:
+            assert str(error) == "Service unavailable"
 
     # Should be OPEN after threshold failures
     assert breaker.state == CircuitState.OPEN

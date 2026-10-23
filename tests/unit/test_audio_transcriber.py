@@ -594,11 +594,8 @@ class TestAudioTranscriberEdgeCases:
             transcriber = AudioTranscriber()
             assert hasattr(transcriber, "model")
 
-            # Delete transcriber
-            del transcriber
-
-            # Model should be deleted (we can't directly test this,
-            # but we verify __del__ doesn't raise errors)
+            transcriber.close()
+            assert not hasattr(transcriber, "model")
 
     def test_transcribe_very_long_video(self, audio_transcriber, sample_video_file):
         """Test transcription of video with many segments."""

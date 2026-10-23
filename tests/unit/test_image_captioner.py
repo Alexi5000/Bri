@@ -514,8 +514,8 @@ class TestImageCaptionerCleanup:
         """Test that resources are cleaned up on deletion."""
         captioner = ImageCaptioner()
 
-        # Manually trigger cleanup
-        captioner.__del__()
+        # Release model resources explicitly.
+        captioner.close()
 
         # Verify cleanup was attempted (model and processor deleted)
         assert not hasattr(captioner, "model") or captioner.model is None

@@ -12,7 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from config import Config
-from services.video_service import get_video_service, VideoValidationError, VideoServiceError
+from services.video_service import get_video_service
 from storage.database import initialize_database
 
 # Configure logging
@@ -391,4 +391,4 @@ def main():
 
 
 if __name__ == "__main__":
-    exit(main())
+    sys.exit(main())

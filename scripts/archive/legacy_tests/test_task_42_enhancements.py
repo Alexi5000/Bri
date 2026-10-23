@@ -5,10 +5,7 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from services.context import ContextBuilder
 from services.router import ToolRouter
-from services.agent import GroqAgent
-from storage.database import Database
 import logging
 
 # Set up logging
@@ -118,7 +115,6 @@ def test_prompt_optimization():
         print("\nTesting prompt building for different query types:")
         for query, query_type in test_queries:
             # Mock agent method (we can't instantiate GroqAgent without API key)
-            from services.agent import GroqAgent
 
             # Create a minimal prompt manually
             prompt_parts = []
@@ -127,7 +123,6 @@ def test_prompt_optimization():
             # Determine query type
             is_visual = query_type == "visual"
             is_audio = query_type == "audio"
-            is_object = query_type == "object"
 
             # Add captions
             if context_data.get("captions"):

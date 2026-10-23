@@ -7,7 +7,7 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from storage.file_store import FileStore, get_file_store
+from storage.file_store import get_file_store
 from storage.database import Database, insert_video, get_video, get_all_videos
 from config import Config
 import uuid

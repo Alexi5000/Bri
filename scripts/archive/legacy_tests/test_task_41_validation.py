@@ -10,11 +10,11 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 # Force reload to get latest changes
 import importlib
-import storage.database
 
-importlib.reload(storage.database)
+database_module = importlib.import_module("storage.database")
+importlib.reload(database_module)
 
-from storage.database import Database, get_database, initialize_database
+from storage.database import get_database, initialize_database
 from services.video_processing_service import VideoProcessingService
 from services.data_validator import get_data_validator
 from services.data_consistency_checker import get_consistency_checker

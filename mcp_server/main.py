@@ -598,7 +598,6 @@ async def process_video(
         )
 
     except Exception as e:
-        execution_time = time.time() - start_time
         logger.error("Video processing failed: %s", (str(e)))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
