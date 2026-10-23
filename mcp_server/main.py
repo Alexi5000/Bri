@@ -8,6 +8,8 @@ from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from utils.log_safety import safe_log_value
+
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -337,7 +339,11 @@ async def execute_tool(
         cached_result = cache_manager.get(cache_key)
         if cached_result is not None:
             execution_time = time.time() - start_time
-            logger.info("Cache hit for %s on video %s", (tool_name), (exec_request.video_id))
+            logger.info(
+                "Cache hit for %s on video %s",
+                (safe_log_value(tool_name)),
+                (safe_log_value(exec_request.video_id)),
+            )
             perf_logger.log_cache_hit(cache_key, hit=True)
             return ToolExecutionResponseV1(
                 success=True,
@@ -359,8 +365,8 @@ async def execute_tool(
         # Execute tool with timeout
         logger.info(
             "Executing tool '%s' for video %s (timeout: %ss)",
-            (tool_name),
-            (exec_request.video_id),
+            (safe_log_value(tool_name)),
+            (safe_log_value(exec_request.video_id)),
             (timeout_seconds),
         )
         perf_logger.log_cache_hit(cache_key, hit=False)
@@ -372,7 +378,11 @@ async def execute_tool(
             )
         except TimeoutError:
             execution_time = time.time() - start_time
-            logger.error("Tool '%s' execution timed out after %ss", (tool_name), (timeout_seconds))
+            logger.error(
+                "Tool '%s' execution timed out after %ss",
+                (safe_log_value(tool_name)),
+                (timeout_seconds),
+            )
             perf_logger.log_execution_time(
                 f"tool_{tool_name}",
                 execution_time,
@@ -402,13 +412,17 @@ async def execute_tool(
 
         # Store result in database for later retrieval
         logger.info(
-            "Storing %s results in database for video %s...", (tool_name), (exec_request.video_id)
+            "Storing %s results in database for video %s...",
+            (safe_log_value(tool_name)),
+            (safe_log_value(exec_request.video_id)),
         )
         _store_tool_result_in_db(exec_request.video_id, tool_name, result)
-        logger.info("✓ Database storage confirmed for %s", (tool_name))
+        logger.info("✓ Database storage confirmed for %s", (safe_log_value(tool_name)))
 
         execution_time = time.time() - start_time
-        logger.info("Tool '%s' executed successfully in %.2fs", tool_name, execution_time)
+        logger.info(
+            "Tool '%s' executed successfully in %.2fs", safe_log_value(tool_name), execution_time
+        )
         perf_logger.log_execution_time(
             f"tool_{tool_name}",
             execution_time,
@@ -495,7 +509,11 @@ async def process_video(
         if tools is None:
             tools = [tool["name"] for tool in tool_registry.list_tools()]
 
-        logger.info("Processing video %s with tools: %s (parallel execution)", (video_id), (tools))
+        logger.info(
+            "Processing video %s with tools: %s (parallel execution)",
+            (safe_log_value(video_id)),
+            (safe_log_value(tools)),
+        )
 
         # Create tasks for parallel execution
         tasks = []
@@ -504,7 +522,7 @@ async def process_video(
         for tool_name in tools:
             tool = tool_registry.get_tool(tool_name)
             if tool is None:
-                logger.warning("Tool '%s' not found, skipping", (tool_name))
+                logger.warning("Tool '%s' not found, skipping", (safe_log_value(tool_name)))
                 continue
 
             # Check cache first
@@ -512,7 +530,7 @@ async def process_video(
 
             cached_result = cache_manager.get(cache_key)
             if cached_result is not None:
-                logger.info("Cache hit for %s", (tool_name))
+                logger.info("Cache hit for %s", (safe_log_value(tool_name)))
                 # Skip creating task for cached results
                 continue
 
@@ -540,11 +558,11 @@ async def process_video(
         # Add parallel execution results
         for tool_name, result in zip(tool_names, task_results):
             if isinstance(result, Exception):
-                logger.error("Tool '%s' failed: %s", (tool_name), (str(result)))
+                logger.error("Tool '%s' failed: %s", (safe_log_value(tool_name)), (str(result)))
                 errors[tool_name] = str(result)
             else:
                 results[tool_name] = {"result": result, "cached": False}
-                logger.info("Tool '%s' completed successfully", (tool_name))
+                logger.info("Tool '%s' completed successfully", (safe_log_value(tool_name)))
 
         execution_time = time.time() - start_time
 
@@ -609,16 +627,24 @@ async def _execute_tool_with_cache(tool, tool_name: str, video_id: str, cache_ke
 
         # Cache the result
         cache_manager.set(cache_key, result)
-        logger.debug("Cached %s results for video %s", (tool_name), (video_id))
+        logger.debug(
+            "Cached %s results for video %s",
+            (safe_log_value(tool_name)),
+            (safe_log_value(video_id)),
+        )
 
         # Store result in database for later retrieval
-        logger.info("Storing %s results in database for video %s...", (tool_name), (video_id))
+        logger.info(
+            "Storing %s results in database for video %s...",
+            (safe_log_value(tool_name)),
+            (safe_log_value(video_id)),
+        )
         _store_tool_result_in_db(video_id, tool_name, result)
-        logger.info("✓ Database storage confirmed for %s", (tool_name))
+        logger.info("✓ Database storage confirmed for %s", (safe_log_value(tool_name)))
 
         return result
     except Exception as e:
-        logger.error("Tool '%s' execution failed: %s", (tool_name), (str(e)))
+        logger.error("Tool '%s' execution failed: %s", (safe_log_value(tool_name)), (str(e)))
         raise
 
 
@@ -641,7 +667,9 @@ def _store_tool_result_in_db(video_id: str, tool_name: str, result: dict):
 
         # Log detailed metrics
         for data_type, count in counts.items():
-            logger.info("✓ Stored %s %s for video %s", (count), (data_type), (video_id))
+            logger.info(
+                "✓ Stored %s %s for video %s", (count), (data_type), (safe_log_value(video_id))
+            )
 
     except Exception as e:
         logger.error("Failed to store tool result in database: %s", e, exc_info=True)
@@ -679,7 +707,7 @@ async def clear_video_cache(video_id: str):
     """
     try:
         deleted = cache_manager.clear_video_cache(video_id)
-        logger.info("Cleared %s cache entries for video %s", (deleted), (video_id))
+        logger.info("Cleared %s cache entries for video %s", (deleted), (safe_log_value(video_id)))
         return {"status": "success", "video_id": video_id, "deleted_count": deleted}
     except Exception as e:
         logger.error("Failed to clear video cache: %s", (str(e)))
@@ -754,8 +782,10 @@ async def get_video_data_status(video_id: str, request: Request):
         status_report = service.verify_video_data_completeness(video_id)
 
         logger.info(
-            f"Video {video_id} status: complete={status_report['complete']}, "
-            f"missing={status_report['missing']}"
+            safe_log_value(
+                f"Video {video_id} status: complete={status_report['complete']}, "
+                f"missing={status_report['missing']}"
+            )
         )
 
         return status_report
@@ -823,8 +853,10 @@ async def process_video_progressive(
         )
 
         logger.info(
-            f"Added video {video_id} to processing queue "
-            f"(priority: {priority}, status: {job.status})"
+            safe_log_value(
+                f"Added video {video_id} to processing queue "
+                f"(priority: {priority}, status: {job.status})"
+            )
         )
 
         # Get queue status
@@ -969,7 +1001,7 @@ async def reset_circuit_breaker(breaker_name: str, request: Request):
     breaker = breakers[breaker_name]
     breaker.reset()
 
-    logger.info("Circuit breaker '%s' reset via API", (breaker_name))
+    logger.info("Circuit breaker '%s' reset via API", (safe_log_value(breaker_name)))
 
     return create_standard_response(
         data={

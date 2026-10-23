@@ -12,6 +12,7 @@ from services.data_lineage_tracker import get_lineage_tracker
 from services.data_validator import ValidationError, get_data_validator
 from services.errors import ProcessingError
 from storage.database import Database
+from utils.log_safety import safe_log_value
 from utils.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -76,7 +77,7 @@ class VideoProcessingService:
         Raises:
             VideoProcessingServiceError: If storage fails after all retries
         """
-        logger.info(f"Storing {tool_name} results for video {video_id}")
+        logger.info(safe_log_value(f"Storing {tool_name} results for video {video_id}"))
 
         # Check idempotency: if this exact operation was already completed, skip
         if idempotency_key and self._check_idempotency(video_id, tool_name, idempotency_key):
@@ -95,7 +96,7 @@ class VideoProcessingService:
         elif tool_name == "detect_objects":
             result = self._store_objects(video_id, results)
         else:
-            logger.warning(f"Unknown tool name: {tool_name}")
+            logger.warning(safe_log_value(f"Unknown tool name: {tool_name}"))
             return {}
 
         # Record idempotency key if provided
@@ -117,13 +118,13 @@ class VideoProcessingService:
         """
         frames = results.get("frames", [])
         if not frames:
-            logger.warning(f"No frames to store for video {video_id}")
+            logger.warning(safe_log_value(f"No frames to store for video {video_id}"))
             return {"frames": 0}
 
         # Validate batch before insertion
         valid, errors = self.validator.validate_batch("frame", frames, video_id)
         if not valid:
-            logger.error(f"Frame validation failed for video {video_id}: {errors}")
+            logger.error(safe_log_value(f"Frame validation failed for video {video_id}: {errors}"))
             raise ValidationError(f"Frame validation failed: {'; '.join(errors)}")
 
         # Prepare batch insert data with lineage metadata
@@ -161,7 +162,7 @@ class VideoProcessingService:
         except Exception as e:
             logger.warning(f"Failed to record lineage: {e}")
 
-        logger.info(f"Stored {stored_count} frames for video {video_id}")
+        logger.info(safe_log_value(f"Stored {stored_count} frames for video {video_id}"))
         return {"frames": stored_count}
 
     def _store_captions(self, video_id: str, results: dict[str, Any]) -> dict[str, int]:
@@ -177,13 +178,15 @@ class VideoProcessingService:
         """
         captions = results.get("captions", [])
         if not captions:
-            logger.warning(f"No captions to store for video {video_id}")
+            logger.warning(safe_log_value(f"No captions to store for video {video_id}"))
             return {"captions": 0}
 
         # Validate batch before insertion
         valid, errors = self.validator.validate_batch("caption", captions, video_id)
         if not valid:
-            logger.error(f"Caption validation failed for video {video_id}: {errors}")
+            logger.error(
+                safe_log_value(f"Caption validation failed for video {video_id}: {errors}")
+            )
             raise ValidationError(f"Caption validation failed: {'; '.join(errors)}")
 
         # Prepare batch insert data with lineage metadata
@@ -222,7 +225,7 @@ class VideoProcessingService:
         except Exception as e:
             logger.warning(f"Failed to record lineage: {e}")
 
-        logger.info(f"Stored {stored_count} captions for video {video_id}")
+        logger.info(safe_log_value(f"Stored {stored_count} captions for video {video_id}"))
         return {"captions": stored_count}
 
     def _store_transcript(self, video_id: str, results: dict[str, Any]) -> dict[str, int]:
@@ -238,13 +241,15 @@ class VideoProcessingService:
         """
         segments = results.get("segments", [])
         if not segments:
-            logger.warning(f"No transcript segments to store for video {video_id}")
+            logger.warning(safe_log_value(f"No transcript segments to store for video {video_id}"))
             return {"transcript_segments": 0}
 
         # Validate batch before insertion
         valid, errors = self.validator.validate_batch("transcript", segments, video_id)
         if not valid:
-            logger.error(f"Transcript validation failed for video {video_id}: {errors}")
+            logger.error(
+                safe_log_value(f"Transcript validation failed for video {video_id}: {errors}")
+            )
             raise ValidationError(f"Transcript validation failed: {'; '.join(errors)}")
 
         # Prepare batch insert data with lineage metadata
@@ -283,7 +288,9 @@ class VideoProcessingService:
         except Exception as e:
             logger.warning(f"Failed to record lineage: {e}")
 
-        logger.info(f"Stored {stored_count} transcript segments for video {video_id}")
+        logger.info(
+            safe_log_value(f"Stored {stored_count} transcript segments for video {video_id}")
+        )
         return {"transcript_segments": stored_count}
 
     def _store_objects(self, video_id: str, results: dict[str, Any]) -> dict[str, int]:
@@ -299,13 +306,15 @@ class VideoProcessingService:
         """
         detections = results.get("detections", [])
         if not detections:
-            logger.warning(f"No object detections to store for video {video_id}")
+            logger.warning(safe_log_value(f"No object detections to store for video {video_id}"))
             return {"object_detections": 0}
 
         # Validate batch before insertion
         valid, errors = self.validator.validate_batch("object", detections, video_id)
         if not valid:
-            logger.error(f"Object detection validation failed for video {video_id}: {errors}")
+            logger.error(
+                safe_log_value(f"Object detection validation failed for video {video_id}: {errors}")
+            )
             raise ValidationError(f"Object detection validation failed: {'; '.join(errors)}")
 
         # Prepare batch insert data with lineage metadata
@@ -344,7 +353,7 @@ class VideoProcessingService:
         except Exception as e:
             logger.warning(f"Failed to record lineage: {e}")
 
-        logger.info(f"Stored {stored_count} object detections for video {video_id}")
+        logger.info(safe_log_value(f"Stored {stored_count} object detections for video {video_id}"))
         return {"object_detections": stored_count}
 
     def _batch_insert_with_retry(
@@ -414,8 +423,10 @@ class VideoProcessingService:
 
                         # Log success
                         logger.info(
-                            f"Successfully stored {len(insert_data)} {context_type} records "
-                            f"for video {video_id} (attempt {attempt + 1}/{self.max_retries})"
+                            safe_log_value(
+                                f"Successfully stored {len(insert_data)} {context_type} records "
+                                f"for video {video_id} (attempt {attempt + 1}/{self.max_retries})"
+                            )
                         )
 
                         return len(insert_data)
@@ -549,7 +560,7 @@ class VideoProcessingService:
                 'missing': []
             }
         """
-        logger.info("Verifying data completeness for video %s", video_id)
+        logger.info("Verifying data completeness for video %s", safe_log_value(video_id))
 
         # Check each data type
         frames_count = self._count_context_type(video_id, "frame")
@@ -599,7 +610,7 @@ class VideoProcessingService:
 
         logger.info(
             "Video %s completeness: %s (frames=%s, captions=%s, transcripts=%s, objects=%s)",
-            video_id,
+            safe_log_value(video_id),
             complete,
             frames_count,
             captions_count,
@@ -633,7 +644,9 @@ class VideoProcessingService:
             rows = self.db.execute_query(query, (video_id, context_type))
             return rows[0][0] if rows else 0
         except Exception as e:
-            logger.error(f"Failed to count {context_type} for video {video_id}: {e}")
+            logger.error(
+                safe_log_value(f"Failed to count {context_type} for video {video_id}: {e}")
+            )
             return 0
 
     def delete_video_data(self, video_id: str) -> dict[str, int]:

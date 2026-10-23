@@ -8,6 +8,7 @@ import uuid
 from typing import Any
 
 from storage.database import Database
+from utils.log_safety import safe_log_value
 from utils.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -163,7 +164,9 @@ class DataLineageTracker:
             self.db.execute_many(query, insert_data)
 
             logger.info(
-                f"Recorded {len(lineage_ids)} lineage records for {tool_name} on video {video_id}"
+                safe_log_value(
+                    f"Recorded {len(lineage_ids)} lineage records for {tool_name} on video {video_id}"
+                )
             )
             return lineage_ids
 

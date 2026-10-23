@@ -9,6 +9,7 @@ from fastapi import HTTPException, Request, status
 from pydantic import BaseModel, Field, validator
 
 from storage.database import get_database
+from utils.log_safety import safe_log_value
 from utils.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -108,7 +109,7 @@ class VideoIdValidator:
             HTTPException: If video not found
         """
         if not VideoIdValidator.validate_video_exists(video_id):
-            logger.warning(f"Video not found: {video_id}")
+            logger.warning(safe_log_value(f"Video not found: {video_id}"))
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail=f"Video '{video_id}' not found"
             )
@@ -181,7 +182,7 @@ class RequestSizeValidator:
         for key, value in parameters.items():
             if isinstance(value, list):
                 if len(value) > RequestSizeValidator.MAX_ARRAY_LENGTH:
-                    logger.warning(f"Array '{key}' too long: {len(value)} items")
+                    logger.warning(safe_log_value(f"Array '{key}' too long: {len(value)} items"))
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail=f"Array '{key}' exceeds maximum length of {RequestSizeValidator.MAX_ARRAY_LENGTH}",

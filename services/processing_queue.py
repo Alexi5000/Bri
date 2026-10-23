@@ -10,6 +10,7 @@ from collections import deque
 from dataclasses import dataclass, field
 from enum import Enum
 
+from utils.log_safety import safe_log_value
 from utils.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -95,13 +96,13 @@ class ProcessingQueue:
         async with self.lock:
             # Check if job already exists
             if video_id in self.active_jobs:
-                logger.info(f"Job for video {video_id} already processing")
+                logger.info(safe_log_value(f"Job for video {video_id} already processing"))
                 return self.active_jobs[video_id]
 
             # Check if job is in queue
             for job in self.queue:
                 if job.video_id == video_id:
-                    logger.info(f"Job for video {video_id} already queued")
+                    logger.info(safe_log_value(f"Job for video {video_id} already queued"))
                     return job
 
             # Create new job
@@ -113,8 +114,10 @@ class ProcessingQueue:
                 self.queue.sort()
 
             logger.info(
-                f"Added job for video {video_id} with priority {priority.name} "
-                f"(queue size: {len(self.queue)})"
+                safe_log_value(
+                    f"Added job for video {video_id} with priority {priority.name} "
+                    f"(queue size: {len(self.queue)})"
+                )
             )
 
             return job

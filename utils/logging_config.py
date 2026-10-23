@@ -19,6 +19,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from utils.log_safety import safe_log_value
+
 if TYPE_CHECKING:
     pass
 
@@ -104,17 +106,19 @@ class StructuredFormatter(logging.Formatter):
         else:
             level_str = f"{record.levelname:8s}"
 
-        base_msg = f"{timestamp} - {level_str} - {record.name:20s} - {record.getMessage()}"
+        base_msg = f"{timestamp} - {level_str} - {safe_log_value(record.name):20s} - {safe_log_value(record.getMessage())}"
 
         # Add context information if present
         context = _log_context.get()
         if context:
-            context_str = " | ".join(f"{k}={v}" for k, v in context.items())
+            context_str = " | ".join(
+                f"{safe_log_value(k)}={safe_log_value(v)}" for k, v in context.items()
+            )
             base_msg += f" [{context_str}]"
 
         # Add exception info if present
         if record.exc_info:
-            base_msg += f"\n{self.formatException(record.exc_info)}"
+            base_msg += f" | exception={safe_log_value(self.formatException(record.exc_info))}"
 
         return base_msg
 
