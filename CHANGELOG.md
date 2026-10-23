@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Security
+
+- `caption_frames` and `detect_objects` now reject explicit `frame_paths` that do not resolve (after following
+  symlinks) inside `FRAME_STORAGE_PATH/<video_id>`, so tool callers cannot point model inference at arbitrary
+  server-readable images.
+
 ### Added
 
 - `services.errors.BriError` hierarchy with HTTP-status mapping and a FastAPI exception handler that returns a JSON
