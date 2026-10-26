@@ -115,7 +115,7 @@ requests==2.34.2
     # via
     #   bri-video-agent (pyproject.toml)
     #   streamlit
-rpds-py==0.30.0
+rpds-py==2026.9.1
     # via
     #   jsonschema
     #   referencing
