@@ -1,4 +1,4 @@
-.PHONY: install install-dev lock init-db run-ui run-api test test-core test-fast validate smoke clean docs
+.PHONY: install install-dev dev lock init-db run-ui run-api test test-core test-fast validate smoke clean docs
 
 install:
 	python -m pip install -r requirements.lock.txt
@@ -6,6 +6,13 @@ install:
 install-dev:
 	python -m pip install -e .[dev]
 	python -m pip install pip-tools
+
+# One-command contributor setup (CONTRIBUTING.md): install dev extras, then
+# confirm the core tools resolve.
+dev: install-dev
+	python -m pytest --version
+	python -m ruff --version
+	python -m mypy --version
 
 lock:
 	python -m piptools compile --quiet --strip-extras --output-file=requirements.lock.txt pyproject.toml
@@ -27,7 +34,7 @@ test-fast:
 	pytest tests/unit tests/production -q
 
 test-core:
-	pytest tests/unit/test_router.py tests/unit/test_memory.py tests/test_production_contract.py
+	pytest tests/unit/test_router.py tests/unit/test_memory.py tests/production/test_production_contract.py
 
 # Full CI lane: matrix lint + type + test + compose.
 ci: lint type test compose-validate compose-build

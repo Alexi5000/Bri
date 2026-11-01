@@ -115,6 +115,65 @@ jobs:
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
 
+  test-locked:
+    # The jobs above resolve fresh versions from pyproject.toml. This job
+    # installs the exact pins in requirements.lock.txt so lockfile-only
+    # updates are actually exercised before they merge.
+    name: test locked deps (ubuntu-latest py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.lock.txt
+            pyproject.toml
+
+      - name: Install locked runtime deps + package (no resolution)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.lock.txt
+          pip install -e . --no-deps
+          pip install pytest pytest-asyncio hypothesis syrupy
+          pip check
+
+      - name: Verify lockfile pins were not changed by test tooling
+        run: |
+          pip freeze --exclude-editable > installed.txt
+          python - <<'EOF'
+          import re
+          pins = {}
+          for line in open("requirements.lock.txt"):
+              m = re.match(r"^([A-Za-z0-9_.\-]+)==(\S+)", line)
+              if m:
+                  pins[re.sub(r"[-_.]+", "-", m.group(1)).lower()] = m.group(2)
+          installed = {}
+          for line in open("installed.txt"):
+              m = re.match(r"^([A-Za-z0-9_.\-]+)==(\S+)", line)
+              if m:
+                  installed[re.sub(r"[-_.]+", "-", m.group(1)).lower()] = m.group(2)
+          bad = {k: (v, installed.get(k)) for k, v in pins.items() if installed.get(k) != v}
+          if bad:
+              raise SystemExit(f"Locked versions not installed: {bad}")
+          print(f"All {len(pins)} locked pins installed.")
+          EOF
+
+      - name: Run pytest against locked deps
+        env:
+          APP_ENV: test
+          ALLOW_MISSING_GROQ_FOR_TESTS: "true"
+        run: |
+          python scripts/init_db.py
+          pytest tests/
+
   compose-validate:
     name: docker compose config
     runs-on: ubuntu-latest
@@ -144,7 +203,7 @@ jobs:
 
   required:
     name: required checks
-    needs: [lint-and-type, test, compose-validate, compose-build]
+    needs: [lint-and-type, test, test-locked, compose-validate, compose-build]
     if: always()
     runs-on: ubuntu-latest
     steps:
