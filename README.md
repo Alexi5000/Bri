@@ -170,12 +170,15 @@ BLIP, Whisper, YOLOv8, and sentence-transformers are loaded lazily only when a t
 | `GROQ_API_KEY`           | _unset_       | Enables live conversational AI responses.                   |
 | `DATABASE_PATH`          | `data/bri.db` | SQLite database location.                                   |
 | `VIDEO_STORAGE_PATH`     | `data/videos` | Where uploaded videos are stored.                           |
-| `FRAME_STORAGE_PATH`     | `data/frames` | Where extracted frame images are stored. Explicit `frame_paths` passed to `caption_frames` / `detect_objects` must resolve inside `FRAME_STORAGE_PATH/<video_id>`. |
+| `FRAME_STORAGE_PATH`     | `data/frames` | Where extracted frame images are stored (see note below).   |
 | `MCP_SERVER_HOST`        | `localhost`   | MCP service host.                                           |
 | `MCP_SERVER_PORT`        | `8000`        | MCP service port.                                           |
 | `REDIS_ENABLED`          | `false`       | Enables optional Redis-backed caching when configured.      |
 | `MAX_FRAMES_PER_VIDEO`   | `20`          | Caps frame extraction per video (lower for speed).          |
 | `TOOL_EXECUTION_TIMEOUT` | `60`          | Per-tool timeout in seconds.                                |
+
+Explicit `frame_paths` passed to `caption_frames` / `detect_objects` must resolve inside
+`FRAME_STORAGE_PATH/<video_id>`.
 
 See [`.env.example`](.env.example) for the full list. The defaults are test-friendly; set `APP_ENV=production` and
 provide `GROQ_API_KEY` for live responses.

@@ -13,7 +13,8 @@ on:
       - "AUDIT.md"
       - "FINAL_REPORT.md"
       - "mkdocs.yml"
-      - "markdownlint.json"
+      - ".markdownlint-cli2.jsonc"
+      - ".github/workflows/docs.yml"
   pull_request:
     paths:
       - "docs/**"
@@ -21,7 +22,8 @@ on:
       - "AUDIT.md"
       - "FINAL_REPORT.md"
       - "mkdocs.yml"
-      - "markdownlint.json"
+      - ".markdownlint-cli2.jsonc"
+      - ".github/workflows/docs.yml"
 
 permissions:
   contents: read
@@ -39,9 +41,6 @@ jobs:
           globs: |
             **/*.md
           config: .markdownlint-cli2.jsonc
-          ignore: |
-            docs/archive/**
-            docs/root-history/**
 
   link-check:
     name: link check (lychee)
