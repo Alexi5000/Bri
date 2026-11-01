@@ -56,7 +56,6 @@
     "MD059": true
   },
   "ignores": [
-    "docs/archive/**",
-    "docs/root-history/**"
+    "docs/archive/**"
   ]
 }
