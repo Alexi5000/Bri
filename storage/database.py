@@ -64,7 +64,7 @@ class Database:
                 return conn
             except sqlite3.Error as e:
                 logger.error(f"Failed to connect to database: {e}")
-                raise DatabaseError(f"Database connection failed: {e}")
+                raise DatabaseError(f"Database connection failed: {e}") from e
 
     def get_connection(self) -> sqlite3.Connection:
         """Get existing connection or create new one.
@@ -97,7 +97,7 @@ class Database:
             except sqlite3.Error as e:
                 conn.rollback()
                 logger.error(f"Database operation failed: {e}")
-                raise DatabaseError(f"Database operation failed: {e}")
+                raise DatabaseError(f"Database operation failed: {e}") from e
             finally:
                 cursor.close()
 
@@ -139,7 +139,7 @@ class Database:
             except Exception as e:
                 conn.rollback()
                 logger.error(f"Transaction rolled back due to error: {e}")
-                raise DatabaseError(f"Transaction failed: {e}")
+                raise DatabaseError(f"Transaction failed: {e}") from e
 
     def execute_query(self, query: str, parameters: tuple | None = None) -> list[sqlite3.Row]:
         """Execute a SELECT query and return results.
@@ -163,7 +163,7 @@ class Database:
                 return cursor.fetchall()
         except sqlite3.Error as e:
             logger.error(f"Query execution failed: {query} - {e}")
-            raise DatabaseError(f"Query execution failed: {e}")
+            raise DatabaseError(f"Query execution failed: {e}") from e
 
     def execute_update(self, query: str, parameters: tuple | None = None) -> int:
         """Execute an INSERT, UPDATE, or DELETE query.
@@ -187,7 +187,7 @@ class Database:
                 return cursor.rowcount
         except sqlite3.Error as e:
             logger.error(f"Update execution failed: {query} - {e}")
-            raise DatabaseError(f"Update execution failed: {e}")
+            raise DatabaseError(f"Update execution failed: {e}") from e
 
     def execute_many(self, query: str, parameters_list: list[tuple]) -> int:
         """Execute a query multiple times with different parameters.
@@ -208,7 +208,7 @@ class Database:
                 return cursor.rowcount
         except sqlite3.Error as e:
             logger.error(f"Batch execution failed: {query} - {e}")
-            raise DatabaseError(f"Batch execution failed: {e}")
+            raise DatabaseError(f"Batch execution failed: {e}") from e
 
     def initialize_schema(self, schema_path: str | None = None) -> None:
         """Initialize database schema from SQL file.
@@ -233,12 +233,12 @@ class Database:
 
             # Create performance indexes
             self._create_performance_indexes()
-        except FileNotFoundError:
+        except FileNotFoundError as err:
             logger.error(f"Schema file not found: {schema_path}")
-            raise DatabaseError(f"Schema file not found: {schema_path}")
+            raise DatabaseError(f"Schema file not found: {schema_path}") from err
         except sqlite3.Error as e:
             logger.error(f"Schema initialization failed: {e}")
-            raise DatabaseError(f"Schema initialization failed: {e}")
+            raise DatabaseError(f"Schema initialization failed: {e}") from e
 
     def _create_performance_indexes(self) -> None:
         """Create indexes for performance optimization."""
@@ -381,7 +381,7 @@ class Database:
             return True
 
         except json.JSONDecodeError as e:
-            raise ValidationError(f"Invalid JSON: {e}")
+            raise ValidationError(f"Invalid JSON: {e}") from e
 
     def validate_video_data(
         self, video_id: str, filename: str, file_path: str, duration: float

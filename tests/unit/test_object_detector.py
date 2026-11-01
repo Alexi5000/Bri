@@ -226,7 +226,7 @@ class TestDetectObjectsInFrames:
         assert len(results) == 5
 
         # Verify timestamps
-        for result, expected_ts in zip(results, timestamps):
+        for result, expected_ts in zip(results, timestamps, strict=True):
             assert result.frame_timestamp == expected_ts
 
         # Verify object counts

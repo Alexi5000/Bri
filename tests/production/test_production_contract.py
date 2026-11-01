@@ -4,6 +4,7 @@ import importlib
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -84,10 +85,10 @@ def test_tool_execution_request_rejects_unsafe_payloads(
 def test_progressive_process_request_rejects_traversal_and_unsupported_formats() -> None:
     from mcp_server.validation import ValidatedProgressiveProcessRequest
 
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         ValidatedProgressiveProcessRequest(video_path="../private.mov")
 
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         ValidatedProgressiveProcessRequest(video_path="uploads/clip.txt")
 
     assert (

@@ -70,7 +70,7 @@ class ImageCaptioner:
             return Caption(frame_timestamp=timestamp, text=caption_text, confidence=confidence)
 
         except Exception as e:
-            raise Exception(f"Failed to caption image {image_path}: {str(e)}")
+            raise Exception(f"Failed to caption image {image_path}: {str(e)}") from e
 
     def caption_frames_batch(
         self, image_paths: list[str], timestamps: list[float]
@@ -108,7 +108,7 @@ class ImageCaptioner:
             except Exception as e:
                 # If batch fails, fall back to individual processing
                 logger.warning("Batch processing failed, falling back to individual: %s", str(e))
-                for path, ts in zip(batch_paths, batch_timestamps):
+                for path, ts in zip(batch_paths, batch_timestamps, strict=True):
                     try:
                         caption = self.caption_frame(path, ts)
                         captions.append(caption)

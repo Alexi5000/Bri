@@ -212,7 +212,7 @@ class TestCaptionFrame:
             captions.append(caption)
 
         # Verify timestamps are preserved
-        for caption, expected_ts in zip(captions, timestamps):
+        for caption, expected_ts in zip(captions, timestamps, strict=True):
             assert caption.frame_timestamp == expected_ts
 
     def test_caption_frame_confidence_score(self, image_captioner, sample_image):
@@ -423,7 +423,7 @@ class TestCaptionFramesBatch:
 
         captions = image_captioner.caption_frames_batch(multiple_images, timestamps)
 
-        for caption, expected_ts in zip(captions, timestamps):
+        for caption, expected_ts in zip(captions, timestamps, strict=True):
             assert caption.frame_timestamp == expected_ts
 
 

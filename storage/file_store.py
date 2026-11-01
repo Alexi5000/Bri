@@ -124,7 +124,7 @@ class FileStore:
 
         except Exception as e:
             logger.error(f"Failed to save video: {e}")
-            raise FileStoreError(f"Failed to save video: {e}")
+            raise FileStoreError(f"Failed to save video: {e}") from e
 
     def get_video_path(self, video_id: str, extension: str = ".mp4") -> Path:
         """
@@ -243,7 +243,7 @@ class FileStore:
 
         except Exception as e:
             logger.error(f"Failed to save frame: {e}")
-            raise FileStoreError(f"Failed to save frame: {e}")
+            raise FileStoreError(f"Failed to save frame: {e}") from e
 
     def get_cache_directory(self, video_id: str) -> Path:
         """

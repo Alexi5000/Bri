@@ -79,7 +79,7 @@ def test_tool_exports_remain_lazy_and_resolve_the_declared_classes(monkeypatch):
         assert getattr(tools, name) is sentinel
         monkeypatch.delitem(tools.__dict__, name)
     with pytest.raises(AttributeError):
-        getattr(tools, "not_a_tool")
+        _ = tools.not_a_tool
 
 
 def test_importing_config_and_tools_does_not_load_optional_media_modules():
@@ -113,7 +113,10 @@ def test_malformed_stored_json_is_retained_and_reported(kind, caplog):
     if kind == "lineage":
         service = DataLineageTracker.__new__(DataLineageTracker)
         key = "parameters"
-        call = lambda: service.get_lineage_history("clip")
+
+        def call():
+            return service.get_lineage_history("clip")
+
     elif kind == "mutation":
         service = DataMutationLogger.__new__(DataMutationLogger)
         key = "data"

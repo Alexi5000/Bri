@@ -367,7 +367,7 @@ class TestChaosEngineering:
 
         try:
             json.loads(corrupted_json)
-            assert False, "Should have raised JSONDecodeError"
+            pytest.fail("Should have raised JSONDecodeError")
         except json.JSONDecodeError:
             # Expected behavior
             pass

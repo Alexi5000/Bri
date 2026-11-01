@@ -170,7 +170,7 @@ class ContextBuilder:
 
         except Exception as e:
             logger.error("Failed to build context for video %s: %s", (video_id), (e))
-            raise ContextError(f"Failed to build video context: {e}")
+            raise ContextError(f"Failed to build video context: {e}") from e
 
     def build_rich_context_description(self, video_id: str, max_items: int = 10) -> str:
         """Build a rich text description of video context even with partial data.
@@ -414,7 +414,7 @@ class ContextBuilder:
 
         except Exception as e:
             logger.error("Failed to search captions: %s", (e))
-            raise ContextError(f"Failed to search captions: {e}")
+            raise ContextError(f"Failed to search captions: {e}") from e
 
     def _tokenize_and_stem(self, text: str) -> set:
         """Tokenize and apply simple stemming to text.
@@ -588,7 +588,7 @@ class ContextBuilder:
 
         except Exception as e:
             logger.error("Failed to search transcripts: %s", (e))
-            raise ContextError(f"Failed to search transcripts: {e}")
+            raise ContextError(f"Failed to search transcripts: {e}") from e
 
     def get_frames_with_object(self, video_id: str, object_class: str) -> list[Frame]:
         """Find frames containing a specific object.
@@ -642,7 +642,7 @@ class ContextBuilder:
 
         except Exception as e:
             logger.error("Failed to search for object: %s", (e))
-            raise ContextError(f"Failed to search for object: {e}")
+            raise ContextError(f"Failed to search for object: {e}") from e
 
     def get_context_at_timestamp(
         self, video_id: str, timestamp: float, window: float = 5.0
@@ -712,7 +712,7 @@ class ContextBuilder:
 
         except Exception as e:
             logger.error("Failed to get context at timestamp: %s", (e))
-            raise ContextError(f"Failed to get timestamp context: {e}")
+            raise ContextError(f"Failed to get timestamp context: {e}") from e
 
     # Private helper methods for data retrieval
 

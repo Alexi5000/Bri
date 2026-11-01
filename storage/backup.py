@@ -93,7 +93,7 @@ class DatabaseBackup:
             # Clean up partial backup
             if os.path.exists(backup_path):
                 os.remove(backup_path)
-            raise OSError(f"Failed to create backup: {e}")
+            raise OSError(f"Failed to create backup: {e}") from e
 
     def _create_backup_metadata(self, backup_path: str) -> dict:
         """Create metadata for backup file.
@@ -187,7 +187,7 @@ class DatabaseBackup:
 
         except Exception as e:
             logger.error(f"Restore failed: {e}", exc_info=True)
-            raise OSError(f"Failed to restore backup: {e}")
+            raise OSError(f"Failed to restore backup: {e}") from e
 
     def verify_backup(self, backup_path: str) -> bool:
         """Verify backup integrity.

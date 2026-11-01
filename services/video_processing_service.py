@@ -454,7 +454,7 @@ class VideoProcessingService:
                     )
                     raise VideoProcessingServiceError(
                         f"Failed to store {context_type} for video {video_id}: {e}"
-                    )
+                    ) from e
 
         return 0
 
@@ -686,7 +686,7 @@ class VideoProcessingService:
 
         except Exception as e:
             logger.error(f"Failed to delete data for video {video_id}: {e}")
-            raise VideoProcessingServiceError(f"Failed to delete video data: {e}")
+            raise VideoProcessingServiceError(f"Failed to delete video data: {e}") from e
 
     def close(self) -> None:
         """Close database connection."""

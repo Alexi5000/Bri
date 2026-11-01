@@ -250,22 +250,24 @@ class VideoProcessor:
                 update_video_status(video_id, "error")
                 raise VideoProcessingError(f"Processing failed with status: {result.get('status')}")
 
-        except requests.exceptions.Timeout:
+        except requests.exceptions.Timeout as err:
             update_video_status(video_id, "error")
             logger.error(f"Video processing timed out for {video_id}")
-            raise VideoProcessingError("Processing took too long. Please try with a shorter video.")
+            raise VideoProcessingError(
+                "Processing took too long. Please try with a shorter video."
+            ) from err
 
-        except requests.exceptions.ConnectionError:
+        except requests.exceptions.ConnectionError as err:
             update_video_status(video_id, "error")
             logger.error(f"Could not connect to MCP server for {video_id}")
             raise VideoProcessingError(
                 "Could not connect to processing server. Please ensure it's running."
-            )
+            ) from err
 
         except Exception as e:
             update_video_status(video_id, "error")
             logger.error(f"Video processing failed for {video_id}: {e}")
-            raise VideoProcessingError(f"Processing failed: {str(e)}")
+            raise VideoProcessingError(f"Processing failed: {str(e)}") from e
 
     def get_processing_status(self, video_id: str) -> dict[str, Any]:
         """

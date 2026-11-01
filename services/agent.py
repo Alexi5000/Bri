@@ -965,7 +965,7 @@ Remember: You're here to make video analysis feel natural and enjoyable!"""
             )
             # Use ErrorHandler for friendly API error messages
             friendly_message = ErrorHandler.handle_api_error(e)
-            raise AgentError(friendly_message)
+            raise AgentError(friendly_message) from e
 
     def _add_memory_pair(self, video_id: str, user_message: str, assistant_message: str) -> None:
         """

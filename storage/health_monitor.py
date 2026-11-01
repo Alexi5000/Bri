@@ -85,7 +85,7 @@ class QueryPerformanceMonitor:
             Dictionary of query statistics
         """
         # Calculate average times
-        for query_key, stats in self.query_stats.items():
+        for stats in self.query_stats.values():
             if stats["count"] > 0:
                 stats["avg_time_ms"] = stats["total_time_ms"] / stats["count"]
 

@@ -3,6 +3,7 @@
 import os
 import sys
 import time
+from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -45,6 +46,9 @@ from mcp_server.versioning import APIVersion, get_api_version, get_version_info
 from services.errors import BriError, http_status_for
 from utils.log_safety import safe_log_value
 from utils.logging_config import get_logger, get_performance_logger, setup_logging
+
+# Resolved API version for versioned endpoints (FastAPI dependency).
+APIVersionDep = Annotated[APIVersion, Depends(get_api_version)]
 
 # Setup logging
 setup_logging(
@@ -248,7 +252,7 @@ async def health_check():
 
 @app.get("/tools", response_model=ToolListResponse)
 @app.get("/v1/tools", response_model=ToolListResponse)
-async def list_tools(request: Request, version: APIVersion = Depends(get_api_version)):
+async def list_tools(request: Request, version: APIVersionDep):
     """
     List all available tools with their schemas.
 
@@ -283,7 +287,7 @@ async def list_tools(request: Request, version: APIVersion = Depends(get_api_ver
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to list tools",
-        )
+        ) from e
 
 
 @app.post("/tools/{tool_name}/execute")
@@ -292,7 +296,7 @@ async def execute_tool(
     tool_name: str,
     exec_request: ValidatedToolExecutionRequest,
     request: Request,
-    version: APIVersion = Depends(get_api_version),
+    version: APIVersionDep,
 ):
     """
     Execute a specific tool with provided parameters and timeout handling.
@@ -476,7 +480,7 @@ async def process_video(
     video_id: str,
     process_request: ValidatedProcessVideoRequest,
     request: Request,
-    version: APIVersion = Depends(get_api_version),
+    version: APIVersionDep,
 ):
     """
     Process a video with multiple tools in batch with parallel execution.
@@ -555,7 +559,7 @@ async def process_video(
                 results[tool_name] = {"result": cached_result, "cached": True}
 
         # Add parallel execution results
-        for tool_name, result in zip(tool_names, task_results):
+        for tool_name, result in zip(tool_names, task_results, strict=True):
             if isinstance(result, Exception):
                 logger.error("Tool '%s' failed: %s", (safe_log_value(tool_name)), (str(result)))
                 errors[tool_name] = str(result)
@@ -602,7 +606,7 @@ async def process_video(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Video processing failed",
-        )
+        ) from e
 
 
 async def _execute_tool_with_cache(tool, tool_name: str, video_id: str, cache_key: str):
@@ -689,7 +693,7 @@ async def get_cache_stats():
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get cache stats",
-        )
+        ) from e
 
 
 @app.delete("/cache/videos/{video_id}", dependencies=[Depends(require_admin)])
@@ -712,7 +716,7 @@ async def clear_video_cache(video_id: str):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to clear video cache",
-        )
+        ) from e
 
 
 @app.delete("/cache", dependencies=[Depends(require_admin)])
@@ -735,7 +739,7 @@ async def clear_all_cache():
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to clear cache",
-        )
+        ) from e
 
 
 @app.get("/videos/{video_id}/status")
@@ -793,7 +797,7 @@ async def get_video_data_status(video_id: str, request: Request):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get video status",
-        )
+        ) from e
 
 
 @app.post("/videos/{video_id}/process-progressive")
@@ -879,7 +883,7 @@ async def process_video_progressive(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to queue processing",
-        )
+        ) from e
 
 
 @app.get("/videos/{video_id}/progress")
@@ -942,7 +946,7 @@ async def get_processing_progress(video_id: str, request: Request):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get progress",
-        )
+        ) from e
 
 
 @app.get("/circuit-breakers")
@@ -1039,7 +1043,7 @@ async def get_queue_status():
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get queue status",
-        )
+        ) from e
 
 
 @app.get("/queue/job/{video_id}")
@@ -1073,7 +1077,7 @@ async def get_job_status(video_id: str):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to get job status",
-        )
+        ) from e
 
 
 async def _run_progressive_processing(video_id: str, video_path: str):

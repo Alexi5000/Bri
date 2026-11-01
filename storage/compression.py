@@ -373,7 +373,7 @@ class FrameDeduplicator:
                 continue
 
             # Compute Hamming distance
-            distance = sum(c1 != c2 for c1, c2 in zip(new_hash, existing_hash))
+            distance = sum(c1 != c2 for c1, c2 in zip(new_hash, existing_hash, strict=True))
             similarity = 1 - (distance / len(new_hash))
 
             if similarity >= self.similarity_threshold:

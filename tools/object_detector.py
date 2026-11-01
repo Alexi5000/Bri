@@ -55,7 +55,7 @@ class ObjectDetector:
         # Filter out non-existent files
         valid_frames = []
         valid_timestamps = []
-        for path, ts in zip(frame_paths, timestamps):
+        for path, ts in zip(frame_paths, timestamps, strict=True):
             if os.path.exists(path):
                 valid_frames.append(path)
                 valid_timestamps.append(ts)
@@ -74,7 +74,7 @@ class ObjectDetector:
             results = self.model(valid_frames, conf=confidence_threshold, verbose=False)
 
             # Process results
-            for result, timestamp in zip(results, valid_timestamps):
+            for result, timestamp in zip(results, valid_timestamps, strict=True):
                 detected_objects = []
 
                 # Extract detections from result
