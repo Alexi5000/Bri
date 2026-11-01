@@ -48,17 +48,13 @@ repos:
       - id: detect-private-key
 
   # --- Markdown ---------------------------------------------------------
-  - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.42.0
+  # Same engine and version as the docs workflow (markdownlint-cli2-action
+  # v25). It reads .markdownlint-cli2.jsonc, including its `ignores` list,
+  # so local results match CI.
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.24.0
     hooks:
-      - id: markdownlint
-        args: ["--config", "markdownlint.json"]
-        exclude: |
-          (?x)^(
-            docs/archive/.*|
-            docs/root-history/.*|
-            CHANGELOG\.md
-          )$
+      - id: markdownlint-cli2
 
   # --- EditorConfig + shell safety -------------------------------------
   - repo: https://github.com/shellcheck-py/shellcheck-py
