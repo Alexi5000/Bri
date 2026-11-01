@@ -6,7 +6,7 @@ requiring a GPU, Redis, uploaded media, or a live Groq key.
 | Command                                                   | Purpose                                                                                     |
 | --------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | `python scripts/validate_production.py`                   | Verifies production files, README graphics, configuration parsing, and fast contract tests. |
-| `pytest tests/test_production_contract.py`                | Runs the lightweight production-readiness contract tests.                                   |
+| `pytest tests/production/test_production_contract.py`     | Runs the lightweight production-readiness contract tests.                                   |
 | `pytest tests/unit`                                       | Runs pure unit tests for routing, memory, and tool logic.                                   |
 | `pytest tests/integration`                                | Runs service-level integration tests with mocked or synthetic media state.                  |
 | `python scripts/smoke_api.py --url http://localhost:8000` | Checks a running API service health and tool registry.                                      |
@@ -20,7 +20,7 @@ key. Production deployments should not enable that flag.
 python -m venv .venv
 source .venv/bin/activate
 pip install -e .[dev]
-ALLOW_MISSING_GROQ_FOR_TESTS=true pytest tests/test_production_contract.py
+ALLOW_MISSING_GROQ_FOR_TESTS=true pytest tests/production/test_production_contract.py
 ```
 
 ## Heavy tests
