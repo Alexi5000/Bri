@@ -138,7 +138,7 @@ class TestGetVideoMetadata:
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
         out = cv2.VideoWriter(path, fourcc, fps, (width, height))
 
-        for i in range(total_frames):
+        for _ in range(total_frames):
             frame = np.zeros((height, width, 3), dtype=np.uint8)
             out.write(frame)
 
@@ -403,7 +403,7 @@ class TestExtractFrameAtTimestamp:
         assert len(frames) == len(timestamps)
 
         # Verify timestamps match
-        for frame, expected_ts in zip(frames, timestamps):
+        for frame, expected_ts in zip(frames, timestamps, strict=True):
             assert frame.timestamp == expected_ts
             assert os.path.exists(frame.image_path)
 

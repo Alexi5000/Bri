@@ -91,7 +91,7 @@ class MediaUtils:
 
         except Exception as e:
             logger.error(f"Failed to generate thumbnail for {image_path}: {e}")
-            raise MediaError(f"Thumbnail generation failed: {e}")
+            raise MediaError(f"Thumbnail generation failed: {e}") from e
 
     @staticmethod
     def generate_thumbnail_base64(
@@ -149,7 +149,7 @@ class MediaUtils:
 
         except Exception as e:
             logger.error(f"Failed to generate base64 thumbnail for {image_path}: {e}")
-            raise MediaError(f"Base64 thumbnail generation failed: {e}")
+            raise MediaError(f"Base64 thumbnail generation failed: {e}") from e
 
     @staticmethod
     def image_to_base64(image_path: str) -> str:
@@ -178,7 +178,7 @@ class MediaUtils:
 
         except Exception as e:
             logger.error(f"Failed to convert image to base64: {e}")
-            raise MediaError(f"Base64 conversion failed: {e}")
+            raise MediaError(f"Base64 conversion failed: {e}") from e
 
     @staticmethod
     def get_image_dimensions(image_path: str) -> tuple[int, int]:
@@ -203,7 +203,7 @@ class MediaUtils:
 
         except Exception as e:
             logger.error(f"Failed to get image dimensions: {e}")
-            raise MediaError(f"Failed to read image dimensions: {e}")
+            raise MediaError(f"Failed to read image dimensions: {e}") from e
 
     @staticmethod
     def batch_generate_thumbnails(
@@ -318,4 +318,4 @@ class MediaUtils:
             return float(timestamp_str)
 
         except Exception as e:
-            raise MediaError(f"Failed to parse timestamp '{timestamp_str}': {e}")
+            raise MediaError(f"Failed to parse timestamp '{timestamp_str}': {e}") from e

@@ -76,7 +76,7 @@ class Memory:
 
         except DatabaseError as e:
             logger.error("Failed to insert memory record: %s", (e))
-            raise MemoryError(f"Failed to store conversation turn: {e}")
+            raise MemoryError(f"Failed to store conversation turn: {e}") from e
 
     def get_conversation_history(
         self, video_id: str, limit: int | None = None, offset: int = 0
@@ -142,7 +142,7 @@ class Memory:
 
         except DatabaseError as e:
             logger.error("Failed to retrieve conversation history: %s", (e))
-            raise MemoryError(f"Failed to retrieve conversation history: {e}")
+            raise MemoryError(f"Failed to retrieve conversation history: {e}") from e
 
     def get_by_message_id(self, message_id: str) -> MemoryRecord | None:
         """Retrieve a specific message by ID.
@@ -180,7 +180,7 @@ class Memory:
 
         except DatabaseError as e:
             logger.error("Failed to retrieve message %s: %s", (message_id), (e))
-            raise MemoryError(f"Failed to retrieve message: {e}")
+            raise MemoryError(f"Failed to retrieve message: {e}") from e
 
     def reset_memory(self, video_id: str) -> int:
         """Clear all conversation history for a video (memory wipe).
@@ -213,7 +213,7 @@ class Memory:
 
         except DatabaseError as e:
             logger.error("Failed to reset memory for video %s: %s", (video_id), (e))
-            raise MemoryError(f"Failed to reset conversation history: {e}")
+            raise MemoryError(f"Failed to reset conversation history: {e}") from e
 
     def count_messages(self, video_id: str) -> int:
         """Count total messages for a video.
@@ -240,7 +240,7 @@ class Memory:
 
         except DatabaseError as e:
             logger.error("Failed to count messages for video %s: %s", (video_id), (e))
-            raise MemoryError(f"Failed to count messages: {e}")
+            raise MemoryError(f"Failed to count messages: {e}") from e
 
     def add_memory_pair(
         self, video_id: str, user_message: str, assistant_message: str

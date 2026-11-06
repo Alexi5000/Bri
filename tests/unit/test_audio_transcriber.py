@@ -46,7 +46,7 @@ def sample_video_file():
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     out = cv2.VideoWriter(path, fourcc, fps, (width, height))
 
-    for i in range(total_frames):
+    for _ in range(total_frames):
         frame = np.zeros((height, width, 3), dtype=np.uint8)
         out.write(frame)
 

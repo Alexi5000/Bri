@@ -283,7 +283,9 @@ class DataQualityMetrics:
 
             if scores:
                 total_weight = sum(weights)
-                overall_accuracy = sum(s * w for s, w in zip(scores, weights)) / total_weight
+                overall_accuracy = (
+                    sum(s * w for s, w in zip(scores, weights, strict=True)) / total_weight
+                )
             else:
                 overall_accuracy = 0.0
 

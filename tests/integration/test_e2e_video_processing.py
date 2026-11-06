@@ -574,7 +574,7 @@ class TestEndToEndErrorHandling:
             try:
                 GroqAgent(groq_api_key="invalid_key", memory=memory)
                 # Should raise AgentError with friendly message
-                assert False, "Should have raised an error"
+                pytest.fail("Should have raised an error")
             except Exception as e:
                 # Error should be caught and handled
                 assert "API key" in str(e) or "Groq" in str(e)

@@ -87,7 +87,7 @@ class AudioTranscriber:
 
         except Exception as e:
             logger.error(f"Failed to transcribe video {video_path}: {str(e)}")
-            raise Exception(f"Transcription failed: {str(e)}")
+            raise Exception(f"Transcription failed: {str(e)}") from e
 
     def transcribe_segment(
         self, video_path: str, start_time: float, end_time: float, language: str | None = None
@@ -177,7 +177,7 @@ class AudioTranscriber:
             logger.error(
                 f"Failed to transcribe segment {start_time}-{end_time} from {video_path}: {str(e)}"
             )
-            raise Exception(f"Segment transcription failed: {str(e)}")
+            raise Exception(f"Segment transcription failed: {str(e)}") from e
 
     def close(self):
         """Release model resources explicitly; safe to call more than once."""

@@ -348,7 +348,9 @@ def _render_response_frames(frames: list[str], timestamps: list[float]) -> None:
     # Display frames in columns
     cols = st.columns(min(len(frames), 3))
 
-    for idx, (frame_path, timestamp) in enumerate(zip(frames, timestamps)):
+    # Render only complete (frame, timestamp) pairs; a malformed response must
+    # not break the chat view.
+    for idx, (frame_path, timestamp) in enumerate(zip(frames, timestamps, strict=False)):
         col_idx = idx % 3
         with cols[col_idx]:
             try:

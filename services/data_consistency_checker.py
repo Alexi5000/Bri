@@ -559,7 +559,7 @@ class DataConsistencyChecker:
 
         except Exception as e:
             logger.error(f"Failed to delete corrupted records: {e}")
-            raise ConsistencyError(f"Failed to delete corrupted records: {e}")
+            raise ConsistencyError(f"Failed to delete corrupted records: {e}") from e
 
 
 # Global checker instance

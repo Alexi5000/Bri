@@ -6,9 +6,25 @@ Main Streamlit Application Entry Point
 import streamlit as st
 
 from config import Config
-
-# Initialize logging first
+from services.application import get_application_service
+from ui.chat_workflow import render_video_chat_workspace
+from ui.history import render_conversation_history_panel  # Task 22
+from ui.library import render_video_library  # Task 19
+from ui.shell import (
+    render_dashboard,
+    render_enterprise_styles,
+    render_persistence_panel,
+    render_product_header,
+    render_sidebar_readiness,
+    render_video_workflow,
+)
+from ui.styles import apply_custom_styles
+from ui.welcome import render_welcome_screen
 from utils.logging_config import get_logger, setup_logging
+
+# Initialize logging first. The imports above are side-effect free (they only
+# define functions and module loggers), so logging setup and config
+# validation below still run before any application code executes.
 
 setup_logging(
     log_level=Config.LOG_LEVEL,
@@ -34,22 +50,6 @@ except Exception as e:
     logger.error(f"Startup error: {e}", exc_info=True)
     st.error(f"⚠️ Startup Error\n\n{e}")
     st.stop()
-
-# Import UI components
-from services.application import get_application_service
-from ui.chat_workflow import render_video_chat_workspace
-from ui.history import render_conversation_history_panel  # Task 22
-from ui.library import render_video_library  # Task 19
-from ui.shell import (
-    render_dashboard,
-    render_enterprise_styles,
-    render_persistence_panel,
-    render_product_header,
-    render_sidebar_readiness,
-    render_video_workflow,
-)
-from ui.styles import apply_custom_styles
-from ui.welcome import render_welcome_screen
 
 # Configure page
 st.set_page_config(

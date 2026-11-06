@@ -62,7 +62,7 @@ class Migration:
         except sqlite3.Error as e:
             conn.rollback()
             logger.error(f"Migration {self.version} failed: {e}")
-            raise DatabaseError(f"Migration {self.version} failed: {e}")
+            raise DatabaseError(f"Migration {self.version} failed: {e}") from e
 
     def rollback(self, conn: sqlite3.Connection) -> None:
         """Rollback the migration.
@@ -88,7 +88,7 @@ class Migration:
         except sqlite3.Error as e:
             conn.rollback()
             logger.error(f"Rollback of migration {self.version} failed: {e}")
-            raise DatabaseError(f"Rollback of migration {self.version} failed: {e}")
+            raise DatabaseError(f"Rollback of migration {self.version} failed: {e}") from e
 
 
 class MigrationManager:
