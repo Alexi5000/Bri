@@ -417,9 +417,14 @@ class TestCaptionFramesBatch:
         assert captions[-1].text == "[Caption unavailable]"
         assert captions[-1].confidence == 0.0
 
-    def test_caption_batch_timestamps_match(self, image_captioner, multiple_images):
+    def test_caption_batch_timestamps_match(
+        self, image_captioner, multiple_images, mock_blip_model
+    ):
         """Test that returned captions have correct timestamps."""
         timestamps = [1.5, 3.7, 5.2, 8.9, 12.3]
+
+        mock_outputs = [MagicMock() for _ in range(len(multiple_images))]
+        mock_blip_model["model"].generate.return_value = mock_outputs
 
         captions = image_captioner.caption_frames_batch(multiple_images, timestamps)
 
