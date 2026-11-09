@@ -154,7 +154,7 @@ uvicorn==0.54.0
     # via
     #   bri-video-agent (pyproject.toml)
     #   streamlit
-watchdog==6.0.0
+watchdog==7.1.0
     # via streamlit
 websockets==17.3
     # via streamlit
